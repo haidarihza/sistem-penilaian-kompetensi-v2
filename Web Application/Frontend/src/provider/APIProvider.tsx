@@ -11,9 +11,9 @@ const APIProvider = ({ children } : Props) => {
   const authContext = useContext(AuthContext);
   
   const axiosInstance = Axios.create({
-    baseURL: process.env.REACT_APP_API_HOST,
+    baseURL: import.meta.env.VITE_APP_API_HOST,
   });
-
+  
   axiosInstance.interceptors.request.use(config => {
     if (authContext.isAuthenticated) {
       config.headers.Authorization = `Bearer ${authContext.auth?.access_token.token}`;
