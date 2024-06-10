@@ -76,9 +76,9 @@ const Register = () => {
   }
   
   return (
-    <Box h="fit-content" minH="100vh" w="100vw" display="grid" bg="main_bg">
+    <Box h="fit-content" minH="100vh" w="100vw" display="flex" flexDir="column" alignItems="flex-start" bg="main_bg">
       <Image src="../assets/hiremif_logo.png" alt="HireMIF" h="50px" mx="10" mt="6"/>
-      <Container boxShadow="2xl" p="6" rounded="md" bg="white" mx="auto" my="auto">
+      <Container boxShadow="2xl" p="6" rounded="md" bg="white" mx="auto" mt="4">
         <Text as="h1" fontSize="3xl" justifyItems="left" fontWeight="extrabold" textColor="main_blue">Daftar HireMIF!</Text>
         <Container as="form" mt="2rem" onSubmit={e => {
           e.preventDefault();
