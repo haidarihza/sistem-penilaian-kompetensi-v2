@@ -1,15 +1,31 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../utils/context/auth";
-import { login, register } from "../../api/auth";
+import { register } from "../../api/auth";
 import { ApiContext } from "../../utils/context/api";
 import { ApiError } from "../../interface/api";
-import { Box, Container, FormControl, FormLabel, FormErrorMessage, Text, Input, InputGroup, Select, Button, InputRightElement } from "@chakra-ui/react"
+import ToastModal from "../../components/ToastModal";
+import {
+  Link,
+  Box,
+  Container,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  Text,
+  Input,
+  InputGroup,
+  Select,
+  Button,
+  InputRightElement,
+  useToast,
+  Image } from "@chakra-ui/react"
 
 const Register = () => {
   const authContext = useContext(AuthContext);
   const apiContext = useContext(ApiContext);
   const navigate = useNavigate();
+  const toast = useToast();
 
   useEffect(() => {
     if (authContext.isAuthenticated) {
@@ -20,73 +36,88 @@ const Register = () => {
   const roleList: Array<string> = ["INTERVIEWEE", "INTERVIEWER"];
 
   const [name, setName] = useState<string>("");
-  const isErrorName = name === "";
   const [phone, setPhone] = useState<string>("");
-  const isErrorPhone = phone === "";
   const [email, setEmail] = useState<string>("");
-  const isErrorEmail = email === "";
   const [password, setPassword] = useState<string>("");
-  const isErrorPassword = password === "";
-  const [show, setShow] = useState<boolean>(false);
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [role, setRole] = useState<string>("");
-  const isErrorRole = role === "";
+  const [isErrorName, setIsErrorName] = useState<boolean>(false);
+  const [isErrorPhone, setIsErrorPhone] = useState<boolean>(false);
+  const [isErrorEmail, setIsErrorEmail] = useState<boolean>(false);
+  const [isErrorPassword, setIsErrorPassword] = useState<boolean>(false);
+  const [isErrorConfirmPassword, setIsErrorConfirmPassword] = useState<boolean>(false);
+  const [isErrorRole, setIsErrorRole] = useState<boolean>(false);
+  const [isSubmit, setIsSubmit] = useState<boolean>(false);
 
   const handleSubmit = async () => {
     try {
+      setIsSubmit(true);
+      setIsErrorName(name === "");
+      setIsErrorPhone(phone === "");
+      setIsErrorEmail(email === "");
+      setIsErrorPassword(password === "");
+      setIsErrorConfirmPassword(password !== confirmPassword || confirmPassword === "");
+      setIsErrorRole(role === "");
+      if (name === "" || phone === "" || email === "" || password === "" || password !== confirmPassword || role === "") {
+        return;
+      }
       await register(apiContext.axios, name, phone, email, password, role);
-      const authData = await login(apiContext.axios, email, password);
-      authContext.login(authData);
-
-      navigate(-1);
+      ToastModal(toast, "Success!", "Akun berhasil dibuat.", "success");
+      navigate("/login");
     } catch (e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
   }
   
   return (
-    <Box h="100vh" w="100vw" display="flex" bg="#4099f8">
-      <Container boxShadow="2xl" p="6" rounded="md" bg="white" mx="auto" my="auto" centerContent>
-        <Text as="h1" fontSize="2xl">Bergabung dengan HireMIF sekarang!</Text>
+    <Box h="fit-content" minH="100vh" w="100vw" display="grid" bg="main_bg">
+      <Image src="../assets/hiremif_logo.png" alt="HireMIF" h="50px" mx="10" mt="6"/>
+      <Container boxShadow="2xl" p="6" rounded="md" bg="white" mx="auto" my="auto">
+        <Text as="h1" fontSize="3xl" justifyItems="left" fontWeight="extrabold" textColor="main_blue">Daftar HireMIF!</Text>
         <Container as="form" mt="2rem" onSubmit={e => {
           e.preventDefault();
           handleSubmit();
         }}>
-          <FormControl isInvalid={isErrorName}>
+          <FormControl isInvalid={isErrorName && isSubmit} mb="4">
             <FormLabel>Nama</FormLabel>
-            <Input value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" />
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" mt="-2"/>
             {!isErrorName ? (
               <></>
             ) : (
               <FormErrorMessage>Nama wajib diisi.</FormErrorMessage>
             )}
           </FormControl>
-          <FormControl isInvalid={isErrorPhone}>
+          <FormControl isInvalid={isErrorPhone && isSubmit} mb="4">
             <FormLabel>Nomor Telepon</FormLabel>
-            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="628123456789" />
+            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="628123456789" mt="-2"/>
             {!isErrorPhone ? (
               <></>
             ) : (
               <FormErrorMessage>Nomor Telepon wajib diisi.</FormErrorMessage>
             )}
           </FormControl>
-          <FormControl isInvalid={isErrorEmail}>
+          <FormControl isInvalid={isErrorEmail && isSubmit} mb="4">
             <FormLabel>Email</FormLabel>
-            <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="john.doe@gmail.com" />
+            <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="john.doe@gmail.com" mt="-2"/>
             {!isErrorEmail ? (
               <></>
             ) : (
               <FormErrorMessage>Email wajib diisi.</FormErrorMessage>
             )}
           </FormControl>
-          <FormControl isInvalid={isErrorPassword}>
+          <FormControl isInvalid={isErrorPassword && isSubmit} mb="4">
             <FormLabel>Password</FormLabel>
             <InputGroup>
-              <Input value={password} onChange={e => setPassword(e.target.value)} type={show ? "text" : "password"} placeholder="*******" />
-              <InputRightElement width="4.5rem">
-                <Button h="1.75rem" size="sm" onClick={e => setShow(!show)}>
-                  {show ? "Hide" : "Show"}
+              <Input value={password} onChange={e => setPassword(e.target.value)} type={showPassword ? "text" : "password"} placeholder="*******" mt="-2" />
+              <InputRightElement width="4.5rem" mt="-2">
+                <Button h="1.75rem" size="sm" onClick={e => setShowPassword(!showPassword)} bg="main_blue" textColor="white" _hover={{ bg: "second_blue" }}>
+                  {showPassword ? "Hide" : "Show"}
                 </Button>
               </InputRightElement>
             </InputGroup>
@@ -96,9 +127,25 @@ const Register = () => {
               <FormErrorMessage>Password wajib diisi.</FormErrorMessage>
             )}
           </FormControl>
-          <FormControl isInvalid={isErrorRole}>
+          <FormControl isInvalid={isErrorConfirmPassword && isSubmit} mb="4">
+            <FormLabel>Konfirmasi Password</FormLabel>
+            <InputGroup>
+              <Input value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} type={showConfirmPassword ? "text" : "password"} placeholder="*******" mt="-2" />
+              <InputRightElement width="4.5rem" mt="-2">
+                <Button h="1.75rem" size="sm" onClick={e => setShowConfirmPassword(!showConfirmPassword)} bg="main_blue" textColor="white" _hover={{ bg: "second_blue" }}>
+                  {showConfirmPassword ? "Hide" : "Show"}
+                </Button>
+              </InputRightElement>
+            </InputGroup>
+            {!isErrorConfirmPassword ? (
+              <></>
+            ) : (
+              <FormErrorMessage>Konfirmasi Password harus sama dengan password.</FormErrorMessage>
+            )}
+          </FormControl>
+          <FormControl isInvalid={isErrorRole && isSubmit} mb="4">
             <FormLabel>Role</FormLabel>
-            <Select value={role} onChange={e => setRole(e.target.value)} placeholder="Select Role">
+            <Select value={role} onChange={e => setRole(e.target.value)} placeholder="Select Role" mt="-2">
               {roleList.map((role, i) => (
                 <option key={i} value={role}>{role}</option>
               ))}
@@ -109,12 +156,23 @@ const Register = () => {
               <FormErrorMessage>Role wajib dipilih.</FormErrorMessage>
             )}
           </FormControl>
-          <Button bg="#4099f8" color="white" w="100%" type="submit" mt="2rem">Register</Button>
+          <Button bg="main_blue" color="white" w="100%" type="submit" mt="2rem" _hover={{ bg: "second_blue" }}>Register</Button>
         </Container>
-        <Container display="flex" justifyContent="space-between" mt="2rem">
-          <Text>Sudah memiliki akun?</Text>
-          <Button bg="#4099f8" color="white" onClick={() => navigate("/login")}>Login</Button>
-        </Container>
+      </Container>
+      <Container display="flex" justifyContent="center" my="2rem">
+        <Text>
+        Sudah memiliki akun?{" "}
+        <Link
+          as="span"
+          color="main_blue"
+          fontWeight="bold"
+          textDecoration="underline"
+          _hover={{ color: "second_blue" }}
+          onClick={() => navigate("/login")}
+        >
+          Masuk
+        </Link>
+        </Text>
       </Container>
     </Box>
   )

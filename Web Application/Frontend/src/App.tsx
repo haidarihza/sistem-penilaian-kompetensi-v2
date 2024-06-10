@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthProvider from './provider/AuthProvider';
 import APIProvider from './provider/APIProvider';
 import { ChakraProvider, Spinner } from '@chakra-ui/react';
+import theme from './Theme';
 
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
@@ -15,7 +16,7 @@ const Competency = lazy(() => import('./pages/competency/Index'));
 const RoomCreate = lazy(() => import('./pages/room/Create'));
 
 const App = () => (
-  <ChakraProvider>
+  <ChakraProvider theme={theme}>
     <AuthProvider>
       <APIProvider>
         <Router>
