@@ -1,80 +1,119 @@
-import { Box, Button, Text } from "@chakra-ui/react";
+import { Box, Button, Text, Image, Icon, Flex, Link, FlexProps } from "@chakra-ui/react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { IconType } from 'react-icons';
+import { ReactText } from 'react';
+import { useLocation, useNavigate } from "react-router-dom";
+import { FiHome } from "react-icons/fi";
+import { LuFileQuestion } from "react-icons/lu";
+import { GiProgression } from "react-icons/gi";
+import { VscFeedback, VscAccount } from "react-icons/vsc";
+import { IoLogOutOutline } from "react-icons/io5";
 
+interface NavItemProps extends FlexProps {
+  icon: IconType;
+  children: ReactText;
+  link?: string;
+  location: any;
+  onClick?: () => void;
+}
+
+const NavItem = ({ icon, children, link, location, onClick, ...rest }: NavItemProps) => {
+  return (
+    <Link href={link} style={{ textDecoration: 'none' }} _focus={{ boxShadow: 'none' }} onClick={onClick}>
+      <Flex
+        align="center"
+        p="4"
+        mx="4"
+        borderRadius="lg"
+        role="group"
+        fontSize="lg"
+        fontWeight="bold"
+        textColor="main_blue"
+        cursor="pointer"
+        bg={location.pathname === link ? "main_bg" : "white"}
+        _hover={{
+          bg: "main_bg",
+        }}
+        {...rest}>
+        {icon && (
+          <Icon
+            mr="4"
+            fontWeight="bold"
+            fontSize="16"
+            textColor="main_blue"
+            _groupHover={{
+              color: 'main_blue',
+            }}
+            as={icon}
+          />
+        )}
+        {children}
+      </Flex>
+    </Link>
+  );
+};
 interface Props {
   role: string;
   logout: () => void;
 }
 
 const Sidebar = ({ role, logout } : Props) => {
-  const navigate = useNavigate();
-  
-  const [index, setIndex] = useState<number>(0);
+  const location = useLocation();
 
   const sideList = role === "INTERVIEWER" ? [{
     name: "Dashboard",
-    url: "/"
+    url: "/",
+    icon: FiHome
   },
   {
     name: "Pertanyaan",
-    url: "/question"
+    url: "/question",
+    icon: LuFileQuestion
   },
   {
     name: "Kompetensi",
-    url: "/competency"
+    url: "/competency",
+    icon: GiProgression
+  },
+  {
+    name: "Umpan Balik",
+    url: "/",
+    icon: VscFeedback
   }] : [{
     name: "Dashboard",
-    url: "/"
+    url: "/",
+    icon: FiHome
   },];
 
-  const handleClick = (idx: number, url: string) => {
-    setIndex(idx);
-    navigate(url);
-  }
+  const secondList = [{
+    name: "Profil",
+    url: "/profile",
+    icon: VscAccount
+  },
+  {
+    name: "Log Out",
+    icon: IoLogOutOutline,
+    onClick: logout
+  }]
   
   return (
     <Box display="flex" flexDir="column" justifyContent="space-between" h="full">
       <Box>
-        <Text color="#4099f8" fontSize="2xl" fontWeight="bold">HireMIF</Text>
-        <Box mt="5">
-          {sideList.map((val, idx) => (
-            <Button 
-              key={idx}
-              bg={idx === index ? "#ebf2ff" : "white"}
-              fontSize="xl"
-              fontWeight="bold"
-              w="80%"
-              mt="1"
-              onClick={() => handleClick(idx, val.url)}
-              _hover={{bg:"#ebf2ff"}}>
-              {val.name}
-            </Button>
-          ))}
-        </Box>
+      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
+        <Image src="../assets/hiremif_logo.png" alt="logo" w="70%"/>
+      </Flex>
+      {sideList.map((link) => (
+        <NavItem key={link.name} icon={link.icon} link={link.url} location={location} mb="1">
+          {link.name}
+        </NavItem>
+      ))}
       </Box>
       <Box>
-        <Button 
-          w="80%" 
-          color="#4099f8" 
-          bg="white" 
-          fontSize="xl" 
-          fontWeight="bold" 
-          _hover={{}}
-          onClick={() => navigate("/profile")}>
-          Akun
-        </Button>
-        <Button 
-          w="80%" 
-          color="white" 
-          bg="#4099f8" 
-          fontSize="xl" 
-          fontWeight="bold" 
-          mt="2"
-          _hover={{}} 
-          onClick={() => logout()}>
-          Logout
-        </Button>
+      {secondList.map((link) => (
+        <NavItem key={link.name} icon={link.icon} link={link.url} location={location} onClick={link.onClick} mb="1">
+          {link.name}
+        </NavItem>
+      ))}
       </Box>
     </Box>
   )
