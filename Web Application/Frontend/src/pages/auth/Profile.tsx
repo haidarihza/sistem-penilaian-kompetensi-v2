@@ -1,4 +1,4 @@
-import { Avatar, Box, IconButton, Text, useDisclosure } from "@chakra-ui/react";
+import { Avatar, Box, IconButton, Text, useDisclosure, Container, Button } from "@chakra-ui/react";
 import Layout from "../../components/Layout";
 import { useContext, useEffect, useState } from "react";
 import { profile, updatePassword, updateProfile } from "../../api/auth";
@@ -7,9 +7,12 @@ import { ApiError } from "../../interface/api";
 import { EmailIcon, PhoneIcon, EditIcon } from "@chakra-ui/icons";
 import ModalForm from "../../components/ModalForm";
 import { FormField } from "../../interface/util";
+import ToastModal from "../../components/ToastModal";
+import { useToast } from "@chakra-ui/react";
 
 const Profile = () => {
   const apiContext = useContext(ApiContext);
+  const toast = useToast();
 
   const [name, setName] = useState<string>("");
   const isErrorName = name === "";
@@ -86,7 +89,9 @@ const Profile = () => {
       }
     } catch(e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
   }
@@ -98,23 +103,33 @@ const Profile = () => {
   const handleSubmitProfile = async () => {
     try {
       await updateProfile(apiContext.axios, name, phone);
+      onCloseProfile();
     } catch (e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
-    onCloseProfile();
   }
 
   const handleSubmitPassword = async () => {
     try {
+      if (currentPassword === "" || newPassword === "" || confirmPassword === "") {
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        return;
+      }
       await updatePassword(apiContext.axios, currentPassword, newPassword);
+      onClosePassword();
     } catch (e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
-    onClosePassword();
   }
   
   return (
@@ -125,6 +140,7 @@ const Profile = () => {
         handleSubmit={handleSubmitProfile}
         title="Ubah Profile"
         fields={profileFields}
+        buttonContent="Ubah"
       />
       <ModalForm 
         isOpen={IsOpenPassword} 
@@ -132,31 +148,44 @@ const Profile = () => {
         handleSubmit={handleSubmitPassword}
         title="Ubah Password"
         fields={passwordFields}
+        buttonContent="Ubah"
       />
-      <Box boxShadow="2xl" p="6" rounded="md" bg="white" display="flex" mx="auto" mt="10">
-        <Box display="flex" my="auto" mr="5">
-          <Avatar size="lg" mr="2" />
+      <Container boxShadow="2xl" p="6" rounded="md" bg="white" mx="auto" mt="4">
+        <Box display="flex" my="auto" mr="5" justifyContent="center" mb="4">
+          <Avatar size="2xl" mr="2" bg="main_blue"/>
+        </Box>
+        <Box display="flex" my="auto" mr="5" justifyContent="center" mb="6">
           <Text as="h1" fontSize="2xl" fontWeight="semibold" my="auto">{name}</Text>
         </Box>
-        <Box display="flex" flexDir="column">
-          <Box display="flex">
-            <PhoneIcon mr="2" />
-            <Text as="p" fontSize="lg">{phone}</Text>
-          </Box>
-          <Box display="flex">
-            <EmailIcon mr="2" />
-            <Text as="p" fontSize="lg">{email}</Text>
-          </Box>
-          <Box mt="3" display="flex" flexDir="row-reverse">
-            <IconButton aria-label="Edit Profile" size="xs" icon={<EditIcon />} onClick={onOpenProfile} />
-            <Text fontSize="xs" mr="1">Ubah Profile</Text>
-          </Box>
-          <Box mt="1" display="flex" flexDir="row-reverse">
-            <IconButton aria-label="Edit Password" size="xs" icon={<EditIcon />} onClick={onOpenPassword} />
-            <Text fontSize="xs" mr="1">Ubah Password</Text>
-          </Box>
+        <Box display="flex" alignItems="center" mb="4">
+          <PhoneIcon color="main_blue" boxSize="6" mr="4"/>
+          <Text as="p" fontSize="lg">{phone}</Text>
         </Box>
-      </Box>
+        <Box display="flex" alignItems="center" mb="4">
+          <EmailIcon color="main_blue" boxSize="6" mr="4"/>
+          <Text as="p" fontSize="lg">{email}</Text>
+        </Box>
+        <Box mt="3" display="flex" flexDir="row-reverse">
+          <Button bg="main_blue" color="white" _hover={{ bg: "second_blue" }} onClick={onOpenProfile}>
+            Ubah Profil
+            <IconButton aria-label="Edit Profile" ml="2" size="xs" icon={<EditIcon/> }/>
+          </Button>
+        </Box>
+      </Container>
+      <Container boxShadow="2xl" p="6" rounded="md" bg="white" mx="auto" mt="4">
+        <Box display="flex" alignItems="center" mb="4">
+          <Text as="h1" fontSize="xl" fontWeight="semibold" my="auto">Password</Text>
+        </Box>
+        <Box display="flex" alignItems="center" mb="4">
+          <Text as="p" fontSize="lg">********</Text>
+        </Box>
+        <Box mt="3" display="flex" flexDir="row-reverse">
+          <Button bg="main_blue" color="white" _hover={{ bg: "second_blue" }} onClick={onOpenPassword}>
+            Ubah Password
+            <IconButton aria-label="Edit Password" ml="2" size="xs" icon={<EditIcon/> }/>
+          </Button>
+        </Box>
+      </Container>
     </Layout>
   )
 }

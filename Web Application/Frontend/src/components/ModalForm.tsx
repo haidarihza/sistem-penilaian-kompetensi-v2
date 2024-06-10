@@ -1,6 +1,25 @@
-import { Box, Button, FormControl, FormErrorMessage, FormLabel, IconButton, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper } from "@chakra-ui/react";
+import React, { useState } from "react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { FormField } from "../interface/util";
+import { Box,
+  Button,
+  FormControl,
+  FormErrorMessage,
+  FormLabel,
+  IconButton,
+  Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper } from "@chakra-ui/react";
 
 interface Props {
   isOpen: boolean
@@ -9,6 +28,7 @@ interface Props {
   title: string;
   fields: Array<FormField>;
   dynamicFields?: Array<any>;
+  buttonContent?: string;
   handleDynamicFields?: (idx: number, key: string, value: string) => void;
   handleDynamicAddField?: () => void;
   handleDynamicDeleteField?: (idx: number) => void;
@@ -20,15 +40,18 @@ const ModalForm = ({
   handleSubmit, 
   title, 
   fields, 
-  dynamicFields, 
+  dynamicFields,
+  buttonContent="Kirim",
   handleDynamicFields,
   handleDynamicAddField,
   handleDynamicDeleteField
 } : Props) => {
+  const [isSubmit, setIsSubmit] = useState<boolean>(false);
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
       <ModalOverlay />
       <ModalContent as="form" onSubmit={e => {
+        setIsSubmit(true);
         e.preventDefault();
         handleSubmit();
       }}>
@@ -36,7 +59,7 @@ const ModalForm = ({
         <ModalCloseButton />
         <ModalBody>
           {fields.map((val, idx) => (
-            <FormControl isInvalid={val.isInvalid} key={idx}>
+            <FormControl isInvalid={val.isInvalid && isSubmit} key={idx}>
               <FormLabel>{val.label}</FormLabel>
               {val.type === "number" ? (
                 <NumberInput value={val.value} onChange={value => val.setValue(Number(value))} min={1}>
@@ -76,10 +99,12 @@ const ModalForm = ({
           )}
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
+          <Button bg="white" color="main_blue" _hover={{ bg: "second_blue", color: "white" }} mr="2" onClick={onClose}>
             Batal
           </Button>
-          <Button colorScheme="blue" type="submit">Kirim</Button>
+          <Button type="submit" bg="main_blue" color="white" _hover={{ bg: "second_blue" }}>
+            {buttonContent}
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

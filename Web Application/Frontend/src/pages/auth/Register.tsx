@@ -57,7 +57,7 @@ const Register = () => {
       setIsErrorName(name === "");
       setIsErrorPhone(phone === "");
       setIsErrorEmail(email === "");
-      setIsErrorPassword(password === "");
+      setIsErrorPassword(password.length < 8);
       setIsErrorConfirmPassword(password !== confirmPassword || confirmPassword === "");
       setIsErrorRole(role === "");
       if (name === "" || phone === "" || email === "" || password === "" || password !== confirmPassword || role === "") {
@@ -124,7 +124,7 @@ const Register = () => {
             {!isErrorPassword ? (
               <></>
             ) : (
-              <FormErrorMessage>Password wajib diisi.</FormErrorMessage>
+              <FormErrorMessage>Password minimal 8 karakter.</FormErrorMessage>
             )}
           </FormControl>
           <FormControl isInvalid={isErrorConfirmPassword && isSubmit} mb="4">
