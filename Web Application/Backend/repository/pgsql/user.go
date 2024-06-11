@@ -40,9 +40,9 @@ var userQueries = map[string]string{
 const userInsert = "userInsert"
 const userInsertQuery = `INSERT INTO
 	"users"(
-		id, name, phone, email, password, role
+		id, name, phone, email, password, role, status
 	) values(
-		$1, $2, $3, $4, $5, $6
+		$1, $2, $3, $4, $5, $6, $7
 	)
 `
 
@@ -54,7 +54,7 @@ func (r *userRepository) Insert(ctx context.Context, user *repository.User) erro
 	defer tx.Rollback()
 
 	_, err = tx.StmtContext(ctx, r.ps[userInsert]).ExecContext(ctx,
-		user.ID, user.Name, user.Phone, user.Email, user.Password, user.Role,
+		user.ID, user.Name, user.Phone, user.Email, user.Password, user.Role, user.Status,
 	)
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ func (r *userRepository) Insert(ctx context.Context, user *repository.User) erro
 }
 
 const userSelectIDPasswordRoleByEmail = "userSelectIDPasswordRoleByEmail"
-const userSelectIDPasswordRoleByEmailQuery = `SELECT id, password, role
+const userSelectIDPasswordRoleByEmailQuery = `SELECT id, password, role, status
 	FROM "users" WHERE email = $1
 `
 
@@ -77,7 +77,7 @@ func (r *userRepository) SelectIDPasswordRoleByEmail(ctx context.Context, email 
 
 	row := r.ps[userSelectIDPasswordRoleByEmail].QueryRowContext(ctx, email)
 	err := row.Scan(
-		&user.ID, &user.Password, &user.Role,
+		&user.ID, &user.Password, &user.Role, &user.Status,
 	)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,8 @@ const userUpdate = "userUpdate"
 const userUpdateQuery = `UPDATE "users" SET
 	name = $2,
 	phone = $3,
-	updated_at = $4
+	status = $4,
+	updated_at = $5
 	WHERE id = $1
 `
 
@@ -160,7 +161,7 @@ func (r *userRepository) Update(ctx context.Context, user *repository.User) erro
 
 	updatedAt := time.Now().UTC()
 	res, err := tx.StmtContext(ctx, r.ps[userUpdate]).ExecContext(ctx,
-		user.ID, user.Name, user.Phone, updatedAt,
+		user.ID, user.Name, user.Phone, user.Status, updatedAt,
 	)
 	if err != nil {
 		return err

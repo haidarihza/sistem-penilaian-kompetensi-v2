@@ -74,6 +74,7 @@ func main() {
 		r.Get("/verify", authhandler.Verify(userRepository, jwtImpl))
 		r.Post("/register", authhandler.Register(userRepository, jwtImpl, cfg))
 		r.Post("/login", authhandler.Login(userRepository, jwtImpl))
+		r.Get("/verify-email", authhandler.VerifyEmail(userRepository, jwtImpl))
 		r.With(authMiddleware, roleInterviewerMiddleware).Get("/check/{email}", authhandler.EmailCheck(userRepository))
 		r.With(authMiddleware).Get("/me", authhandler.Profile(userRepository))
 		r.With(authMiddleware).Put("/me", authhandler.UpdateProfile(userRepository))

@@ -122,3 +122,25 @@ export async function updatePassword(
      throw new ApiError("Something Went Wrong");
    }
 }
+
+export async function verifyEmail(
+  axios: AxiosInstance,
+  token: string,
+  userID: string
+): Promise<void> {
+  try {
+    await axios.get(`/auth/verify-email`, {
+      params: {
+        token: token,
+        userID: userID
+      }
+    });
+  } catch (e) {
+     if (isAxiosError(e)) {
+       throw new ApiError(e.response?.data.message ? 
+         e.response?.data.message : "Something Went Wrong");
+     }
+ 
+     throw new ApiError("Something Went Wrong");
+   }
+}

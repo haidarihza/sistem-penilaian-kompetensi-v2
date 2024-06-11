@@ -1,8 +1,7 @@
-import { Box, Button, Text, Image, Icon, Flex, Link, FlexProps } from "@chakra-ui/react";
-import { useState } from "react";
+import { Box, Image, Icon, Flex, Link, FlexProps } from "@chakra-ui/react";
 import { IconType } from 'react-icons';
 import { ReactText } from 'react';
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FiHome } from "react-icons/fi";
 import { LuFileQuestion } from "react-icons/lu";
 import { GiProgression } from "react-icons/gi";

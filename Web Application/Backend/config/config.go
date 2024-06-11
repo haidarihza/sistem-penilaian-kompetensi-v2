@@ -15,6 +15,8 @@ type Config struct {
 	APIPort           string `mapstructure:"API_PORT"`
 	SpeechToTextHost  string `mapstructure:"SPEECH_TO_TEXT_HOST"`
 	SummarizationHost string `mapstructure:"SUMMARIZATION_HOST"`
+	FEHost						string `mapstructure:"FE_HOST"`
+	FEPort						string `mapstructure:"FE_PORT"`
 
 	TokenSecret        string `mapstructure:"TOKEN_SECRET"`
 	AccessTokenExpire  int    `mapstructure:"ACCESS_TOKEN_EXPIRE"`

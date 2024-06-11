@@ -23,6 +23,23 @@ func UserRoleMapper(role string) (UserRole, bool) {
 	return userRole, ok
 }
 
+type UserStatus string
+
+const (
+	Veryfied = UserStatus("VERIFIED")
+	Unverified = UserStatus("UNVERIFIED")
+)
+
+func UserStatusMapper(status string) (UserStatus, bool) {
+	mapper := map[string]UserStatus{
+		"VERIFIED": Veryfied,
+		"UNVERIFIED": Unverified,
+	}
+
+	userStatus, ok := mapper[status]
+	return userStatus, ok
+}
+
 type User struct {
 	ID        string
 	Name      string
@@ -30,7 +47,7 @@ type User struct {
 	Email     string
 	Password  string
 	Role      UserRole
-	Status    string
+	Status    UserStatus
 	Deleted   bool
 	CreatedAt time.Time
 	UpdatedAt sql.NullTime

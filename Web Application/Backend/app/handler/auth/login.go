@@ -56,6 +56,16 @@ func Login(userRepository repository.UserRepository, jwt token.JWT) http.Handler
 			return
 		}
 
+		status, ok := repository.UserStatusMapper(string(user.Status))
+		if !ok {
+			response.RespondError(w, response.InternalServerError())
+			return
+		}
+		if status != repository.Veryfied {
+			response.RespondError(w, response.UnauthorizedError("User is not verified"))
+			return
+		}
+
 		atClaim := token.JWTClaim{
 			UserID: user.ID,
 			Role:   string(user.Role),

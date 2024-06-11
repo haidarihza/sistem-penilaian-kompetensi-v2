@@ -9,6 +9,7 @@ import theme from './Theme';
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const Profile = lazy(() => import('./pages/auth/Profile'));
+const VerifyEmail = lazy(() => import('./pages/auth/EmailVerification'));
 const Dashboard = lazy(() => import('./pages/room/Index'));
 const RoomDetail = lazy(() => import('./pages/room/Detail'));
 const Question = lazy(() => import('./pages/question/Index'));
@@ -25,6 +26,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/auth/verify-email" element={<VerifyEmail />} />
               <Route path="/" element={<Dashboard />} />
               <Route path="/room/:id" element={<RoomDetail />} />
               <Route path="/room/create" element={<RoomCreate />} />

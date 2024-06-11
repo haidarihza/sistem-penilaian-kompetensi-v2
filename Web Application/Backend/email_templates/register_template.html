@@ -1,0 +1,65 @@
+<!-- email_templates/register_template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            text-align: center;
+            color: #333333;
+        }
+        .body {
+            margin-top: 20px;
+            color: #333333;
+        }
+        .button {
+            display: block;
+            width: 100px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #40a2d8;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #777777;
+        }
+        a {
+            text-decoration: none;
+        }
+        .link {
+            color: #0b60b0;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="header">Selamat datang di HireMIF!</h2>
+        <div class="body">
+            <p>Kepada User,</p>
+            <p>Terima kasih telah melakukan registrasi di HireMIF. Untuk dapat melakukan akses website, silakan tekan tombol berikut untuk melakukan verifikasi email Anda:</p>
+            <a href="{{.VerifyURL}}" class="button">Verify Email</a>
+            <p>Jika tombol tidak bekerja, silakan copy dan buka link berikut di web browser Anda:</p>
+            <p><a href="{{.VerifyURL}}" class="link">{{.VerifyURL}}</a></p>
+        </div>
+        <div class="footer">
+            <p>Terima kasih,<br/>HireMIF Team</p>
+        </div>
+    </div>
+</body>
+</html>

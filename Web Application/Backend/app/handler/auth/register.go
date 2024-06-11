@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"bytes"
 	"interview/summarization/app/response"
 	"interview/summarization/config"
 	"interview/summarization/repository"
@@ -11,9 +12,11 @@ import (
 	"net/http"
 	"net/smtp"
 	"strings"
-
+	"html/template"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"os"
+	"path/filepath"
 )
 
 type RegisterRequest struct {
@@ -44,6 +47,11 @@ func Register(userRepository repository.UserRepository, jwt token.JWT, cfg confi
 			return
 		}
 
+		status, ok := repository.UserStatusMapper("UNVERIFIED")
+		if !ok {
+			response.RespondError(w, response.InternalServerError())
+			return
+		}
 		newUser := &repository.User{
 			ID:       uuid.NewString(),
 			Name:     req.Name,
@@ -51,6 +59,7 @@ func Register(userRepository repository.UserRepository, jwt token.JWT, cfg confi
 			Email:    req.Email,
 			Password: string(hashedPass),
 			Role:     role,
+			Status:   status,
 		}
 
 		go func(ctx context.Context, userID, receiver string, jwt token.JWT) {
@@ -60,11 +69,35 @@ func Register(userRepository repository.UserRepository, jwt token.JWT, cfg confi
 				UserID: userID,
 			})
 
-			urlverify := fmt.Sprintf("%s/auth/verify?token=%s", cfg.APIHost, token.Token)
-			body := []byte(fmt.Sprintf("Thank you for registering to Hiremif. Click the link to verify your email: %s", urlverify))
+			urlverify := fmt.Sprintf("http://%s:%s/auth/verify-email?token=%s&userID=%s", cfg.FEHost, cfg.FEPort, token.Token, userID)
 
-			content := "Subject: Email Verification Hiremif" + "\n\n" + string(body)
+			cwd, err := os.Getwd()
+			if err != nil {
+					fmt.Println("Error getting current working directory:", err)
+					return
+			}
+			tmplPath := filepath.Join(cwd, "/email_templates/register_template.html")
 
+			tmpl, err := template.ParseFiles(tmplPath)
+			if err != nil {
+					fmt.Println("Error parsing template:", err)
+					return
+			}
+
+			data := struct {
+        VerifyURL template.HTML
+	    }{
+        VerifyURL: template.HTML(urlverify),
+		  }
+
+			var renderedContent bytes.Buffer
+			err = tmpl.Execute(&renderedContent, data)
+			if err != nil {
+					fmt.Println("Error executing template:", err)
+					return
+			}
+
+			content := "Subject: Email Verification Hiremif\nMIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n" + renderedContent.String()
 			smtp.SendMail(fmt.Sprintf("%s:%d", cfg.AddressHost, cfg.AddressPort), auth, cfg.SenderEmail, []string{receiver}, []byte(content))
 		}(context.Background(), newUser.ID, req.Email, jwt)
 
