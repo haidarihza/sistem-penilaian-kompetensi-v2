@@ -28,6 +28,7 @@ const APIProvider = ({ children } : Props) => {
     if (err.response.status === 401 && authContext.isAuthenticated) {
       authContext.logout();
     }
+    return Promise.reject(err);
   })
   
   const apiContext: APIContextInterface = {

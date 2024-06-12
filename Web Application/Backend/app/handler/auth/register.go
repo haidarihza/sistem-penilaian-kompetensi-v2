@@ -52,6 +52,12 @@ func Register(userRepository repository.UserRepository, jwt token.JWT, cfg confi
 			response.RespondError(w, response.InternalServerError())
 			return
 		}
+
+		if res, err := userRepository.SelectIDByEmail(r.Context(), req.Email); res != nil || err == nil{
+			response.RespondError(w, response.BadRequestError("Email already registered"))
+			return
+		}
+
 		newUser := &repository.User{
 			ID:       uuid.NewString(),
 			Name:     req.Name,

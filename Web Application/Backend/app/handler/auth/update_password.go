@@ -42,7 +42,7 @@ func UpdatePassword(userRepository repository.UserRepository) http.HandlerFunc {
 		}
 
 		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.CurrentPassword)); err != nil {
-			response.RespondError(w, response.UnauthorizedError("Invalid credentials"))
+			response.RespondError(w, response.BadRequestError("Incorrect Current Password"))
 			return
 		}
 

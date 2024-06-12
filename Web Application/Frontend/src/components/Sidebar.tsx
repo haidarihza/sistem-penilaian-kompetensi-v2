@@ -13,10 +13,11 @@ interface NavItemProps extends FlexProps {
   children: ReactText;
   link?: string;
   location: any;
+  name?: string;
   onClick?: () => void;
 }
 
-const NavItem = ({ icon, children, link, location, onClick, ...rest }: NavItemProps) => {
+const NavItem = ({ icon, children, link, location, name, onClick, ...rest }: NavItemProps) => {
   return (
     <Link href={link} style={{ textDecoration: 'none' }} _focus={{ boxShadow: 'none' }} onClick={onClick}>
       <Flex
@@ -27,11 +28,12 @@ const NavItem = ({ icon, children, link, location, onClick, ...rest }: NavItemPr
         role="group"
         fontSize="lg"
         fontWeight="bold"
-        textColor="main_blue"
+        textColor={name === "Log Out" ? "main_bg" : "main_blue"}
         cursor="pointer"
-        bg={location.pathname === link ? "main_bg" : "white"}
+        bg={name === "Log Out" ? "main_blue" : (location.pathname === link ? "main_bg" : "white")}
         _hover={{
           bg: "main_bg",
+          color: "main_blue",
         }}
         {...rest}>
         {icon && (
@@ -39,7 +41,7 @@ const NavItem = ({ icon, children, link, location, onClick, ...rest }: NavItemPr
             mr="4"
             fontWeight="bold"
             fontSize="16"
-            textColor="main_blue"
+            textColor={name === "Log Out" ? "main_bg" : "main_blue"}
             _groupHover={{
               color: 'main_blue',
             }}
@@ -109,7 +111,7 @@ const Sidebar = ({ role, logout } : Props) => {
       </Box>
       <Box>
       {secondList.map((link) => (
-        <NavItem key={link.name} icon={link.icon} link={link.url} location={location} onClick={link.onClick} mb="1">
+        <NavItem key={link.name} icon={link.icon} link={link.url} location={location} name={link.name} onClick={link.onClick} mb="1">
           {link.name}
         </NavItem>
       ))}

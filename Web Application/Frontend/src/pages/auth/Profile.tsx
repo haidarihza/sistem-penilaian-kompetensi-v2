@@ -103,6 +103,7 @@ const Profile = () => {
   const handleSubmitProfile = async () => {
     try {
       await updateProfile(apiContext.axios, name, phone);
+      ToastModal(toast, "Success!", "Profile berhasil diubah", "success");
       onCloseProfile();
     } catch (e) {
       if (e instanceof ApiError) {
@@ -122,6 +123,7 @@ const Profile = () => {
         return;
       }
       await updatePassword(apiContext.axios, currentPassword, newPassword);
+      ToastModal(toast, "Success!", "Password berhasil diubah", "success");
       onClosePassword();
     } catch (e) {
       if (e instanceof ApiError) {

@@ -64,7 +64,7 @@ const Register = () => {
         return;
       }
       await register(apiContext.axios, name, phone, email, password, role);
-      ToastModal(toast, "Success!", "Akun berhasil dibuat.", "success");
+      ToastModal(toast, "Success!", "Akun berhasil dibuat. Email verifikasi telah dikirim ke email Anda", "success");
       navigate("/login");
     } catch (e) {
       if (e instanceof ApiError) {
