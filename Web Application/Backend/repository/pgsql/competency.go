@@ -43,9 +43,9 @@ var competencyQueries = map[string]string{
 const competencyInsert = "competencyInsert"
 const competencyInsertQuery = `INSERT INTO
 	competencies(
-		id, competency
+		id, competency, description
 	) values(
-		$1, $2
+		$1, $2, $3
 	)
 `
 
@@ -65,7 +65,7 @@ func (r *competencyRepository) Insert(ctx context.Context, competency *repositor
 	defer tx.Rollback()
 
 	_, err = tx.StmtContext(ctx, r.ps[competencyInsert]).ExecContext(ctx,
-		competency.ID, competency.Competency,
+		competency.ID, competency.Competency, competency.Description,
 	)
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func (r *competencyRepository) Insert(ctx context.Context, competency *repositor
 
 const competencySelectAll = "competencySelectAll"
 const competencySelectAllQuery = `SELECT
-	c.id, c.competency, cl.id, cl.level, cl.description, cl.competency_id
+	c.id, c.competency, c.description, cl.id, cl.level, cl.description, cl.competency_id
 	FROM competencies c
 	LEFT JOIN competency_levels cl ON c.id = cl.competency_id
 	WHERE c.deleted = false AND cl.deleted = false
@@ -104,7 +104,7 @@ func (r *competencyRepository) SelectAll(ctx context.Context) ([]*repository.Com
 	for rows.Next() {
 		competency := &repository.Competency{}
 		competencyLevel := &repository.CompetencyLevel{}
-		err := rows.Scan(&competency.ID, &competency.Competency,
+		err := rows.Scan(&competency.ID, &competency.Competency, &competency.Description,
 			&competencyLevel.ID, &competencyLevel.Level,
 			&competencyLevel.Description, &competencyLevel.CompetencyID)
 		if err != nil {
@@ -128,7 +128,7 @@ func (r *competencyRepository) SelectAll(ctx context.Context) ([]*repository.Com
 
 const competencySelectAllByRoomID = "competencySelectAllByRoomID"
 const competencySelectAllByRoomIDQuery = `SELECT
-	c.id, c.competency, cl.id, cl.level, cl.description, cl.competency_id
+	c.id, c.competency, c.description, cl.id, cl.level, cl.description, cl.competency_id
 	FROM competencies c
 	INNER JOIN rooms_has_competencies rc ON c.id = rc.competency_id
 	LEFT JOIN competency_levels cl ON c.id = cl.competency_id
@@ -146,7 +146,7 @@ func (r *competencyRepository) SelectAllByRoomID(ctx context.Context, id string)
 	for rows.Next() {
 		competency := &repository.Competency{}
 		competencyLevel := &repository.CompetencyLevel{}
-		err := rows.Scan(&competency.ID, &competency.Competency,
+		err := rows.Scan(&competency.ID, &competency.Competency, &competency.Description,
 			&competencyLevel.ID, &competencyLevel.Level,
 			&competencyLevel.Description, &competencyLevel.CompetencyID)
 		if err != nil {
@@ -170,7 +170,7 @@ func (r *competencyRepository) SelectAllByRoomID(ctx context.Context, id string)
 
 const competencySelectOne = "competencySelectOne"
 const competencySelectOneQuery = `SELECT
-	c.id, c.competency, cl.id, cl.level, cl.description, cl.competency_id
+	c.id, c.competency, c.description, cl.id, cl.level, cl.description, cl.competency_id
 	FROM competencies c
 	LEFT JOIN competency_levels cl ON c.id = cl.competency_id
 	WHERE c.deleted = false AND cl.deleted = false AND c.id = $1
@@ -186,7 +186,7 @@ func (r *competencyRepository) SelectOneByID(ctx context.Context, id string) (*r
 	competency := &repository.Competency{}
 	for rows.Next() {
 		competencyLevel := &repository.CompetencyLevel{}
-		err := rows.Scan(&competency.ID, &competency.Competency,
+		err := rows.Scan(&competency.ID, &competency.Competency, &competency.Description,
 			&competencyLevel.ID, &competencyLevel.Level,
 			&competencyLevel.Description, &competencyLevel.CompetencyID)
 		if err != nil {
@@ -204,7 +204,8 @@ func (r *competencyRepository) SelectOneByID(ctx context.Context, id string) (*r
 const competencyUpdate = "competencyUpdate"
 const competencyUpdateQuery = `UPDATE competencies SET
 	competency = $2,
-	updated_at = $3
+	description = $3,
+	updated_at = $4
 	WHERE id = $1
 `
 
@@ -236,7 +237,7 @@ func (r *competencyRepository) Upsert(ctx context.Context, competency *repositor
 
 	currentAt := time.Now().UTC()
 	res, err := tx.StmtContext(ctx, r.ps[competencyUpdate]).ExecContext(ctx,
-		competency.ID, competency.Competency, currentAt,
+		competency.ID, competency.Competency, competency.Description, currentAt,
 	)
 	if err != nil {
 		return err

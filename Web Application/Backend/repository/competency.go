@@ -7,13 +7,14 @@ import (
 )
 
 type Competency struct {
-	ID         string
-	Competency string
-	Deleted    bool
-	CreatedAt  time.Time
-	UpdatedAt  sql.NullTime
-	DeletedAt  sql.NullTime
-	Levels     []*CompetencyLevel
+	ID         	string
+	Competency 	string
+	Description string
+	Deleted    	bool
+	CreatedAt  	time.Time
+	UpdatedAt  	sql.NullTime
+	DeletedAt  	sql.NullTime
+	Levels     	[]*CompetencyLevel
 }
 
 type CompetencyLevel struct {

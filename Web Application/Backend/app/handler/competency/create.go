@@ -17,9 +17,10 @@ type CompetencyLevel struct {
 }
 
 type Competency struct {
-	ID         string            `json:"id,omitempty"`
-	Competency string            `json:"competency,omitempty"`
-	Levels     []CompetencyLevel `json:"levels,omitempty"`
+	ID         	string            `json:"id,omitempty"`
+	Competency 	string            `json:"competency,omitempty"`
+	Description string            `json:"description,omitempty"`
+	Levels     	[]CompetencyLevel `json:"levels,omitempty"`
 }
 
 func Create(competencyRepository repository.CompetencyRepository) http.HandlerFunc {
@@ -33,6 +34,7 @@ func Create(competencyRepository repository.CompetencyRepository) http.HandlerFu
 		newCompetency := &repository.Competency{
 			ID:         uuid.NewString(),
 			Competency: req.Competency,
+			Description: req.Description,
 		}
 
 		var newLevelsUid []string

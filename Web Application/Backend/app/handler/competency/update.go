@@ -24,6 +24,7 @@ func Update(competencyRepository repository.CompetencyRepository) http.HandlerFu
 		updatedCompetency := &repository.Competency{
 			ID:         competencyId,
 			Competency: req.Competency,
+			Description: req.Description,
 		}
 
 		var updatedLevelsUid []string

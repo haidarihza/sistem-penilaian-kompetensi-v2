@@ -5,11 +5,13 @@ import { Competency, CompetencyLevel } from "../interface/competency";
 export async function createCompetency(
   axios: AxiosInstance,
   competency: string,
+  description: string,
   levels: CompetencyLevel[]
 ): Promise<void> {
   try {
     await axios.post("/competency", {
       competency,
+      description,
       levels,
     });
   } catch (e) {
@@ -61,11 +63,13 @@ export async function updateCompetency(
   axios: AxiosInstance,
   id: string,
   competency: string,
+  description: string,
   levels: CompetencyLevel[]
 ): Promise<void> {
   try {
     await axios.put(`/competency/${id}`, {
       competency,
+      description,
       levels,
     });
   } catch (e) {

@@ -37,9 +37,10 @@ func GetOne(competencyRepository repository.CompetencyRepository) http.HandlerFu
 
 		response.Respond(w, http.StatusOK, GetOneCompetencyResponse{
 			Data: Competency{
-				ID:         competency.ID,
-				Competency: competency.Competency,
-				Levels:     levels,
+				ID:         	competency.ID,
+				Competency: 	competency.Competency,
+				Description: 	competency.Description,
+				Levels:     	levels,
 			},
 		})
 	}

@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS rooms_has_questions(
 CREATE TABLE IF NOT EXISTS competencies(
   id UUID PRIMARY KEY,
   competency TEXT NOT NULL,
+  description TEXT NOT NULL,
   deleted BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE,
@@ -85,4 +86,16 @@ CREATE TABLE IF NOT EXISTS results_competencies(
   result REAL NOT NULL,
   FOREIGN KEY(room_id) REFERENCES rooms(id),
   PRIMARY KEY(room_id, competency, level)
+);
+
+CREATE TABLE IF NOT EXISTS questions_labels(
+  id UUID PRIMARY KEY,
+  question_id UUID,
+  competency_id UUID,
+  deleted BOOLEAN DEFAULT false NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE,
+  deleted_at TIMESTAMP WITH TIME ZONE,
+  FOREIGN KEY(competency_id) REFERENCES competencies(id),
+  FOREIGN KEY(question_id) REFERENCES questions(id)
 );

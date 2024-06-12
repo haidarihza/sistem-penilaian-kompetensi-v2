@@ -34,6 +34,7 @@ func GetAll(competencyRepository repository.CompetencyRepository) http.HandlerFu
 			resp.Data = append(resp.Data, Competency{
 				ID:         cp.ID,
 				Competency: cp.Competency,
+				Description: cp.Description,
 				Levels:     levels,
 			})
 		}

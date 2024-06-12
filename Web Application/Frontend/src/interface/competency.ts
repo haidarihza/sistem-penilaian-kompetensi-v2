@@ -8,5 +8,6 @@ export interface CompetencyLevel {
 export interface Competency {
   id: string,
   competency: string,
+  description: string,
   levels: CompetencyLevel[]
 }
