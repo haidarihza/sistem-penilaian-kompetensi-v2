@@ -9,11 +9,17 @@ import (
 	"github.com/google/uuid"
 )
 
+type QuestionLabel struct {
+	ID          	string `json:"id,omitempty"`
+	CompetencyID 	string `json:"competency_id,omitempty"`
+}
+
 type Question struct {
 	ID            string `json:"id,omitempty"`
 	Question      string `json:"question,omitempty"`
 	DurationLimit int    `json:"duration_limit,omitempty"`
 	Transcript    string `json:"transcript,omitempty"`
+	Labels				[]QuestionLabel `json:"labels,omitempty"`
 }
 
 func Create(questionRepository repository.QuestionRepository) http.HandlerFunc {
@@ -29,7 +35,19 @@ func Create(questionRepository repository.QuestionRepository) http.HandlerFunc {
 			Question:      req.Question,
 			DurationLimit: req.DurationLimit,
 		}
-		if err := questionRepository.Insert(r.Context(), newQuestion); err != nil {
+
+		var newLabelsUid []string
+		var newLabelsCompetencyUid []string
+		for _, label := range req.Labels {
+			newLabelsUid = append(newLabelsUid, uuid.NewString())
+			newLabelsCompetencyUid = append(newLabelsCompetencyUid, label.CompetencyID)
+		}
+		newLabels := &repository.Labels{
+			IDs: newLabelsUid,
+			CompetencyIDs: newLabelsCompetencyUid,
+		}
+
+		if err := questionRepository.Insert(r.Context(), newQuestion, newLabels); err != nil {
 			response.RespondError(w, response.InternalServerError())
 			return
 		}

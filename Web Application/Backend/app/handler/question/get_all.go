@@ -22,10 +22,19 @@ func GetAll(questionRepository repository.QuestionRepository) http.HandlerFunc {
 			Data: []Question{},
 		}
 		for _, tr := range treatments {
+			labels := make([]QuestionLabel, 0)
+			for _, label := range tr.Labels {
+				labels = append(labels, QuestionLabel{
+					ID: label.ID,
+					CompetencyID: label.CompetencyID,
+				})
+			}
+
 			resp.Data = append(resp.Data, Question{
 				ID:            tr.ID,
 				Question:      tr.Question,
 				DurationLimit: tr.DurationLimit,
+				Labels:        labels,
 			})
 		}
 

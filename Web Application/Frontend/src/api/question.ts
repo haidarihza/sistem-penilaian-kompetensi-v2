@@ -1,16 +1,18 @@
 import { AxiosInstance, isAxiosError } from "axios";
 import { ApiError } from "../interface/api";
-import { Question } from "../interface/question";
+import { Question, QuestionLabel, QuestionLabelOptions } from "../interface/question";
 
 export async function createQuestion(
   axios: AxiosInstance,
   question: string, 
-  duration_limit: number
+  duration_limit: number,
+  labels: QuestionLabel[]
 ): Promise<void> {
   try {
     await axios.post("/question", {
       question,
       duration_limit,
+      labels,
     });
   } catch (e) {
     if (isAxiosError(e)) {
@@ -61,12 +63,14 @@ export async function updateQuestion(
   axios: AxiosInstance,
   id: string,
   question: string, 
-  duration_limit: number
+  duration_limit: number,
+  labels: QuestionLabel[]
 ): Promise<void> {
   try {
     await axios.put(`/question/${id}`, {
       question,
       duration_limit,
+      labels,
     });
   } catch (e) {
     if (isAxiosError(e)) {
@@ -84,6 +88,23 @@ export async function deleteQuestion(
 ): Promise<void> {
   try {
     await axios.delete(`/question/${id}`);
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}
+
+export async function getQuestionLabelOptions(
+  axios: AxiosInstance
+): Promise<Array<QuestionLabelOptions>> {
+  try {
+    const res = await axios.get("/competency/only");
+
+    return res.data.data as Array<QuestionLabelOptions>;
   } catch (e) {
     if (isAxiosError(e)) {
       throw new ApiError(e.response?.data.message ? 

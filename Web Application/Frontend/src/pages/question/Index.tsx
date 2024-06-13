@@ -1,8 +1,8 @@
 import Layout from "../../components/Layout";
 import { useContext, useEffect, useState } from "react";
 import { ApiContext } from "../../utils/context/api";
-import { createQuestion, deleteQuestion, getAllQuestion, getOneQuestion, updateQuestion } from "../../api/question";
-import { Question } from "../../interface/question";
+import { createQuestion, deleteQuestion, getAllQuestion, getOneQuestion, updateQuestion, getQuestionLabelOptions } from "../../api/question";
+import { Question, QuestionLabel, QuestionLabelOptions } from "../../interface/question";
 import { ApiError } from "../../interface/api";
 import {
   Table,
@@ -15,99 +15,114 @@ import {
   Input,
   Flex, 
   Button, 
-  Spinner, 
+  Box,
   Text,
   useDisclosure,
   IconButton,
+  useToast,
+  Icon,
 } from "@chakra-ui/react"
-import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
-import ModalForm from "../../components/ModalForm";
-import { FormField } from "../../interface/util";
+import { EditIcon, DeleteIcon, SettingsIcon, SmallCloseIcon } from "@chakra-ui/icons";
+import QuestionModal from "./QuestionModal";
+import LabelFilterPopover from "./LabelFilterPopover";
+import ToastModal from "../../components/ToastModal";
 
 const Index = () => {
   const apiContext = useContext(ApiContext);
+  const toast = useToast();
 
   const [data, setData] = useState<Array<Question>>([] as Array<Question>);
-  const [question, setQuestion] = useState<string>("");
-  const isErrorQuestion = question === "";
-  const [durationLimit, setDurationLimit] = useState<number>(0);
-  const isErrorDurationLimit = durationLimit === 0;
-  
-  const [id, setId] = useState<string>("");
-  const { isOpen:isOpenCreate, onOpen:onOpenCreate, onClose:onCloseCreate } = useDisclosure();
-  const { isOpen:isOpenEdit, onOpen:onOpenEdit, onClose:onCloseEdit } = useDisclosure();
-  
-  const fields: Array<FormField> = [
-    {
-      isInvalid: isErrorQuestion, 
-      label: "Pertanyaan", 
-      value: question, 
-      setValue: setQuestion,
-      placeholder: "Pertanyaan",
-      invalidMessage: "Pertanyaan wajib diisi"
-    },
-    {
-      isInvalid: isErrorDurationLimit, 
-      label: "Batas Durasi", 
-      type: "number",
-      value: durationLimit, 
-      setValue: setDurationLimit,
-      invalidMessage: "Batas Durasi harus lebih dari 0 menit"
-    },
-  ];
+  const [filteredData, setFilteredData] = useState<Array<Question>>([] as Array<Question>);
+  const [question, setQuestion] = useState<Question>({
+    id: "",
+    question: "",
+    duration_limit: 0,
+    labels: [] as Array<QuestionLabel>
+  } as Question);
+  const [labelOptions, setLabelOptions] = useState<Array<QuestionLabelOptions>>([] as Array<QuestionLabelOptions>);
+  const [labelFilter, setLabelFilter] = useState<Array<QuestionLabelOptions>>([] as Array<QuestionLabelOptions>);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const { isOpen:isOpenModal, onOpen:onOpenModal, onClose:onCloseModal } = useDisclosure();
 
   const fetch = async () => {
     try {
       const questions = await getAllQuestion(apiContext.axios);
       setData(questions);
+      setFilteredData(questions);
+      const labelOptions = await getQuestionLabelOptions(apiContext.axios);
+      setLabelOptions(labelOptions);
     } catch(e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
   }
   
   useEffect(() => {
-    setQuestion("");
-    setDurationLimit(0);
-
     fetch();
-  }, [isOpenCreate, isOpenEdit]);
-  
-  const handleSubmitCreate = async () => {
-    try {
-      await createQuestion(apiContext.axios, question, durationLimit);
-    } catch (e) {
-      if (e instanceof ApiError) {
-        alert(e.message);
-      }
+  }, [isOpenModal]);
+
+  const filterAndSearchData = () => {
+    if (searchTerm.trim() === '' && labelFilter.length === 0) {
+      setFilteredData(data); // Show all data if no filter or search term
+    } else {
+      const filtered = data.filter((val) => {
+        const isSearchMatch = val.question.toLowerCase().includes(searchTerm.toLowerCase());
+        const isLabelMatch = labelFilter.length === 0 || labelFilter.every((label) => val.labels.map((val) => val.competency_id).includes(label.id));
+        return isSearchMatch && isLabelMatch;
+      });
+      setFilteredData(filtered);
     }
-    onCloseCreate();
+  };
+
+  useEffect(() => {
+    filterAndSearchData();
+  }, [searchTerm, labelFilter, data]);
+
+  const handleClickCreate = () => {
+    setIsEdit(false);
+    setQuestion({
+      id: "",
+      question: "",
+      duration_limit: 0,
+      labels: [] as Array<QuestionLabel>
+    } as Question);
+    onOpenModal();
   }
 
-  const handleClickEdit = async (id: string) => {
-    onOpenEdit();
-    try {
-      const question = await getOneQuestion(apiContext.axios, id);
+  const handleClickEdit = (id: string) => {
+    setIsEdit(true);
+    setQuestion(data.find((val) => val.id === id) as Question);
+    onOpenModal();
+  }
 
-      setQuestion(question.question);
-      setDurationLimit(question.duration_limit);
+  const handleSubmitCreate = async () => {
+    try {
+      await createQuestion(apiContext.axios, question.question, question.duration_limit, question.labels);
+      onCloseModal();
     } catch (e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
   }
 
   const handleSubmitEdit = async () => {
     try {
-      await updateQuestion(apiContext.axios, id, question, durationLimit);
+      await updateQuestion(apiContext.axios, question.id, question.question, question.duration_limit, question.labels);
+      onCloseModal();
     } catch (e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
-    onCloseEdit();
   }
 
   const handleDelete = async (id: string) => {
@@ -116,57 +131,105 @@ const Index = () => {
       fetch();
     } catch (e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
   }
-  
+
+  const handleDeleteLabel = (idx: number) => () => {
+    const newLabels = labelFilter.filter((_, index) => index !== idx) as Array<QuestionLabelOptions>;
+    setLabelFilter(newLabels);
+    filterAndSearchData();
+  }
+
+  const handleApplyFilter = (filteredLabels: Array<QuestionLabelOptions>) => {
+    setLabelFilter(filteredLabels);
+    filterAndSearchData();
+  }
+
   return (
     <Layout>
-      <ModalForm 
-        isOpen={isOpenCreate} 
-        onClose={onCloseCreate} 
-        handleSubmit={handleSubmitCreate}
-        title="Buat Pertanyaan"
-        fields={fields}
-      />
-      <ModalForm 
-        isOpen={isOpenEdit} 
-        onClose={onCloseEdit} 
-        handleSubmit={handleSubmitEdit}
-        title="Ubah Pertanyaan"
-        fields={fields}
+      <QuestionModal 
+        isOpen={isOpenModal} 
+        onClose={onCloseModal} 
+        handleSubmit={isEdit ? handleSubmitEdit : handleSubmitCreate}
+        title={isEdit ? "Edit Pertanyaan" : "Buat Pertanyaan"}
+        question={question} 
+        setQuestion={setQuestion}
+        labelOptions={labelOptions}
+        buttonContent={isEdit ? "Ubah" : "Buat"}
       />
       <Text as="h1" fontSize="2xl" fontWeight="semibold">Koleksi Pertanyaan</Text>
       <TableContainer bg="white" rounded="md">
         <Flex justifyContent="space-between" p="5">
-          <Input maxW="40%" placeholder="Cari Pertanyaan" />
-          <Button bg="#4099f8" color="white" onClick={onOpenCreate}>Buat Pertanyaan</Button>
+          <Input 
+            maxW="60%" 
+            placeholder="Cari Pertanyaan" 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+          />
+          <Button bg="main_blue" color="white" onClick={handleClickCreate}>Buat Pertanyaan</Button>
         </Flex>
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th textTransform="capitalize" w="90%">Pertanyaan</Th>
-              <Th textTransform="capitalize" textAlign="center">Batas Durasi</Th>
-              <Th textTransform="capitalize" textAlign="center">Aksi</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {data ? data.map((val, idx) => (
-              <Tr key={idx}>
-                <Td>{val.question}</Td>
-                <Td textAlign="center">{val.duration_limit} menit</Td>
-                <Td>
-                  <IconButton aria-label="Edit" mr="2" icon={<EditIcon />} onClick={() => {
-                    setId(val.id);
-                    handleClickEdit(val.id);
-                  }} />
-                  <IconButton aria-label="Delete" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
-                </Td>
+        <Box display="flex" alignItems="center">
+          <LabelFilterPopover
+            labelOptions={labelOptions}
+            filteredLabels={labelFilter}
+            handleApplyFilter={handleApplyFilter}
+          />
+          <Box display="flex" flexDir="row" flexWrap="wrap" mt="2">
+            {labelFilter.map((val, idx) => (
+            <Box key={idx} display="flex" alignItems="center" w="fit-content" rounded="md" bg="main_blue" mr="2" mb="2">
+              <Text fontSize="sm" fontWeight="normal" color="white" ml="1">
+                {val.competency}
+              </Text>
+              <IconButton
+                aria-label="Delete"
+                icon={<SmallCloseIcon />}
+                colorScheme="white.400"
+                size="xs"
+                onClick={handleDeleteLabel(idx)}
+              />
+            </Box>
+            ))}
+          </Box>
+        </Box>
+        <Box overflowY="auto" maxHeight="80%">
+          <Table variant="simple" colorScheme="blue">
+            <Thead position="sticky" top="0" zIndex="1" bg="white">
+              <Tr>
+                <Th textTransform="capitalize" w="40%">Pertanyaan</Th>
+                <Th textTransform="capitalize" textAlign="center">Batas Durasi</Th>
+                <Th textTransform="capitalize" w="30%" textAlign="center">Label</Th>
+                <Th textTransform="capitalize" textAlign="center">Aksi</Th>
               </Tr>
-            )) : <Spinner />}
-          </Tbody>
-        </Table>
+            </Thead>
+            <Tbody>
+            {filteredData.map((val) => (
+                <Tr key={val.id}>
+                  <Td w="50%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">{val.question}</Td>
+                  <Td textAlign="center">{val.duration_limit} menit</Td>
+                  <Td textAlign="center">
+                    <Box display="flex" flexDir="row" p="0" flexWrap="wrap" justifyContent="center">
+                      {val.labels.map((val, idx) => (
+                      <Box key={idx} display="flex" alignItems="center" w="fit-content" rounded="md" bg="main_blue" mr="2" mb="2">
+                        <Text fontSize="sm" fontWeight="normal" color="white" pl="1" pr="1">
+                          {labelOptions.find((label) => label.id === val.competency_id)?.competency}
+                        </Text>
+                      </Box>
+                      ))}
+                    </Box>
+                  </Td>
+                  <Td>
+                    <IconButton aria-label="Edit" mr="2" icon={<EditIcon />} onClick={() => handleClickEdit(val.id)} />
+                    <IconButton aria-label="Delete" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
       </TableContainer>
     </Layout>
   )

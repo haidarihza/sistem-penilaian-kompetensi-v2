@@ -22,9 +22,17 @@ func GetOne(questionRepository repository.QuestionRepository) http.HandlerFunc {
 				response.RespondError(w, response.NotFoundError("Question not found"))
 				return
 			}
-
+		
 			response.RespondError(w, response.InternalServerError())
 			return
+		}
+
+		labels := make([]QuestionLabel, 0)
+		for _, label := range question.Labels {
+			labels = append(labels, QuestionLabel{
+				ID:           label.ID,
+				CompetencyID: label.CompetencyID,
+			})
 		}
 
 		response.Respond(w, http.StatusOK, GetOneQuestionResponse{
@@ -32,6 +40,7 @@ func GetOne(questionRepository repository.QuestionRepository) http.HandlerFunc {
 				ID:            question.ID,
 				Question:      question.Question,
 				DurationLimit: question.DurationLimit,
+				Labels:        labels,
 			},
 		})
 	}

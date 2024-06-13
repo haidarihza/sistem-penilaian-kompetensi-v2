@@ -28,12 +28,16 @@ func NewQuestionRepository(db *sql.DB) (repository.QuestionRepository, error) {
 }
 
 var questionQueries = map[string]string{
-	questionInsert:            questionInsertQuery,
-	questionSelectAll:         questionSelectAllQuery,
-	questionSelectAllByRoomID: questionSelectAllByRoomIDQuery,
-	questionSelectOne:         questionSelectOneQuery,
-	questionUpdate:            questionUpdateQuery,
-	questionDelete:            questionDeleteQuery,
+	questionInsert:            		questionInsertQuery,
+	questionLabelInsert:       		questionLabelInsertQuery,
+	questionSelectAll:         		questionSelectAllQuery,
+	questionSelectAllByRoomID: 		questionSelectAllByRoomIDQuery,
+	questionSelectOne:         		questionSelectOneQuery,
+	questionUpdate:            		questionUpdateQuery,
+	questionLabelUpsert:       		questionLabelUpsertQuery,
+	questionLabelDeleteNotInList: questionLabelDeleteNotInListQuery,
+	questionDelete:            		questionDeleteQuery,
+	questionLabelDelete:       		questionLabelDeleteQuery,
 }
 
 const questionInsert = "questionInsert"
@@ -44,8 +48,15 @@ const questionInsertQuery = `INSERT INTO
 		$1, $2, $3
 	)
 `
+const questionLabelInsert = "questionLabelInsert"
+const questionLabelInsertQuery = `INSERT INTO
+	questions_labels(
+		id, question_id, competency_id
+	) SELECT
+	UNNEST($1::UUID[]), $2, UNNEST($3::UUID[])
+`
 
-func (r *questionRepository) Insert(ctx context.Context, question *repository.Question) error {
+func (r *questionRepository) Insert(ctx context.Context, question *repository.Question, labels *repository.Labels) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -54,6 +65,13 @@ func (r *questionRepository) Insert(ctx context.Context, question *repository.Qu
 
 	_, err = tx.StmtContext(ctx, r.ps[questionInsert]).ExecContext(ctx,
 		question.ID, question.Question, question.DurationLimit,
+	)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.StmtContext(ctx, r.ps[questionLabelInsert]).ExecContext(ctx,
+		labels.IDs, question.ID, labels.CompetencyIDs,
 	)
 	if err != nil {
 		return err
@@ -68,9 +86,10 @@ func (r *questionRepository) Insert(ctx context.Context, question *repository.Qu
 
 const questionSelectAll = "questionSelectAll"
 const questionSelectAllQuery = `SELECT
-	id, question, duration_limit
-	FROM questions
-	WHERE deleted = false
+	q.id, q.question, q.duration_limit, ql.id, ql.competency_id, ql.question_id
+	FROM questions q
+	LEFT JOIN questions_labels ql ON q.id = ql.question_id
+	WHERE q.deleted = false AND ql.deleted = false
 `
 
 func (r *questionRepository) SelectAll(ctx context.Context) ([]*repository.Question, error) {
@@ -83,12 +102,25 @@ func (r *questionRepository) SelectAll(ctx context.Context) ([]*repository.Quest
 	questions := []*repository.Question{}
 	for rows.Next() {
 		question := &repository.Question{}
-		err := rows.Scan(&question.ID, &question.Question, &question.DurationLimit)
+		questionLabel := &repository.QuestionLabel{}
+		err := rows.Scan(
+			&question.ID, &question.Question, &question.DurationLimit,
+			&questionLabel.ID, &questionLabel.CompetencyID, &questionLabel.QuestionID,
+		)
 		if err != nil {
 			return nil, err
 		}
 
-		questions = append(questions, question)
+		lenQ := len(questions)
+		if lenQ > 0 && questionLabel.QuestionID == questions[lenQ-1].ID {
+			questions[lenQ-1].Labels = append(questions[lenQ-1].Labels, questionLabel)
+		} else {
+			if questionLabel.QuestionID != "" {
+				question.Labels = append(question.Labels, questionLabel)
+			}
+
+			questions = append(questions, question)
+		}
 	}
 
 	return questions, nil
@@ -96,10 +128,11 @@ func (r *questionRepository) SelectAll(ctx context.Context) ([]*repository.Quest
 
 const questionSelectAllByRoomID = "questionSelectAllByRoomID"
 const questionSelectAllByRoomIDQuery = `SELECT
-	q.id, q.question, q.duration_limit
+	q.id, q.question, q.duration_limit, ql.id, ql.competency_id, ql.question_id
 	FROM questions q
 	INNER JOIN rooms_has_questions rq ON q.id = rq.question_id
-	WHERE q.deleted = false AND rq.room_id = $1
+	LEFT JOIN questions_labels ql ON q.id = ql.question_id
+	WHERE q.deleted = false AND rq.room_id = $1 AND ql.deleted = false
 `
 
 func (r *questionRepository) SelectAllByRoomID(ctx context.Context, id string) ([]*repository.Question, error) {
@@ -112,12 +145,25 @@ func (r *questionRepository) SelectAllByRoomID(ctx context.Context, id string) (
 	questions := []*repository.Question{}
 	for rows.Next() {
 		question := &repository.Question{}
-		err := rows.Scan(&question.ID, &question.Question, &question.DurationLimit)
+		questionLabel := &repository.QuestionLabel{}
+		err := rows.Scan(
+			&question.ID, &question.Question, &question.DurationLimit,
+			&questionLabel.ID, &questionLabel.CompetencyID, &questionLabel.QuestionID,
+		)
 		if err != nil {
 			return nil, err
 		}
 
-		questions = append(questions, question)
+		lenQ := len(questions)
+		if lenQ > 0 && questionLabel.QuestionID == questions[lenQ-1].ID {
+			questions[lenQ-1].Labels = append(questions[lenQ-1].Labels, questionLabel)
+		} else {
+			if questionLabel.QuestionID != "" {
+				question.Labels = append(question.Labels, questionLabel)
+			}
+
+			questions = append(questions, question)
+		}
 	}
 
 	return questions, nil
@@ -125,23 +171,36 @@ func (r *questionRepository) SelectAllByRoomID(ctx context.Context, id string) (
 
 const questionSelectOne = "questionSelectOne"
 const questionSelectOneQuery = `SELECT
-	id, question, duration_limit
-	FROM questions
-	WHERE deleted = false AND id = $1
+	q.id, q.question, q.duration_limit, ql.id, ql.competency_id, ql.question_id
+	FROM questions q
+	LEFT JOIN questions_labels ql ON q.id = ql.question_id
+	WHERE q.deleted = false AND ql.deleted = false AND q.id = $1
 `
 
 func (r *questionRepository) SelectOneByID(ctx context.Context, id string) (*repository.Question, error) {
-	question := &repository.Question{}
-
-	row := r.ps[questionSelectOne].QueryRowContext(ctx, id)
-	err := row.Scan(
-		&question.ID, &question.Question, &question.DurationLimit,
-	)
+	rows, err := r.ps[questionSelectOne].QueryContext(ctx, id)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	return question, err
+	question := &repository.Question{}
+	for rows.Next() {
+		questionLabel := &repository.QuestionLabel{}
+		err := rows.Scan(
+			&question.ID, &question.Question, &question.DurationLimit,
+			&questionLabel.ID, &questionLabel.CompetencyID, &questionLabel.QuestionID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if questionLabel.QuestionID != "" {
+			question.Labels = append(question.Labels, questionLabel)
+		}
+	}
+
+	return question, nil
 }
 
 const questionUpdate = "questionUpdate"
@@ -152,7 +211,24 @@ const questionUpdateQuery = `UPDATE questions SET
 	WHERE id = $1
 `
 
-func (r *questionRepository) Update(ctx context.Context, question *repository.Question) error {
+const questionLabelUpsert = "questionLabelUpsert"
+const questionLabelUpsertQuery = `INSERT INTO questions_labels(
+		id, question_id, competency_id
+	) SELECT
+	UNNEST($1::UUID[]), $2, UNNEST($3::UUID[])
+	ON CONFLICT (id)
+	DO UPDATE SET
+	updated_at = $4
+`
+
+const questionLabelDeleteNotInList = "questionLabelDeleteNotInList"
+const questionLabelDeleteNotInListQuery = `UPDATE questions_labels SET
+	deleted = true,
+	deleted_at = $3
+	WHERE question_id = $1 AND NOT id = ANY($2::UUID[])
+`
+
+func (r *questionRepository) Upsert(ctx context.Context, question *repository.Question, labels *repository.Labels) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -175,6 +251,20 @@ func (r *questionRepository) Update(ctx context.Context, question *repository.Qu
 		return sql.ErrNoRows
 	}
 
+	res, err = tx.StmtContext(ctx, r.ps[questionLabelUpsert]).ExecContext(ctx,
+		labels.IDs, question.ID, labels.CompetencyIDs, updatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	res, err = tx.StmtContext(ctx, r.ps[questionLabelDeleteNotInList]).ExecContext(ctx,
+		question.ID, labels.IDs, updatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
 	if err = tx.Commit(); err != nil {
 		return err
 	}
@@ -187,6 +277,13 @@ const questionDeleteQuery = `UPDATE questions SET
 	deleted = true,
 	deleted_at = $2
 	WHERE id = $1
+`
+
+const questionLabelDelete = "questionLabelDelete"
+const questionLabelDeleteQuery = `UPDATE questions_labels SET
+	deleted = true,
+	deleted_at = $2
+	WHERE question_id = $1
 `
 
 func (r *questionRepository) DeleteByID(ctx context.Context, id string) error {
@@ -207,6 +304,19 @@ func (r *questionRepository) DeleteByID(ctx context.Context, id string) error {
 		return err
 	}
 	if updatedRows != 1 {
+		return sql.ErrNoRows
+	}
+
+	res, err = tx.StmtContext(ctx, r.ps[questionLabelDelete]).ExecContext(ctx, id, deletedAt)
+	if err != nil {
+		return err
+	}
+
+	updatedRows, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if updatedRows < 1 {
 		return sql.ErrNoRows
 	}
 

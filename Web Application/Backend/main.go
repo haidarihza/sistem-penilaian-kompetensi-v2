@@ -94,6 +94,7 @@ func main() {
 		Route("/competency", func(r chi.Router) {
 			r.Post("/", competencyhandler.Create(competencyRepository))
 			r.Get("/", competencyhandler.GetAll(competencyRepository))
+			r.Get("/only", competencyhandler.GetAllCompetencyOnly(competencyRepository))
 			r.Get("/{id}", competencyhandler.GetOne(competencyRepository))
 			r.Put("/{id}", competencyhandler.Update(competencyRepository))
 			r.Delete("/{id}", competencyhandler.Delete(competencyRepository))

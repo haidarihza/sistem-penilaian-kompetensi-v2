@@ -37,6 +37,7 @@ type Levels struct {
 type CompetencyRepository interface {
 	Insert(context.Context, *Competency, *Levels) error
 	SelectAll(context.Context) ([]*Competency, error)
+	SelectAllCompetencyOnly(context.Context) ([]*Competency, error)
 	SelectAllByRoomID(context.Context, string) ([]*Competency, error)
 	SelectOneByID(context.Context, string) (*Competency, error)
 	Upsert(context.Context, *Competency, *Levels) error

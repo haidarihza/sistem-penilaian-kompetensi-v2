@@ -28,16 +28,17 @@ func NewCompetencyRepository(db *sql.DB) (repository.CompetencyRepository, error
 }
 
 var competencyQueries = map[string]string{
-	competencyInsert:               competencyInsertQuery,
-	competencyLevelInsert:          competencyLevelInsertQuery,
-	competencySelectAll:            competencySelectAllQuery,
-	competencySelectAllByRoomID:    competencySelectAllByRoomIDQuery,
-	competencySelectOne:            competencySelectOneQuery,
-	competencyUpdate:               competencyUpdateQuery,
-	competencyLevelUpsert:          competencyLevelUpsertQuery,
-	competencyLevelDeleteNotInList: competencyLevelDeleteNotInListQuery,
-	competencyDelete:               competencyDeleteQuery,
-	competencyLevelDelete:          competencyLevelDeleteQuery,
+	competencyInsert:               		competencyInsertQuery,
+	competencyLevelInsert:          		competencyLevelInsertQuery,
+	competencySelectAll:            		competencySelectAllQuery,
+	competencySelectAllCompetencyOnly: 	competencySelectAllCompetencyOnlyQuery,
+	competencySelectAllByRoomID:    		competencySelectAllByRoomIDQuery,
+	competencySelectOne:            		competencySelectOneQuery,
+	competencyUpdate:               		competencyUpdateQuery,
+	competencyLevelUpsert:          		competencyLevelUpsertQuery,
+	competencyLevelDeleteNotInList: 		competencyLevelDeleteNotInListQuery,
+	competencyDelete:               		competencyDeleteQuery,
+	competencyLevelDelete:          		competencyLevelDeleteQuery,
 }
 
 const competencyInsert = "competencyInsert"
@@ -121,6 +122,34 @@ func (r *competencyRepository) SelectAll(ctx context.Context) ([]*repository.Com
 
 			competencies = append(competencies, competency)
 		}
+	}
+
+	return competencies, nil
+}
+
+const competencySelectAllCompetencyOnly = "competencySelectAllCompetencyOnly"
+const competencySelectAllCompetencyOnlyQuery = `SELECT
+	id, competency
+	FROM competencies
+	WHERE deleted = false
+`
+
+func (r *competencyRepository) SelectAllCompetencyOnly(ctx context.Context) ([]*repository.Competency, error) {
+	rows, err := r.ps[competencySelectAllCompetencyOnly].QueryContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	competencies := []*repository.Competency{}
+	for rows.Next() {
+		competency := &repository.Competency{}
+		err := rows.Scan(&competency.ID, &competency.Competency)
+		if err != nil {
+			return nil, err
+		}
+
+		competencies = append(competencies, competency)
 	}
 
 	return competencies, nil

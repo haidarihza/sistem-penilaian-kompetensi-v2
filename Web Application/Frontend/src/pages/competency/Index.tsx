@@ -13,7 +13,7 @@ import {
   Input,
   Flex, 
   Button, 
-  Spinner, 
+  Box,
   Text,
   useDisclosure,
   IconButton,
@@ -21,7 +21,7 @@ import {
 } from "@chakra-ui/react"
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import { Competency, CompetencyLevel } from "../../interface/competency";
-import { createCompetency, deleteCompetency, getAllCompetency, getOneCompetency, updateCompetency } from "../../api/competency";
+import { createCompetency, deleteCompetency, getAllCompetency, updateCompetency } from "../../api/competency";
 import CompetencyModal from "./CompetencyModal";
 import DetailsCompetencyModal from "./DetailsCompetencyModal";
 import ToastModal from "../../components/ToastModal";
@@ -50,7 +50,9 @@ const Index = () => {
       setFilteredData(competencies);
     } catch(e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
   }
@@ -77,16 +79,10 @@ const Index = () => {
     onOpenModal();
   }
 
-  const handleClickEdit = async (id: string) => {
-    try {
-      setIsEdit(true);
-      setCompetency(data.find((val) => val.id === id) as Competency);
-      onOpenModal();  
-    } catch (e) {
-      if (e instanceof ApiError) {
-        alert(e.message);
-      }
-    }
+  const handleClickEdit = (id: string) => {
+    setIsEdit(true);
+    setCompetency(data.find((val) => val.id === id) as Competency);
+    onOpenModal();  
   }
 
   const handleSubmitCreate = async () => {
@@ -125,7 +121,9 @@ const Index = () => {
       fetch();
     } catch (e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
   }
@@ -141,7 +139,7 @@ const Index = () => {
         isOpen={isOpenModal}
         onClose={onCloseModal}
         handleSubmit={isEdit ? handleSubmitEdit : handleSubmitCreate}
-        title="Buat Kompetensi"
+        title={isEdit ? "Ubah Kompetensi" : "Buat Kompetensi"}
         competency={competency}
         setCompetency={setCompetency}
         buttonContent={isEdit ? "Ubah" : "Buat"}
@@ -164,44 +162,46 @@ const Index = () => {
           />
           <Button bg="main_blue" color="white" onClick={handleClickCreate}>Buat Kompetensi</Button>
         </Flex>
-        <Table variant="simple" colorScheme="blue">
-          <Thead>
-            <Tr>
-              <Th textTransform="capitalize" textAlign="center" w="20%">Kompetensi</Th>
-              <Th textTransform="capitalize" textAlign="center" w="60%">Deskripsi</Th>
-              <Th textTransform="capitalize" textAlign="center" w="10%">Level</Th>
-              <Th textTransform="capitalize" textAlign="center">Aksi</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {filteredData.length > 0 ? filteredData.map((val) => (
-              <Tr key={val.id}>
-                <Td w="20%">{val.competency}</Td>
-                <Td w="60%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">
-                  {val.description}
-                </Td>
-                <Td w="10%">
-                  {val.levels.map((level) => (
-                    <Text maxW="10rem" noOfLines={1} key={level.id}>{level.level}: {level.description}</Text>
-                  ))}
-                  <Text
-                    cursor="pointer"
-                    color="blue.500"
-                    textDecoration="underline"
-                    _hover={{ color: "blue.700" }}
-                    onClick={() => handleSeeDetails(val.id)}
-                  >
-                  Lihat detail
-                  </Text>
-                </Td>
-                <Td>
-                  <IconButton aria-label="Edit" mr="2" icon={<EditIcon />} onClick={() => {handleClickEdit(val.id)}} />
-                  <IconButton aria-label="Delete" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
-                </Td>
+        <Box overflowY="auto" maxHeight="80%">
+          <Table variant="simple" colorScheme="blue">
+            <Thead position="sticky" top="0" zIndex="1" bg="white">
+              <Tr>
+                <Th textTransform="capitalize" textAlign="center" w="20%">Kompetensi</Th>
+                <Th textTransform="capitalize" textAlign="center" w="60%">Deskripsi</Th>
+                <Th textTransform="capitalize" textAlign="center" w="10%">Level</Th>
+                <Th textTransform="capitalize" textAlign="center">Aksi</Th>
               </Tr>
-            )) : <Spinner />}
-          </Tbody>
-        </Table>
+            </Thead>
+            <Tbody>
+              {filteredData.map((val) => (
+                <Tr key={val.id}>
+                  <Td w="20%">{val.competency}</Td>
+                  <Td w="60%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">
+                    {val.description}
+                  </Td>
+                  <Td w="10%">
+                    {val.levels.map((level) => (
+                      <Text maxW="10rem" noOfLines={1} key={level.id}>{level.level}: {level.description}</Text>
+                    ))}
+                    <Text
+                      cursor="pointer"
+                      color="blue.500"
+                      textDecoration="underline"
+                      _hover={{ color: "blue.700" }}
+                      onClick={() => handleSeeDetails(val.id)}
+                    >
+                    Lihat detail
+                    </Text>
+                  </Td>
+                  <Td>
+                    <IconButton aria-label="Edit" mr="2" icon={<EditIcon />} onClick={() => {handleClickEdit(val.id)}} />
+                    <IconButton aria-label="Delete" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
       </TableContainer>
     </Layout>
   )
