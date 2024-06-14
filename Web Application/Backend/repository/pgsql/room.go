@@ -73,42 +73,42 @@ const roomCompetenciesInsertQuery = `INSERT INTO
 func (r *roomRepository) Insert(
 	ctx context.Context,
 	room *repository.Room,
-	questions, competencies []string) (string, error) {
+	questions, competencies []string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer tx.Rollback()
 
 	var id string
 	row := tx.StmtContext(ctx, r.ps[roomInsert]).QueryRowContext(ctx,
 		room.ID, room.Title, room.Description, room.Start, room.End,
-		"Menunggu Jawaban", room.InterviewerID, room.IntervieweeID,
+		room.Status, room.InterviewerID, room.IntervieweeID,
 	)
 	err = row.Scan(&id)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	_, err = tx.StmtContext(ctx, r.ps[roomQuestionsInsert]).ExecContext(ctx,
 		room.ID, questions,
 	)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	_, err = tx.StmtContext(ctx, r.ps[roomCompetenciesInsert]).ExecContext(ctx,
 		room.ID, competencies,
 	)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	if err = tx.Commit(); err != nil {
-		return "", err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 const roomSelectAllByInterviewerID = "roomSelectAllByInterviewerID"

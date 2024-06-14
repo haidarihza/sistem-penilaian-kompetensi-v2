@@ -56,6 +56,7 @@ type User struct {
 
 type UserRepository interface {
 	Insert(context.Context, *User) error
+	SelectAll(context.Context) ([]*User, error)
 	SelectIDPasswordRoleByEmail(context.Context, string) (*User, error)
 	SelectIDByEmail(context.Context, string) (*User, error)
 	SelectNamePhoneEmailByID(context.Context, string) (*User, error)

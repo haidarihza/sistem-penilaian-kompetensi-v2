@@ -59,7 +59,7 @@ func GetOne(
 				Start:       room.Start,
 				End:         room.End,
 				Submission:  submission,
-				Status:      room.Status,
+				Status:      string(room.Status),
 				Note:        note,
 			},
 		}

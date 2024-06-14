@@ -56,6 +56,7 @@ const CompetencyModal = ({
       title={title}
       buttonContent={buttonContent}
       isForm={true}
+      size="2xl"
     >
       <FormControl isRequired mb="4">
         <FormLabel>Kompetensi</FormLabel>

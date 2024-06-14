@@ -18,6 +18,7 @@ interface Props {
   buttonContent?: string;
   isForm: boolean;
   children: ReactNode;
+  [key: string]: any;
 }
 
 const ModalTemplate = ({
@@ -27,10 +28,11 @@ const ModalTemplate = ({
   title,
   buttonContent = "Kirim",
   isForm = true,
-  children
+  children,
+  ...rest
 }: Props) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} {...rest}>
       <ModalOverlay bg="blackAlpha.700"/>
       <ModalContent
         as="form"

@@ -29,6 +29,7 @@ func NewUserRepository(db *sql.DB) (repository.UserRepository, error) {
 
 var userQueries = map[string]string{
 	userInsert:                      userInsertQuery,
+	userSelectAll:                   userSelectAllQuery,
 	userSelectIDPasswordRoleByEmail: userSelectIDPasswordRoleByEmailQuery,
 	userSelectIDByEmail:             userSelectIDByEmailQuery,
 	userSelectNamePhoneEmailByID:    userSelectNamePhoneEmailByIDQuery,
@@ -66,6 +67,34 @@ func (r *userRepository) Insert(ctx context.Context, user *repository.User) erro
 	}
 
 	return nil
+}
+
+const userSelectAll = "userSelectAll"
+const userSelectAllQuery = `SELECT id, name, phone, email, role
+	FROM "users"
+`
+
+func (r *userRepository) SelectAll(ctx context.Context) ([]*repository.User, error) {
+	rows, err := r.ps[userSelectAll].QueryContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := make([]*repository.User, 0)
+	for rows.Next() {
+		user := &repository.User{}
+		err := rows.Scan(
+			&user.ID, &user.Name, &user.Phone, &user.Email, &user.Role,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 const userSelectIDPasswordRoleByEmail = "userSelectIDPasswordRoleByEmail"

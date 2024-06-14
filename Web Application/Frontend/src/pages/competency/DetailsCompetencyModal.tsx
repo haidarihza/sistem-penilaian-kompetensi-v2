@@ -28,6 +28,7 @@ const DetailsCompetencyModal = ({
       handleSubmit={handleSubmit}
       title={title}
       isForm={false}
+      size="2xl"
     >
       <Text mb="4">{competency.description}</Text>
       {competency.levels.map((level, idx) => (

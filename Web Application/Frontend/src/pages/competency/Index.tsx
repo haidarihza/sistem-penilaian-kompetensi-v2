@@ -166,7 +166,7 @@ const Index = () => {
           <Table variant="simple" colorScheme="blue">
             <Thead position="sticky" top="0" zIndex="1" bg="white">
               <Tr>
-                <Th textTransform="capitalize" textAlign="center" w="20%">Kompetensi</Th>
+                <Th textTransform="capitalize" w="20%">Kompetensi</Th>
                 <Th textTransform="capitalize" textAlign="center" w="60%">Deskripsi</Th>
                 <Th textTransform="capitalize" textAlign="center" w="10%">Level</Th>
                 <Th textTransform="capitalize" textAlign="center">Aksi</Th>

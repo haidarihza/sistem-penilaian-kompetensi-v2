@@ -41,7 +41,7 @@ func GetAll(roomRepository repository.RoomRepository) http.HandlerFunc {
 					IntervieweeName: room.Interviewee.Name,
 					End:             room.End,
 					Submission:      submission,
-					Status:          room.Status,
+					Status:          string(room.Status),
 				})
 			}
 		} else if userCred.Role == repository.Interviewee {
@@ -57,7 +57,7 @@ func GetAll(roomRepository repository.RoomRepository) http.HandlerFunc {
 					Title:  room.Title,
 					Start:  room.Start,
 					End:    room.End,
-					Status: room.Status,
+					Status: string(room.Status),
 				})
 			}
 		}

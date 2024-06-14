@@ -23,10 +23,20 @@ export interface RoomDetail {
   submission: string,
   status: string,
   note: string,
-  questions: Array<Question>
+  questions: Array<Question>,
   competencies: Array<Competency>
 }
 
+export interface RoomCreate {
+  id: string,
+  title: string,
+  description: string,
+  start: string,
+  end: string,
+  interview_email: string,
+  questions: Array<Question>,
+  competencies: Array<Competency>
+}
 export interface RoomReview {
   status: string,
   note: string

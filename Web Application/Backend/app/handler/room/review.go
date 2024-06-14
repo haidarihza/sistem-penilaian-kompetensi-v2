@@ -25,9 +25,15 @@ func Review(roomRepository repository.RoomRepository) http.HandlerFunc {
 
 		roomId := chi.URLParam(r, "id")
 
+		status, ok := repository.RoomStatusMapper(req.Status)
+		if !ok {
+			response.RespondError(w, response.BadRequestError("Invalid Status"))
+			return
+		}
+
 		room := &repository.Room{
 			ID:     roomId,
-			Status: req.Status,
+			Status: status,
 			Note: sql.NullString{
 				String: req.Note,
 			},

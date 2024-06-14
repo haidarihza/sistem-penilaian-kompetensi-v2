@@ -6,6 +6,25 @@ import (
 	"time"
 )
 
+type RoomStatus string
+
+const (
+	WaitingAnswer = RoomStatus("WAITING ANSWER")
+	WaitingReview = RoomStatus("WAITING REVIEW")
+	Completed = RoomStatus("COMPLETED")
+)
+
+func RoomStatusMapper(status string) (RoomStatus, bool) {
+	mapper := map[string]RoomStatus{
+		"WAITING ANSWER":   WaitingAnswer,
+		"WAITING REVIEW":   WaitingReview,
+		"COMPLETED": 				Completed,
+	}
+
+	roomStatus, ok := mapper[status]
+	return roomStatus, ok
+}
+
 type Room struct {
 	ID            string
 	InterviewerID string
@@ -15,7 +34,7 @@ type Room struct {
 	Start         string
 	End           string
 	Submission    sql.NullString
-	Status        string
+	Status        RoomStatus
 	Note          sql.NullString
 	Deleted       bool
 	CreatedAt     time.Time
@@ -30,7 +49,7 @@ type ResultCompetency map[string]map[string]float64
 type ResultQuestion map[string]string
 
 type RoomRepository interface {
-	Insert(context.Context, *Room, []string, []string) (string, error)
+	Insert(context.Context, *Room, []string, []string) error
 	SelectAllByInterviewerID(context.Context, string) ([]*Room, error)
 	SelectAllByIntervieweeID(context.Context, string) ([]*Room, error)
 	SelectOneByIDUserID(context.Context, string, string) (*Room, error)

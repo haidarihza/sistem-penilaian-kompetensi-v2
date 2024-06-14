@@ -23,22 +23,34 @@ type Room struct {
 	Submission       string                  `json:"submission,omitempty"`
 	Status           string                  `json:"status,omitempty"`
 	Note             string                  `json:"note,omitempty"`
-	IntervieweeEmail string                  `json:"interviewee_email,omitempty"`
+	IntervieweeEmail string                `json:"interviewee_email,omitempty"`
 	IntervieweeName  string                  `json:"interviewee_name,omitempty"`
-	IntervieweePhone string                  `json:"interviewee_phone,omitempty"`
+	IntervieweePhone string                  `json:"interviewer_name,omitempty"`
 	QuestionsID      []string                `json:"questions_id,omitempty"`
 	CompetenciesID   []string                `json:"competencies_id,omitempty"`
 	Questions        []question.Question     `json:"questions,omitempty"`
 	Competencies     []competency.Competency `json:"competencies,omitempty"`
 }
 
-type RoomCreateResponse struct {
-	ID string `json:"id"`
+type RoomCreate struct {
+	ID               string                  `json:"id,omitempty"`
+	Title            string                  `json:"title,omitempty"`
+	Description      string                  `json:"description,omitempty"`
+	Start            string                  `json:"start,omitempty"`
+	End              string                  `json:"end,omitempty"`
+	Submission       string                  `json:"submission,omitempty"`
+	Status           string                  `json:"status,omitempty"`
+	Note             string                  `json:"note,omitempty"`
+	IntervieweeEmail []string                `json:"interviewee_email,omitempty"`
+	QuestionsID      []string                `json:"questions_id,omitempty"`
+	CompetenciesID   []string                `json:"competencies_id,omitempty"`
+	Questions        []question.Question     `json:"questions,omitempty"`
+	Competencies     []competency.Competency `json:"competencies,omitempty"`
 }
 
 func Create(roomRepository repository.RoomRepository, userRepository repository.UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := Room{}
+		req := RoomCreate{}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			response.RespondError(w, response.BadRequestError("Incorrect Payload Format"))
 			return
@@ -50,35 +62,41 @@ func Create(roomRepository repository.RoomRepository, userRepository repository.
 			return
 		}
 
-		interviewee, err := userRepository.SelectIDByEmail(r.Context(), req.IntervieweeEmail)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				response.RespondError(w, response.NotFoundError("User not found"))
+		status, ok := repository.RoomStatusMapper("WAITING ANSWER")
+		if !ok {
+			response.RespondError(w, response.InternalServerError())
+			return
+		}
+
+		for _, email := range req.IntervieweeEmail {
+			interviewee, err := userRepository.SelectIDByEmail(r.Context(), email)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					response.RespondError(w, response.NotFoundError("User not found"))
+					return
+				}
+
+				response.RespondError(w, response.InternalServerError())
 				return
 			}
 
-			response.RespondError(w, response.InternalServerError())
-			return
+			newRoom := &repository.Room{
+				ID:            uuid.NewString(),
+				InterviewerID: interviewerCred.ID,
+				IntervieweeID: interviewee.ID,
+				Title:         req.Title,
+				Start:         req.Start,
+				End:           req.End,
+				Description:   req.Description,
+				Status:        status,
+			}
+
+			if err := roomRepository.Insert(r.Context(), newRoom, req.QuestionsID, req.CompetenciesID); err != nil {
+				response.RespondError(w, response.InternalServerError())
+				return
+			}
 		}
 
-		newRoom := &repository.Room{
-			ID:            uuid.NewString(),
-			InterviewerID: interviewerCred.ID,
-			IntervieweeID: interviewee.ID,
-			Title:         req.Title,
-			Start:         req.Start,
-			End:           req.End,
-			Description:   req.Description,
-		}
-
-		newID, err := roomRepository.Insert(r.Context(), newRoom, req.QuestionsID, req.CompetenciesID)
-		if err != nil {
-			response.RespondError(w, response.InternalServerError())
-			return
-		}
-
-		response.Respond(w, http.StatusCreated, RoomCreateResponse{
-			ID: newID,
-		})
+		response.RespondOK(w)
 	}
 }
