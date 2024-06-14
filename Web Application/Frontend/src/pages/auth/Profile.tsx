@@ -6,87 +6,26 @@ import { ApiContext } from "../../utils/context/api";
 import { ApiError } from "../../interface/api";
 import { EmailIcon, PhoneIcon, EditIcon } from "@chakra-ui/icons";
 import ModalForm from "../../components/ModalForm";
-import { FormField } from "../../interface/util";
+import { ProfileData, UpdatePassword } from "../../interface/auth";
 import ToastModal from "../../components/ToastModal";
 import { useToast } from "@chakra-ui/react";
+import ProfileModal from "./ProfileModal";
+import ChangePasswordModal from "./ChangePasswordModal";
+
 
 const Profile = () => {
   const apiContext = useContext(ApiContext);
   const toast = useToast();
-
-  const [name, setName] = useState<string>("");
-  const isErrorName = name === "";
-  const [phone, setPhone] = useState<string>("");
-  const isErrorPhone = phone === "";
-  const [email, setEmail] = useState<string>("");
-
-  const [currentPassword, setCurrentPassword] = useState<string>("");
-  const isErrorCurrent = currentPassword === "";
-  const [newPassword, setNewPassword] = useState<string>("");
-  const isErrorNew = newPassword.length < 8;
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const isErrorConfirm = confirmPassword !== newPassword;
+  const [profileData, setProfileData] = useState<ProfileData>({name: "", phone: "", email: ""});
+  const [updatePasswordData, setUpdatePasswordData] = useState<UpdatePassword>({current_password: "", new_password: "", confirm_password: ""});
 
   const { isOpen:IsOpenProfile, onOpen:onOpenProfile, onClose:onCloseProfile } = useDisclosure();
   const { isOpen:IsOpenPassword, onOpen:onOpenPassword, onClose:onClosePassword } = useDisclosure();
-
-  const profileFields: Array<FormField> = [
-    {
-      isInvalid: isErrorName,
-      label: "Nama",
-      value: name,
-      setValue: setName,
-      placeholder: "Nama",
-      invalidMessage: "Nama wajib diisi"
-    },
-    {
-      isInvalid: isErrorPhone,
-      label: "Nomor Telepon",
-      value: phone,
-      setValue: setPhone,
-      placeholder: "Nomor Telepon",
-      invalidMessage: "Nomor Telepon wajib diisi"
-    },
-  ];
-
-  const passwordFields: Array<FormField> = [
-    {
-      isInvalid: isErrorCurrent,
-      label: "Password saat ini",
-      type: "password",
-      value: currentPassword,
-      setValue: setCurrentPassword,
-      placeholder: "*********",
-      invalidMessage: "Isi password saat ini"
-    },
-    {
-      isInvalid: isErrorNew,
-      label: "Password baru",
-      type: "password",
-      value: newPassword,
-      setValue: setNewPassword,
-      placeholder: "*********",
-      invalidMessage: "Panjang password harus lebih dari 8"
-    },
-    {
-      isInvalid: isErrorConfirm,
-      label: "Konfirmasi password baru",
-      type: "password",
-      value: confirmPassword,
-      setValue: setConfirmPassword,
-      placeholder: "*********",
-      invalidMessage: "Password tidak sesuai"
-    },
-  ];
   
   const fetch = async () => {
     try {
       const prof = await profile(apiContext.axios);
-      setName(prof.name);
-      setPhone(prof.phone);
-      if (prof.email) {
-        setEmail(prof.email);
-      }
+      setProfileData(prof);
     } catch(e) {
       if (e instanceof ApiError) {
         ToastModal(toast, "Error!", e.message, "error");
@@ -102,7 +41,7 @@ const Profile = () => {
 
   const handleSubmitProfile = async () => {
     try {
-      await updateProfile(apiContext.axios, name, phone);
+      await updateProfile(apiContext.axios, profileData.name, profileData.phone);
       ToastModal(toast, "Success!", "Profile berhasil diubah", "success");
       onCloseProfile();
     } catch (e) {
@@ -116,13 +55,10 @@ const Profile = () => {
 
   const handleSubmitPassword = async () => {
     try {
-      if (currentPassword === "" || newPassword === "" || confirmPassword === "") {
+      if (updatePasswordData.new_password !== updatePasswordData.confirm_password) {
         return;
       }
-      if (newPassword !== confirmPassword) {
-        return;
-      }
-      await updatePassword(apiContext.axios, currentPassword, newPassword);
+      await updatePassword(apiContext.axios, updatePasswordData.current_password, updatePasswordData.new_password);
       ToastModal(toast, "Success!", "Password berhasil diubah", "success");
       onClosePassword();
     } catch (e) {
@@ -136,20 +72,22 @@ const Profile = () => {
   
   return (
     <Layout>
-      <ModalForm
+      <ProfileModal 
         isOpen={IsOpenProfile} 
         onClose={onCloseProfile} 
         handleSubmit={handleSubmitProfile}
-        title="Ubah Profile"
-        fields={profileFields}
+        title="Ubah Profil"
+        profileData={profileData}
+        setProfileData={setProfileData}
         buttonContent="Ubah"
       />
-      <ModalForm 
+      <ChangePasswordModal 
         isOpen={IsOpenPassword} 
         onClose={onClosePassword} 
         handleSubmit={handleSubmitPassword}
         title="Ubah Password"
-        fields={passwordFields}
+        updatePasswordData={updatePasswordData}
+        setUpdatePasswordData={setUpdatePasswordData}
         buttonContent="Ubah"
       />
       <Container boxShadow="2xl" p="6" rounded="md" bg="white" mx="auto" mt="4">
@@ -157,15 +95,15 @@ const Profile = () => {
           <Avatar size="2xl" mr="2" bg="main_blue"/>
         </Box>
         <Box display="flex" my="auto" mr="5" justifyContent="center" mb="6">
-          <Text as="h1" fontSize="2xl" fontWeight="semibold" my="auto">{name}</Text>
+          <Text as="h1" fontSize="2xl" fontWeight="semibold" my="auto">{profileData.name}</Text>
         </Box>
         <Box display="flex" alignItems="center" mb="4">
           <PhoneIcon color="main_blue" boxSize="6" mr="4"/>
-          <Text as="p" fontSize="lg">{phone}</Text>
+          <Text as="p" fontSize="lg">{profileData.phone}</Text>
         </Box>
         <Box display="flex" alignItems="center" mb="4">
           <EmailIcon color="main_blue" boxSize="6" mr="4"/>
-          <Text as="p" fontSize="lg">{email}</Text>
+          <Text as="p" fontSize="lg">{profileData.email}</Text>
         </Box>
         <Box mt="3" display="flex" flexDir="row-reverse">
           <Button bg="main_blue" color="white" _hover={{ bg: "second_blue" }} onClick={onOpenProfile}>

@@ -15,3 +15,9 @@ export interface ProfileData {
   phone: string,
   email?: string
 }
+
+export interface UpdatePassword {
+  current_password: string,
+  new_password: string,
+  confirm_password: string,
+}

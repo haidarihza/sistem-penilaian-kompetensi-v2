@@ -62,4 +62,5 @@ type UserRepository interface {
 	SelectPasswordByID(context.Context, string) (*User, error)
 	Update(context.Context, *User) error
 	UpdatePassword(context.Context, *User) error
+	UpdateStatus(context.Context, *User) error
 }

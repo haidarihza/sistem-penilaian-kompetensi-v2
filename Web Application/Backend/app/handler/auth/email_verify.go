@@ -37,7 +37,7 @@ func VerifyEmail(userRepository repository.UserRepository, jwt token.JWT) http.H
 			Status: status,
 		}
 
-		if err := userRepository.Update(r.Context(), updatedUser); err != nil {
+		if err := userRepository.UpdateStatus(r.Context(), updatedUser); err != nil {
 			response.RespondError(w, response.InternalServerError())
 			return
 		}

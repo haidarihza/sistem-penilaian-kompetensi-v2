@@ -1,7 +1,7 @@
 import Layout from "../../components/Layout";
 import { useContext, useEffect, useState } from "react";
 import { ApiContext } from "../../utils/context/api";
-import { createQuestion, deleteQuestion, getAllQuestion, getOneQuestion, updateQuestion, getQuestionLabelOptions } from "../../api/question";
+import { createQuestion, deleteQuestion, getAllQuestion, updateQuestion, getQuestionLabelOptions } from "../../api/question";
 import { Question, QuestionLabel, QuestionLabelOptions } from "../../interface/question";
 import { ApiError } from "../../interface/api";
 import {
@@ -20,9 +20,8 @@ import {
   useDisclosure,
   IconButton,
   useToast,
-  Icon,
 } from "@chakra-ui/react"
-import { EditIcon, DeleteIcon, SettingsIcon, SmallCloseIcon } from "@chakra-ui/icons";
+import { EditIcon, DeleteIcon, SmallCloseIcon } from "@chakra-ui/icons";
 import QuestionModal from "./QuestionModal";
 import LabelFilterPopover from "./LabelFilterPopover";
 import ToastModal from "../../components/ToastModal";

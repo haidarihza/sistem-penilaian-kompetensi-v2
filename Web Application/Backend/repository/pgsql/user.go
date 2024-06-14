@@ -35,6 +35,7 @@ var userQueries = map[string]string{
 	userSelectPasswordByID:          userSelectPasswordByIDQuery,
 	userUpdate:                      userUpdateQuery,
 	userUpdatePassword:              userUpdatePasswordQuery,
+	userUpdateStatus:                userUpdateStatusQuery,
 }
 
 const userInsert = "userInsert"
@@ -147,8 +148,7 @@ const userUpdate = "userUpdate"
 const userUpdateQuery = `UPDATE "users" SET
 	name = $2,
 	phone = $3,
-	status = $4,
-	updated_at = $5
+	updated_at = $4
 	WHERE id = $1
 `
 
@@ -161,7 +161,7 @@ func (r *userRepository) Update(ctx context.Context, user *repository.User) erro
 
 	updatedAt := time.Now().UTC()
 	res, err := tx.StmtContext(ctx, r.ps[userUpdate]).ExecContext(ctx,
-		user.ID, user.Name, user.Phone, user.Status, updatedAt,
+		user.ID, user.Name, user.Phone, updatedAt,
 	)
 	if err != nil {
 		return err
@@ -184,7 +184,8 @@ func (r *userRepository) Update(ctx context.Context, user *repository.User) erro
 
 const userUpdatePassword = "userUpdatePassword"
 const userUpdatePasswordQuery = `UPDATE "users" SET
-	password = $2
+	password = $2,
+	updated_at = $3
 	WHERE id = $1
 `
 
@@ -195,8 +196,46 @@ func (r *userRepository) UpdatePassword(ctx context.Context, user *repository.Us
 	}
 	defer tx.Rollback()
 
+	updatedAt := time.Now().UTC()
 	res, err := tx.StmtContext(ctx, r.ps[userUpdatePassword]).ExecContext(ctx,
-		user.ID, user.Password,
+		user.ID, user.Password, updatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	updatedRows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if updatedRows != 1 {
+		return sql.ErrNoRows
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+const userUpdateStatus = "userUpdateStatus"
+const userUpdateStatusQuery = `UPDATE "users" SET
+	status = $2,
+	updated_at = $3
+	WHERE id = $1
+`
+
+func (r *userRepository) UpdateStatus(ctx context.Context, user *repository.User) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	updatedAt := time.Now().UTC()
+	res, err := tx.StmtContext(ctx, r.ps[userUpdateStatus]).ExecContext(ctx,
+		user.ID, user.Status, updatedAt,
 	)
 	if err != nil {
 		return err
