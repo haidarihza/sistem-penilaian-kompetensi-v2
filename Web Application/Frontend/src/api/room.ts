@@ -8,7 +8,7 @@ export async function createRoom(
   description: string,
   start: string,
   end: string,
-  interviewee_email: string,
+  interviewee_email: Array<string>,
   questions_id: Array<string>,
   competencies_id: Array<string>,
 ): Promise<string> {

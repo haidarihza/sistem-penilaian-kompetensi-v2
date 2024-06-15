@@ -144,3 +144,20 @@ export async function verifyEmail(
      throw new ApiError("Something Went Wrong");
    }
 }
+
+export async function getAllEmails(
+  axios: AxiosInstance
+): Promise<Array<string>> {
+  try {
+    const res = await axios.get("/auth/all-email");
+
+    return res.data.data as Array<string>;
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}

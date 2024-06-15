@@ -8,13 +8,12 @@ import { Box,
   Button,
   Flex,
   FormControl,
+  FormErrorMessage,
   FormLabel,
   IconButton,
   Input,
   Table,
   TableContainer,
-  Tbody,
-  Td,
   Text,
   Textarea,
   Th,
@@ -23,14 +22,22 @@ import { Box,
   useDisclosure,
   useToast
  } from "@chakra-ui/react";
+ import {
+  AutoComplete,
+  AutoCompleteInput,
+  AutoCompleteItem,
+  AutoCompleteList,
+  AutoCompleteTag,
+} from "@choc-ui/chakra-autocomplete";
 import { createRoom } from "../../api/room";
 import { ApiError } from "../../interface/api";
 import { Question } from "../../interface/question";
 import { Competency } from "../../interface/competency";
 import { RoomCreate } from "../../interface/room";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import { AddIcon } from "@chakra-ui/icons";
 import { getAllQuestion } from "../../api/question";
 import { getAllCompetency } from "../../api/competency";
+import { getAllEmails } from "../../api/auth"; 
 import ToastModal from "../../components/ToastModal";
 import CompetenciesListModal from "./CompetenciesListModal";
 import QuestionsListModal from "./QuestionsListModal";
@@ -50,7 +57,7 @@ const Detail = () => {
     description: "",
     start: "",
     end: "",
-    interview_email: "",
+    interview_email: [],
     questions: [] as Array<Question>,
     competencies: [] as Array<Competency>
   });
@@ -61,6 +68,8 @@ const Detail = () => {
 
   const [questionCollections, setQuestionCollections] = useState<Array<Question>>([]);
   const [competencyCollections, setCompetencyCollections] = useState<Array<Competency>>([]);
+  const [emailList, setEmailList] = useState<Array<string>>([]);
+  const [filteredEmailList, setFilteredEmailList] = useState<Array<string>>([]);
 
   const role = authContext.auth?.role!;
   
@@ -89,6 +98,20 @@ const Detail = () => {
       }
     }
   }
+
+  const fetchEmails = async () => {
+    try {
+      const emails = await getAllEmails(apiContext.axios);
+      setEmailList(emails);
+      setFilteredEmailList(emails);
+    } catch(e) {
+      if (e instanceof ApiError) {
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada sistem", "error");
+      }
+    }
+  }
   
   useEffect(() => {
     if (role !== "INTERVIEWER") {
@@ -99,7 +122,17 @@ const Detail = () => {
   useEffect(() => {
     fetchQ();
     fetchC();
+    fetchEmails();
   }, []);
+
+  useEffect(() => {
+    handleFilterEmail();
+  }, [room.interview_email]);
+
+  const handleFilterEmail = () => {
+    // set filteredemaillist that not containe email in room.interview_email
+    setFilteredEmailList(emailList.filter((email) => !room.interview_email.includes(email)));
+  }
 
   const handleClickAddQuestion = () => {
     onOpenQuestion();
@@ -132,6 +165,11 @@ const Detail = () => {
   const handleSubmit = async () => {
     try {
       setIsSubmit(true);
+      if (room.title === "" || room.description === "" || room.start === "" || room.end === "" ||
+          room.interview_email.length === 0 || room.questions.length === 0 || room.competencies.length === 0) {
+        ToastModal(toast, "Error!", "Semua kolom harus diisi", "error");
+        return;
+      }
       const questionsId = [];
       for (var q of room.questions) {
         questionsId.push(q.id);
@@ -186,22 +224,54 @@ const Detail = () => {
           <FormControl isInvalid={isSubmit && room.title === ""} mb="4">
             <FormLabel>Judul</FormLabel>
             <Input value={room.title} onChange={e => setRoom({...room, title: e.target.value})} placeholder="Judul Ruangan" mt="-2"/>
+            <FormErrorMessage>Judul harus diisi</FormErrorMessage>
           </FormControl>
           <FormControl isInvalid={isSubmit && room.description === ""} mb="4">
             <FormLabel>Deskripsi</FormLabel>
             <Textarea value={room.description} onChange={e => setRoom({...room, description: e.target.value})} placeholder="Deskripsi Ruangan" mt="-2"/>
+            <FormErrorMessage>Deskripsi harus diisi</FormErrorMessage>
           </FormControl>
           <FormControl isInvalid={isSubmit && room.start === ""} mb="4">
             <FormLabel>Waktu Mulai</FormLabel>
             <Input type="datetime-local" value={room.start} onChange={e => setRoom({...room, start: e.target.value})} placeholder="Waktu Mulai" />
+            <FormErrorMessage>Waktu Mulai harus diisi</FormErrorMessage>
           </FormControl>
           <FormControl isInvalid={isSubmit && room.end === ""} mb="4">
             <FormLabel>Waktu Selesai</FormLabel>
             <Input type="datetime-local" value={room.end} onChange={e => setRoom({...room, end: e.target.value})} placeholder="Waktu Selesai" />
+            <FormErrorMessage>Waktu Selesai harus diisi</FormErrorMessage>
           </FormControl>
-          <FormControl isInvalid={isSubmit && room.interview_email === ""} mb="4">
+          <FormControl isInvalid={isSubmit && room.interview_email.length === 0} mb="4">
             <FormLabel>Email Kandidat</FormLabel>
-            <Input value={room.interview_email} onChange={e => setRoom({...room, interview_email: e.target.value})} placeholder="Email Kandidat" mt="-2"/>
+            <AutoComplete
+              multiple
+              openOnFocus
+              onChange={vals => setRoom({...room, interview_email: vals})}
+            >
+              <AutoCompleteInput
+                placeholder="Email Kandidat"
+                hidePlaceholder={true}>
+                {({ tags }) =>
+                tags.map((tag, tid) => (
+                  <AutoCompleteTag
+                    key={tid}
+                    label={tag.label}
+                    onRemove={tag.onRemove}
+                    bg="main_blue"
+                    color="white"
+                  />
+                ))
+              }
+              </AutoCompleteInput>
+              <AutoCompleteList>
+                {filteredEmailList.map((val) => (
+                  <AutoCompleteItem key={val} value={val} _focus={{ bg: "main_blue", color: "white" }}> 
+                    {val}
+                  </AutoCompleteItem>
+                ))}
+              </AutoCompleteList>
+            </AutoComplete>
+            <FormErrorMessage>Email Kandidat harus diisi</FormErrorMessage>
           </FormControl>
         </Box>
         {/* ************************************* */}

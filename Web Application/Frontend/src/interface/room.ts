@@ -33,7 +33,7 @@ export interface RoomCreate {
   description: string,
   start: string,
   end: string,
-  interview_email: string,
+  interview_email: Array<string>,
   questions: Array<Question>,
   competencies: Array<Competency>
 }
