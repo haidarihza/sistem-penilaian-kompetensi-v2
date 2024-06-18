@@ -5,6 +5,7 @@ export interface RoomAll {
   id: string,
   title: string,
   interviewee_name: string,
+  interviewee_email: string,
   start: string,
   end: string,
   submission: string,

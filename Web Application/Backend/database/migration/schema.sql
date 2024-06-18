@@ -99,3 +99,13 @@ CREATE TABLE IF NOT EXISTS questions_labels(
   FOREIGN KEY(competency_id) REFERENCES competencies(id),
   FOREIGN KEY(question_id) REFERENCES questions(id)
 );
+
+CREATE TABLE IF NOT EXISTS feedback_results(
+  id UUID PRIMARY KEY,
+  transcript TEXT NOT NULL,
+  competency_id UUID,
+  status TEXT NOT NULL,
+  label_result TEXT,
+  label_feedback TEXT,
+  FOREIGN KEY(competency_id) REFERENCES competencies(id)
+);

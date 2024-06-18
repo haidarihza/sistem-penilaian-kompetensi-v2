@@ -111,3 +111,19 @@ export async function reviewRoom(
     throw new ApiError("Something Went Wrong");
   }
 }
+
+export async function deleteRoom(
+  axios: AxiosInstance,
+  id: string
+): Promise<void> {
+  try {
+    await axios.delete(`/room/${id}`);
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}

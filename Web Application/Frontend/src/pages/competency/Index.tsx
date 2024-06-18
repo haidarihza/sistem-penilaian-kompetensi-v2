@@ -194,8 +194,8 @@ const Index = () => {
                     </Text>
                   </Td>
                   <Td>
-                    <IconButton aria-label="Edit" mr="2" icon={<EditIcon />} onClick={() => {handleClickEdit(val.id)}} />
-                    <IconButton aria-label="Delete" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
+                    <IconButton aria-label="Edit" mr="2" bg="main_blue" color="white" icon={<EditIcon />} onClick={() => {handleClickEdit(val.id)}} />
+                    <IconButton aria-label="Delete" bg="main_blue" color="white" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
                   </Td>
                 </Tr>
               ))}

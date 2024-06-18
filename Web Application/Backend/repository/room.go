@@ -11,6 +11,8 @@ type RoomStatus string
 const (
 	WaitingAnswer = RoomStatus("WAITING ANSWER")
 	WaitingReview = RoomStatus("WAITING REVIEW")
+	Accepted = RoomStatus("ACCEPTED")
+	Rejected = RoomStatus("REJECTED")
 	Completed = RoomStatus("COMPLETED")
 )
 
@@ -19,6 +21,8 @@ func RoomStatusMapper(status string) (RoomStatus, bool) {
 		"WAITING ANSWER":   WaitingAnswer,
 		"WAITING REVIEW":   WaitingReview,
 		"COMPLETED": 				Completed,
+		"ACCEPTED":					Accepted,
+		"REJECTED":					Rejected,
 	}
 
 	roomStatus, ok := mapper[status]
@@ -60,4 +64,5 @@ type RoomRepository interface {
 	GetResultCompetencies(context.Context, string) (ResultCompetency, error)
 	GetResultQuestions(context.Context, string) (ResultQuestion, error)
 	Review(context.Context, *Room) error
+	DeleteByID(context.Context, string) error
 }

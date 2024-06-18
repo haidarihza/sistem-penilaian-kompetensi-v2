@@ -91,7 +91,7 @@ const CompetencyModal = ({
             })})} placeholder="Deskripsi" mt="-2"/>
           </FormControl>
         </Box>
-        <IconButton aria-label="Add" icon={<DeleteIcon />} onClick={() => handleDeleteLevel(idx)} />
+        <IconButton aria-label="Delete" bg="main_blue" color="white" icon={<DeleteIcon />} onClick={() => handleDeleteLevel(idx)} />
       </Box>
       ))}
       <Button

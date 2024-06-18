@@ -99,7 +99,7 @@ const QuestionModal = ({
         <FormLabel>Label</FormLabel>
         <Box display="flex" flexDir="row" p="0" flexWrap="wrap">
         {question.labels.map((val, idx) => (
-        <Box key={idx} display="flex" alignItems="center" w="fit-content" rounded="md" bg="main_blue" mr="2" mb="2">
+        <Box key={idx} display="flex" alignItems="center" w="fit-content" rounded="md" bg="second_blue" mr="2" mb="2">
           <Text fontSize="sm" fontWeight="normal" color="white" ml="1">
             {labelOptions.find((label) => label.id === val.competency_id)?.competency}
           </Text>

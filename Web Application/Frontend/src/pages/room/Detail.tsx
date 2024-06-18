@@ -13,7 +13,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
   useDisclosure,
@@ -28,19 +27,23 @@ import {
   FormControl,
   FormLabel,
   Textarea, 
+  Heading,
+  Stack,
+  Icon,
+  Divider,
 } from "@chakra-ui/react";
 import { Question } from "../../interface/question";
 import Webcam from "react-webcam";
 import { AuthContext } from "../../utils/context/auth";
+import { CalendarIcon } from "@chakra-ui/icons";
+import { MdAccessTimeFilled } from "react-icons/md";
+import InterviewModal from "./InterviewModal";
 
 const Detail = () => {
   const params = useParams();
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
   const [data, setData] = useState<RoomDetail>({} as RoomDetail);
-  const [current, setCurrent] = useState<Question>({} as Question);
-  const questionIdx = useRef<number>(0);
-  const [timer, setTimer] = useState<number>(0);
   const [note, setNote] = useState<string>("");
 
   const [question, setQuestion] = useState<string>("");
@@ -51,30 +54,16 @@ const Detail = () => {
   const { isOpen:isOpenDetail, onOpen:onOpenDetail, onClose:onCloseDetail } = useDisclosure();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const tick = () => {
-    if (timer === 0) {
-      handleStopCaptureClick();
-    } else {
-      setTimer(timer-1);
-    }
-  }
-
   const fetch = async () => {
     try {
       const rooms = await getOneRoom(apiContext.axios, params.id!);
       setData(rooms);
-      setCurrent(rooms.questions[questionIdx.current]);
     } catch(e) {
       if (e instanceof ApiError) {
         alert(e.message);
       }
     }
   }
-
-  useEffect(() => {
-    const timerId = setInterval(() => tick(), 1000);
-    return () => clearInterval(timerId);
-  });
 
   useEffect(() => {
     fetch();
@@ -91,58 +80,6 @@ const Detail = () => {
     onOpenDetail();
   }
 
-  const webcamRef = useRef<Webcam>({} as Webcam);
-  const mediaRecorderRef = useRef<MediaRecorder>({} as MediaRecorder);
-  const [capturing, setCapturing] = useState(false);
-  const [recordedChunks, setRecordedChunks] = useState<Array<BlobPart>>([] as Array<BlobPart>);
-
-  const handleDataAvailable = useCallback(
-    ({ data } : { data: Blob }) => {
-      if (data.size > 0) {
-        setRecordedChunks((prev) => prev.concat(data));
-      }
-    },
-    [setRecordedChunks]
-  );
-
-  const handleStartCaptureClick = useCallback(() => {
-    setCapturing(true);
-    mediaRecorderRef.current = new MediaRecorder(webcamRef.current.stream!, {
-      mimeType: "video/webm",
-    });
-    mediaRecorderRef.current.addEventListener(
-      "dataavailable",
-      handleDataAvailable
-    );
-    mediaRecorderRef.current.start();
-  }, [webcamRef, setCapturing, mediaRecorderRef, handleDataAvailable]);
-
-  const handleStopCaptureClick = useCallback(() => {
-    mediaRecorderRef.current.stop();
-    setCapturing(false);
-  }, [mediaRecorderRef, setCapturing]);
-
-  const handleSubmit = useCallback(() => {
-    if (recordedChunks.length) {
-      const blob = new Blob(recordedChunks, {
-        type: "video/webm",
-      });
-
-      answer(blob);
-      setRecordedChunks([]);
-    }
-  }, [recordedChunks]);
-
-  const answer = async (value : Blob) => {
-    try {
-      await answerQuestion(apiContext.axios, data.id, data.questions[questionIdx.current-1].id, value);
-    } catch(e) {
-      if (e instanceof ApiError) {
-        alert(e.message);
-      }
-    }
-  }
-
   const submitReview = async (status: string) => {
     try {
       await reviewRoom(apiContext.axios, params.id!, status, note);
@@ -154,21 +91,23 @@ const Detail = () => {
     }
   }
 
-  const videoConstraints = {
-    width: 1080,
-    height: 540,
-    facingMode: "user",
+  const formatDateTime = (dateTimeString: string) => {
+    const date = new Date(dateTimeString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
-  useEffect(() => {
-    if (recordedChunks.length > 0 && !capturing) {
-      questionIdx.current += 1
-      if (questionIdx.current < data.questions.length) {
-        setCurrent(data.questions[questionIdx.current]);
-      }
-      handleSubmit();
-    }
-  }, [recordedChunks])
+  const countTotalTime = (questions: Question[]) => {
+    let total = 0;
+    questions?.forEach((val) => {
+      total += val.duration_limit;
+    });
+    return total;
+  }
 
   return (
     <Layout>
@@ -185,7 +124,6 @@ const Detail = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
-      <Text as="h1" fontSize="2xl" fontWeight="semibold" mb="5">{data.title}</Text>
       {role === "INTERVIEWER" ? (
         <Box>
           <Text as="h2" fontSize="xl" fontWeight="semibold">Informasi Umum</Text>
@@ -273,13 +211,33 @@ const Detail = () => {
           )}
         </Box>
       ) : (
+        // INTERVIEWEE PART
         <Box bg="white" rounded="md" p="3">
-          <Text as="h3" fontSize="md">{data.description}</Text>
-          {data.status === "Menunggu Jawaban" && (
-            <Button bg="#4099f8" color="white" w="10%" mt="5" onClick={onOpen}>Mulai</Button>
-          )}
-          {data.status === "Menunggu Review" && (
-            <Box>
+          <Heading mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
+            <Text fontWeight="bold" fontSize="2xl">{data.title}</Text>
+            <Box bg="main_beige" color="main_blue" rounded="md">
+              <Text fontSize="lg" p="2" fontWeight="extrabold">{data.status}</Text>
+            </Box>
+          </Heading>
+          <Text as="h3" fontSize="md" mb="6">{data.description}</Text>
+          <Divider mb="6"/>
+          <Stack spacing="2">
+              <Box display="flex" flexDir="row" alignItems="center" mb="4">
+                <Icon color="main_blue" mr="4" boxSize="25px" as={CalendarIcon} />
+                <Box display="flex" flexDir="column">
+                  <Text fontSize="sm" fontWeight="normal">Start: {formatDateTime(data.start)}</Text>
+                  <Text fontSize="sm" fontWeight="normal">End: {formatDateTime(data.end)}</Text>
+                </Box>
+              </Box>
+              <Box display="flex" flexDir="row" alignItems="center" mb="4">
+                <Icon color="main_blue" mr="4" boxSize="25px" as={MdAccessTimeFilled} />
+                <Box display="flex" flexDir="column">
+                  <Text fontSize="sm" fontWeight="normal">~ {countTotalTime(data.questions)} menit</Text>
+                </Box>
+              </Box>
+          </Stack>
+          {data.status === "WAITING REVIEW" && (
+            <Box display="flex" alignItems="center" flexDir="column">
               <Text fontSize="xl" mt="5" fontWeight="semibold">
                 Selamat Anda telah menyelesaikan interview!
               </Text>
@@ -288,69 +246,21 @@ const Detail = () => {
               </Text>
             </Box>
           )}
-          {(data.status === "Diterima" || "Ditolak") && (
-            <Box>
-             <Text as="h2" fontSize="xl" fontWeight="semibold" mt="5">Status Kandidat</Text>
-             <Text as="h3" fontSize="md">{data.status}</Text>
-             <Text as="h3" fontSize="sm">Note: {data.note}</Text>
-           </Box>
+          <Heading mt="6" fontSize="xl" fontWeight="bold">Catatan</Heading>
+          <Text fontSize="lg">{data.note}</Text>
+          {data.status === "WAITING ANSWER" && (
+            <Box display="flex" flexDir="row" justifyContent="flex-end">
+              <Button bg="main_blue" color="white" mt="5" onClick={onOpen}>Mulai Wawancara</Button>
+            </Box>
           )}
         </Box>
       )}
-      <Modal closeOnOverlayClick={false} isOpen={isOpen} onClose={onClose} size="4xl">
-        <ModalOverlay />
-        {
-          data.questions && questionIdx.current < data.questions.length ? (
-            <ModalContent w="100%">
-              <ModalHeader>Mulai Interview!</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody pb={6}>
-                <Text as="h1">{current.question}</Text>
-                {!capturing && <Text as="h2" fontSize="sm">Batas waktu menjawab: {current.duration_limit} menit</Text>}
-                {capturing && <Text as="h2" fontSize="sm">Sisa Waktu (detik): {timer}</Text>}
-                <Webcam
-                  height={540}
-                  width={720}
-                  audio={true}
-                  muted={true}
-                  mirrored={true}
-                  ref={webcamRef}
-                  videoConstraints={videoConstraints}
-                />
-                {capturing ? (
-                  <Button bg="#4099f8" color="white" onClick={handleStopCaptureClick}>Stop</Button>
-                ) : (
-                  <Button bg="#4099f8" color="white" onClick={() => {
-                    setTimer(current.duration_limit * 60);
-                    handleStartCaptureClick();
-                  }}>Mulai</Button>
-                )}
-              </ModalBody>
-    
-              <ModalFooter>
-                <Button bg="#4099f8" color="white">
-                  Lanjut
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          )
-          : (
-            <ModalContent w="100%">
-              <ModalHeader>Mulai Interview!</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody pb={6}>
-                <Text as="h1">Anda telah menyelesaikan interview!</Text>
-              </ModalBody>
-    
-              <ModalFooter>
-                <Button bg="#4099f8" color="white">
-                  Tutup
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          )
-        }
-      </Modal>
+      <InterviewModal 
+        isOpen={isOpen} 
+        onClose={onClose} 
+        questions={data.questions} 
+        room={data}
+      />
     </Layout>
   )
 }

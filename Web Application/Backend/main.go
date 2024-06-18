@@ -107,6 +107,7 @@ func main() {
 		r.Post("/{roomId}/{questionId}", roomhandler.Answer(roomRepository, competencyRepository, cfg.APIHost, cfg.SpeechToTextHost, cfg.SummarizationHost))
 		r.With(roleInterviewerMiddleware).Post("/", roomhandler.Create(roomRepository, userRepository))
 		r.With(roleInterviewerMiddleware).Post("/{id}/review", roomhandler.Review(roomRepository))
+		r.With(roleInterviewerMiddleware).Delete("/{id}", roomhandler.Delete(roomRepository))
 	})
 
 	log.Printf("Server is listening on port %s", cfg.APIPort)

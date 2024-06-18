@@ -212,7 +212,7 @@ const Index = () => {
                   <Td textAlign="center">
                     <Box display="flex" flexDir="row" p="0" flexWrap="wrap" justifyContent="center">
                       {val.labels.map((val, idx) => (
-                      <Box key={idx} display="flex" alignItems="center" w="fit-content" rounded="md" bg="main_blue" mr="2" mb="2">
+                      <Box key={idx} display="flex" alignItems="center" w="fit-content" rounded="md" bg="second_blue" mr="2" mb="2">
                         <Text fontSize="sm" fontWeight="normal" color="white" pl="1" pr="1">
                           {labelOptions.find((label) => label.id === val.competency_id)?.competency}
                         </Text>
@@ -221,8 +221,8 @@ const Index = () => {
                     </Box>
                   </Td>
                   <Td>
-                    <IconButton aria-label="Edit" mr="2" icon={<EditIcon />} onClick={() => handleClickEdit(val.id)} />
-                    <IconButton aria-label="Delete" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
+                    <IconButton aria-label="Edit" mr="2" bg="main_blue" color="white" icon={<EditIcon />} onClick={() => handleClickEdit(val.id)} />
+                    <IconButton aria-label="Delete" bg="main_blue" color="white" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
                   </Td>
                 </Tr>
               ))}

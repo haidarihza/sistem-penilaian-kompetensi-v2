@@ -42,6 +42,10 @@ var roomQueries = map[string]string{
 	roomGetResultCompetencies:    roomGetResultCompetenciesQuery,
 	roomGetResultQuestions:       roomGetResultQuestionsQuery,
 	roomReview:                   roomReviewQuery,
+	roomDeleteByID:								roomDeleteByIDQuery,
+	roomCompetenciesDelete:				roomCompetenciesDeleteQuery,
+	roomQuestionsDelete:					roomQuestionsDeleteQuery,
+	roomResultCompetenciesDelete:	roomResultCompetenciesDeleteQuery,
 }
 
 const roomInsert = "roomInsert"
@@ -113,7 +117,7 @@ func (r *roomRepository) Insert(
 
 const roomSelectAllByInterviewerID = "roomSelectAllByInterviewerID"
 const roomSelectAllByInterviewerIDQuery = `SELECT
-	r.id, r.title, u.name, r."end", r.submission, r.status
+	r.id, r.title, u.name, u.email, r."start", r."end", r.submission, r.status
 	FROM rooms r
 	INNER JOIN "users" u ON r.interviewee_id = u.id
 	WHERE r.interviewer_id = $1 AND r.deleted = false
@@ -131,7 +135,7 @@ func (r *roomRepository) SelectAllByInterviewerID(ctx context.Context, id string
 		room := &repository.Room{}
 		interviewee := &repository.User{}
 		err := rows.Scan(&room.ID, &room.Title,
-			&interviewee.Name, &room.End,
+			&interviewee.Name, &interviewee.Email, &room.Start, &room.End,
 			&room.Submission, &room.Status)
 		if err != nil {
 			return nil, err
@@ -434,3 +438,54 @@ func (r *roomRepository) Review(ctx context.Context, room *repository.Room) erro
 
 	return nil
 }
+
+const roomQuestionsDelete = "roomQuestionsDelete"
+const roomQuestionsDeleteQuery = `DELETE FROM ONLY rooms_has_questions
+	WHERE room_id = $1
+`
+
+const roomCompetenciesDelete = "roomComptenciesDelete"
+const roomCompetenciesDeleteQuery = `DELETE FROM ONLY rooms_has_competencies
+	WHERE room_id = $1
+`
+
+const roomResultCompetenciesDelete = "roomResultCompetenciesDelete"
+const roomResultCompetenciesDeleteQuery = `DELETE FROM ONLY results_competencies
+	WHERE room_id = $1
+`
+
+const roomDeleteByID = "roomDeleteByID"
+const roomDeleteByIDQuery = `UPDATE rooms SET
+	deleted = true,
+	deleted_at = $2
+	WHERE id = $1
+`
+
+func (r *roomRepository) DeleteByID(ctx context.Context, id string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.StmtContext(ctx, r.ps[roomDeleteByID]).ExecContext(ctx, id, time.Now().UTC())
+	if err != nil {
+		return err
+	}
+	_, err = tx.StmtContext(ctx, r.ps[roomQuestionsDelete]).ExecContext(ctx, id)
+	if err != nil {
+		return err
+	}
+	_, err = tx.StmtContext(ctx, r.ps[roomCompetenciesDelete]).ExecContext(ctx, id)
+	if err != nil {
+		return err
+	}
+	_, err = tx.StmtContext(ctx, r.ps[roomResultCompetenciesDelete]).ExecContext(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
