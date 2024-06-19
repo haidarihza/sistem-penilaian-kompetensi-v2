@@ -6,6 +6,7 @@ import (
 	competencyhandler "interview/summarization/app/handler/competency"
 	questionhandler "interview/summarization/app/handler/question"
 	roomhandler "interview/summarization/app/handler/room"
+	feedbackhandler "interview/summarization/app/handler/feedback"
 	"interview/summarization/app/middleware"
 	"interview/summarization/config"
 	"interview/summarization/database"
@@ -50,6 +51,11 @@ func main() {
 	roomRepository, err := pgsql.NewRoomRepository(db)
 	if err != nil {
 		log.Fatalln("room repository:", err)
+	}
+
+	feedbackRepository, err := pgsql.NewFeedbackRepository(db)
+	if err != nil {
+		log.Fatalln("feedback repository:", err)
 	}
 
 	authMiddleware := middleware.Auth(jwtImpl)
@@ -108,6 +114,12 @@ func main() {
 		r.With(roleInterviewerMiddleware).Post("/", roomhandler.Create(roomRepository, userRepository))
 		r.With(roleInterviewerMiddleware).Post("/{id}/review", roomhandler.Review(roomRepository))
 		r.With(roleInterviewerMiddleware).Delete("/{id}", roomhandler.Delete(roomRepository))
+	})
+
+	r.With(corsMiddleware).Route("/feedback", func(r chi.Router) {
+		r.Post("/", feedbackhandler.Create(feedbackRepository))
+		r.Get("/need-feedback", feedbackhandler.GetAllNeedFeedback(feedbackRepository))
+		r.Put("/bulk", feedbackhandler.UpdateBulkFeedback(feedbackRepository))
 	})
 
 	log.Printf("Server is listening on port %s", cfg.APIPort)
