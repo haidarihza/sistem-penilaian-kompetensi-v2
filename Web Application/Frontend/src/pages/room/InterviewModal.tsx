@@ -10,6 +10,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Box,
+  useToast,
 } from "@chakra-ui/react";
 import Webcam from "react-webcam";
 import { Question } from "../../interface/question";
@@ -17,6 +18,7 @@ import { answerQuestion } from "../../api/room";
 import { ApiError } from "../../interface/api";
 import { ApiContext } from "../../utils/context/api";
 import { RoomDetail } from "../../interface/room";
+import ToastModal from "../../components/ToastModal";
 
 
 interface Props {
@@ -34,6 +36,7 @@ const InterviewModal = ({
   questions,
 }: Props) => {
   const apiContext = useContext(ApiContext);
+  const toast = useToast();
 
   const [timer, setTimer] = useState<number>(0);
   const webcamRef = useRef<Webcam>({} as Webcam);
@@ -41,7 +44,6 @@ const InterviewModal = ({
   const questionIdx = useRef<number>(0);
   const mediaRecorderRef = useRef<MediaRecorder>({} as MediaRecorder);
   const [recordedChunks, setRecordedChunks] = useState<Array<BlobPart>>([] as Array<BlobPart>);
-  const [isFinished, setIsFinished] = useState<boolean>(false);
   const [current, setCurrent] = useState<Question>({} as Question);
   const videoConstraints = {
     width: 1080,
@@ -99,7 +101,9 @@ const InterviewModal = ({
       await answerQuestion(apiContext.axios, room.id, room.questions[questionIdx.current-1].id, value);
     } catch(e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan", "error");
       }
     }
   }

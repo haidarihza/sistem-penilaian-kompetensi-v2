@@ -25,7 +25,7 @@ type Room struct {
 	Note             string                  `json:"note,omitempty"`
 	IntervieweeEmail string                `json:"interviewee_email,omitempty"`
 	IntervieweeName  string                  `json:"interviewee_name,omitempty"`
-	IntervieweePhone string                  `json:"interviewer_name,omitempty"`
+	IntervieweePhone string                  `json:"interviewee_phone,omitempty"`
 	QuestionsID      []string                `json:"questions_id,omitempty"`
 	CompetenciesID   []string                `json:"competencies_id,omitempty"`
 	Questions        []question.Question     `json:"questions,omitempty"`

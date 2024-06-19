@@ -1,7 +1,7 @@
-import { useContext, useEffect, useState, useRef, useCallback } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ApiContext } from "../../utils/context/api";
-import { answerQuestion, getOneRoom, reviewRoom } from "../../api/room";
+import { getOneRoom, reviewRoom } from "../../api/room";
 import { RoomDetail } from "../../interface/room";
 import { ApiError } from "../../interface/api";
 import Layout from "../../components/Layout";
@@ -9,12 +9,6 @@ import {
   Box, 
   Text,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
   useDisclosure,
   Table,
   Thead,
@@ -31,18 +25,24 @@ import {
   Stack,
   Icon,
   Divider,
+  useToast,
 } from "@chakra-ui/react";
 import { Question } from "../../interface/question";
-import Webcam from "react-webcam";
 import { AuthContext } from "../../utils/context/auth";
 import { CalendarIcon } from "@chakra-ui/icons";
 import { MdAccessTimeFilled } from "react-icons/md";
 import InterviewModal from "./InterviewModal";
+import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
+import DetailQuestionModal from "./DetailQuestionModal";
+import { Competency } from "../../interface/competency";
+import ToastModal from "../../components/ToastModal";
+
 
 const Detail = () => {
   const params = useParams();
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
+  const toast = useToast();
   const [data, setData] = useState<RoomDetail>({} as RoomDetail);
   const [note, setNote] = useState<string>("");
 
@@ -51,16 +51,26 @@ const Detail = () => {
 
   const role = authContext.auth?.role!;
 
-  const { isOpen:isOpenDetail, onOpen:onOpenDetail, onClose:onCloseDetail } = useDisclosure();
+  const { isOpen:isOpenDetailQuestion, onOpen:onOpenDetailQuestion, onClose:onCloseDetailQuestion } = useDisclosure();
+  const { isOpen:isOpenDetailCompetency, onOpen:onOpenDetailCompetency, onClose:onCloseDetailCompetency } = useDisclosure();
+  const [selectedCompetency, setSelectedCompetency] = useState<Competency>({
+    id: "",
+    competency: "",
+    description: "",
+    levels: [],
+  } as Competency);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const fetch = async () => {
     try {
       const rooms = await getOneRoom(apiContext.axios, params.id!);
+      console.log(rooms);
       setData(rooms);
     } catch(e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan", "error");
       }
     }
   }
@@ -77,7 +87,13 @@ const Detail = () => {
     
     setQuestion(data.questions[idx].question);
     setTranscript(tct);
-    onOpenDetail();
+    onOpenDetailQuestion();
+  }
+
+  const handleDetailCompetency = (id: string) => {
+    const competency = data.competencies?.find((val) => val.id === id);
+    setSelectedCompetency(competency!);
+    onOpenDetailCompetency();
   }
 
   const submitReview = async (status: string) => {
@@ -86,7 +102,9 @@ const Detail = () => {
       fetch();
     } catch(e) {
       if (e instanceof ApiError) {
-        alert(e.message);
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan", "error");
       }
     }
   }
@@ -111,101 +129,120 @@ const Detail = () => {
 
   return (
     <Layout>
-      <Modal isOpen={isOpenDetail} onClose={onCloseDetail} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Detail Pertanyaan</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Text as="h1" fontWeight="semibold">Pertanyaan</Text>
-            <Text>{question}</Text>
-            <Text as="h1" fontWeight="semibold" mt="2">Transkrip Jawaban Kandidat</Text>
-            <Text>{transcript !== "" ? transcript : "Belum Ada Hasil"}</Text>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      <DetailQuestionModal
+        isOpen={isOpenDetailQuestion}
+        onClose={onCloseDetailQuestion}
+        question={question}
+        transcript={transcript}
+      />
+      <DetailsCompetencyModal
+        isOpen={isOpenDetailCompetency}
+        onClose={onCloseDetailCompetency}
+        title="Detail Kompetensi"
+        competency={selectedCompetency}
+        handleSubmit={async () => {}}
+      />
       {role === "INTERVIEWER" ? (
-        <Box>
-          <Text as="h2" fontSize="xl" fontWeight="semibold">Informasi Umum</Text>
-          <Box bg="white" rounded="md" p="3" display="flex">
-            <Box>
-              <Text as="h3" fontSize="md">{data.description}</Text>
-              <Text as="h3" fontSize="xl" fontWeight="semibold">Informasi Kandidat</Text>
-              <Text>Nama: {data.interviewee_name}</Text>
-              <Text>Email: {data.interviewee_email}</Text>
-              <Text>Phone: {data.interviewee_phone}</Text>
+        <Box bg="white" rounded="md" p="3">
+          <Heading mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
+            <Text fontWeight="bold" fontSize="2xl">{data.title}</Text>
+            <Box bg="main_beige" color="main_blue" rounded="md">
+              <Text fontSize="lg" p="2" fontWeight="extrabold">{data.status}</Text>
             </Box>
-            <Box>
-
+          </Heading>
+          <Text as="h3" fontSize="md" mb="6">{data.description}</Text>
+          <Box display="flex" flexDir="row" mb="4" flexWrap="wrap" alignItems="flex-start">
+            <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
+              <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
+                <Text fontWeight="bold">Informasi Umum</Text>
+              </Box>
+              <Text mb="2"><b>Tanggal Wawancara :</b> {formatDateTime(data.start)} - {formatDateTime(data.end)}</Text>
+              <Text mb="2"><b>Submission :</b> {data.submission === "-" ? "-" : formatDateTime(data.submission)}</Text>
+              <Text mb="2"><b>Waktu Total :</b> ~ {countTotalTime(data.questions)} menit</Text>
+            </Box>
+            <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
+              <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
+                <Text fontWeight="bold">Informasi Kandidat</Text>
+              </Box>
+              <Text mb="2"><b>Nama :</b> {data.interviewee_name}</Text>
+              <Text mb="2"><b>Email :</b> {data.interviewee_email}</Text>
+              <Text mb="2"><b>Phone :</b> {data.interviewee_phone}</Text>
+            </Box>
+            <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
+              <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
+                <Text fontWeight="bold">Pertanyaan</Text>
+              </Box>
+              <TableContainer bg="white" rounded="md" w="100%">
+                  <Table variant="simple" size="sm" w="100%" colorScheme="blue">
+                    <Thead>
+                      <Tr>
+                        <Th textTransform="capitalize" w="30%">Pertanyaan</Th>
+                        <Th textTransform="capitalize" textAlign="center" w="10%">Batas Durasi</Th>
+                        <Th textTransform="capitalize" textAlign="center" w="10%">Aksi</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {data.questions ? data.questions.map((val, idx) => (
+                        <Tr key={idx}>
+                          <Td w="30%" overflow="hidden" textOverflow="ellipsis" whiteSpace="normal">{val.question}</Td>
+                          <Td w="10%" textAlign="center">{val.duration_limit} menit</Td>
+                          <Td w="10%" textAlign="center">
+                          <Button size="sm" bg="main_blue" color="white" onClick={e => handleDetailQuestion(idx)}>Detail</Button>
+                          </Td>
+                        </Tr>
+                      )) : <Spinner />}
+                    </Tbody>
+                  </Table>
+                </TableContainer>
+            </Box>
+            <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
+              <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
+                <Text fontWeight="bold">Kompetensi</Text>
+              </Box>
+              <TableContainer bg="white" rounded="md" w="100%">
+                <Table variant="simple" size="sm" w="100%" colorScheme="blue">
+                  <Thead>
+                    <Tr>
+                      <Th textTransform="capitalize" w="30%">Kompetensi</Th>
+                      <Th textTransform="capitalize" textAlign="center" w="10%">Aksi</Th>
+                      <Th textTransform="capitalize" textAlign="center" w="10%">Hasil</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.competencies ? data.competencies.map((val) => (
+                      <Tr key={val.id}>
+                        <Td w="30%">{val.competency}</Td>
+                        <Td w="10%" textAlign="center">
+                          <Button size="sm" bg="main_blue" color="white" onClick={e => handleDetailCompetency(val.id)}>Detail</Button>
+                        </Td>
+                        <Td w="10%" isNumeric>
+                          {val.levels.map((level) => <Text key={level.id}>{level.result? parseFloat(level.result).toFixed(3) : "Belum Ada Hasil"}</Text>)}
+                        </Td>
+                      </Tr>
+                    )) : <Spinner />}
+                  </Tbody>
+                </Table>
+              </TableContainer>
             </Box>
           </Box>
 
-          <Text as="h2" fontSize="xl" fontWeight="semibold" mt="5">Kompetensi</Text>
-          <TableContainer bg="white" rounded="md">
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th textTransform="capitalize" w="20%">Kompetensi</Th>
-                  <Th textTransform="capitalize" w="70%">Level</Th>
-                  <Th textTransform="capitalize" textAlign="center">Hasil</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {data.competencies ? data.competencies.map((val) => (
-                  <Tr key={val.id}>
-                    <Td>{val.competency}</Td>
-                    <Td>
-                      {val.levels.map((level) => (
-                        <Text maxW="45rem" noOfLines={1} key={level.id}>{level.level}: {level.description}</Text>
-                      ))}
-                    </Td>
-                    <Td isNumeric>
-                      {val.levels.map((level) => <Text key={level.id}>{level.result? parseFloat(level.result).toFixed(3) : "Belum Ada Hasil"}</Text>)}
-                    </Td>
-                  </Tr>
-                )) : <Spinner />}
-              </Tbody>
-            </Table>
-          </TableContainer>
-
-          <Text as="h2" fontSize="xl" fontWeight="semibold" mt="5">Pertanyaan</Text>
-          <TableContainer bg="white" rounded="md">
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th textTransform="capitalize" w="90%">Pertanyaan</Th>
-                  <Th textTransform="capitalize" textAlign="center">Batas Durasi</Th>
-                  <Th textTransform="capitalize" textAlign="center">Aksi</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {data.questions ? data.questions.map((val, idx) => (
-                  <Tr key={idx}>
-                    <Td>{val.question}</Td>
-                    <Td textAlign="center">{val.duration_limit} menit</Td>
-                    <Td>
-                    <Button onClick={e => handleDetailQuestion(idx)}>Detail</Button>
-                    </Td>
-                  </Tr>
-                )) : <Spinner />}
-              </Tbody>
-            </Table>
-          </TableContainer>
-          {data.status === "Menunggu Review" && (
-            <Box>
-              <Text as="h2" fontSize="xl" fontWeight="semibold" mt="5">Review Kandidat!</Text>
-              <FormControl>
+          {data.status === "WAITING REVIEW" && (
+            <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
+              <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
+                <Text fontWeight="bold">Review Kandidat</Text>
+              </Box>
+              <FormControl mb="4">
                 <FormLabel>Note kandidat</FormLabel>
                 <Textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Berikan note untuk kandidat" />
               </FormControl>
-              <Button mr="2" onClick={() => submitReview("Ditolak")}>Tolak</Button>
-              <Button bg="#4099f8" color="white" onClick={() => submitReview("Diterima")}>Terima</Button>
+              <Box display="flex" flexDir="row" justifyContent="flex-start">
+                <Button w="fit-content" mr="2" onClick={() => submitReview("REJECTED")}>Tolak</Button>
+                <Button w="fit-content" bg="main_blue" color="white" onClick={() => submitReview("ACCEPTED")}>Terima</Button>
+              </Box>
             </Box>
           )}
-          {(data.status === "Diterima" || "Ditolak") && (
+          {((data.status === "ACCEPTED") || (data.status === "REJECTED")) && (
             <Box>
-             <Text as="h2" fontSize="xl" fontWeight="semibold" mt="5">Status Kandidat</Text>
-             <Text as="h3" fontSize="md">{data.status}</Text>
              <Text as="h3" fontSize="sm">Note: {data.note}</Text>
            </Box>
           )}
@@ -246,8 +283,8 @@ const Detail = () => {
               </Text>
             </Box>
           )}
-          <Heading mt="6" fontSize="xl" fontWeight="bold">Catatan</Heading>
-          <Text fontSize="lg">{data.note}</Text>
+          <Heading mt="6" fontSize="xl" fontWeight="bold" mb="4">Catatan</Heading>
+          <Text fontSize="md">{data.note}</Text>
           {data.status === "WAITING ANSWER" && (
             <Box display="flex" flexDir="row" justifyContent="flex-end">
               <Button bg="main_blue" color="white" mt="5" onClick={onOpen}>Mulai Wawancara</Button>

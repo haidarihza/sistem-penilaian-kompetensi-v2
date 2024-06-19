@@ -84,7 +84,7 @@ func GetOne(
 
 			var resultCompetency repository.ResultCompetency
 			var resultQuestion repository.ResultQuestion
-			if resp.Data.Status != "Menunggu Jawaban" {
+			if resp.Data.Status != "WAITING ANSWER" {
 				resultCompetency, err = roomRepository.GetResultCompetencies(r.Context(), roomId)
 				if err != nil {
 					response.RespondError(w, response.InternalServerError())
