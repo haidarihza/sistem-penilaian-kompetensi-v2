@@ -15,6 +15,7 @@ const RoomDetail = lazy(() => import('./pages/room/Detail'));
 const Question = lazy(() => import('./pages/question/Index'));
 const Competency = lazy(() => import('./pages/competency/Index'));
 const RoomCreate = lazy(() => import('./pages/room/Create'));
+const Feedback = lazy(() => import('./pages/feedback/Index'));
 
 const App = () => (
   <ChakraProvider theme={theme}>
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/room/create" element={<RoomCreate />} />
               <Route path="/question" element={<Question />} />
               <Route path="/competency" element={<Competency />} />
+              <Route path="/feedback" element={<Feedback />} />
             </Routes>
           </Suspense>
         </Router>

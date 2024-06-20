@@ -78,7 +78,7 @@ const Sidebar = ({ role, logout } : Props) => {
   },
   {
     name: "Umpan Balik",
-    url: "/",
+    url: "/feedback",
     icon: VscFeedback
   }] : [{
     name: "Dashboard",

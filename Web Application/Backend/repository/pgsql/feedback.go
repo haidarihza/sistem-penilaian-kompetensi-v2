@@ -102,7 +102,7 @@ func (r *feedbackRepository) UpdateFeedback(ctx context.Context, feedback *repos
 	}
 	defer tx.Rollback()
 
-	_, err = tx.StmtContext(ctx, r.ps[feedbackUpdate]).ExecContext(ctx, feedback.Status, feedback.ID)
+	_, err = tx.StmtContext(ctx, r.ps[feedbackUpdate]).ExecContext(ctx, feedback.Status, feedback.LabelFeedback, feedback.ID)
 	if err != nil {
 		return err
 	}
