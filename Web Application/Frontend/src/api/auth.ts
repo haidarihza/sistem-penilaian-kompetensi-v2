@@ -145,11 +145,11 @@ export async function verifyEmail(
    }
 }
 
-export async function getAllEmails(
+export async function getAllEmailsInterviewee(
   axios: AxiosInstance
 ): Promise<Array<string>> {
   try {
-    const res = await axios.get("/auth/all-email");
+    const res = await axios.get("/auth/all-email-interviewee");
 
     return res.data.data as Array<string>;
   } catch (e) {

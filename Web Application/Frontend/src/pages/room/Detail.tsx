@@ -43,6 +43,20 @@ const Detail = () => {
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
   const toast = useToast();
+  const colors = [{
+    status: "WAITING ANSWER",
+    color: "main_beige"
+  }, {
+    status: "WAITING REVIEW",
+    color: "#E6F4F1"
+  }, {
+    status: "REJECTED",
+    color: "#8CBCFF"
+  }, {
+    status: "ACCEPTED",
+    color: "#8CBCFF"
+  }];
+
   const [data, setData] = useState<RoomDetail>({} as RoomDetail);
   const [note, setNote] = useState<string>("");
 
@@ -146,7 +160,10 @@ const Detail = () => {
         <Box bg="white" rounded="md" p="3">
           <Heading mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
             <Text fontWeight="bold" fontSize="2xl">{data.title}</Text>
-            <Box bg="main_beige" color="main_blue" rounded="md">
+            <Box
+              bg={colors.find((val) => val.status === data.status)?.color}
+              color="main_blue"
+              rounded="md">
               <Text fontSize="lg" p="2" fontWeight="extrabold">{data.status}</Text>
             </Box>
           </Heading>
@@ -252,7 +269,10 @@ const Detail = () => {
         <Box bg="white" rounded="md" p="3">
           <Heading mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
             <Text fontWeight="bold" fontSize="2xl">{data.title}</Text>
-            <Box bg="main_beige" color="main_blue" rounded="md">
+            <Box 
+              bg={colors.find((val) => val.status === data.status)?.color}
+              color="main_blue"
+              rounded="md">
               <Text fontSize="lg" p="2" fontWeight="extrabold">{data.status}</Text>
             </Box>
           </Heading>

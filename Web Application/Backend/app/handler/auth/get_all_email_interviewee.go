@@ -10,7 +10,7 @@ type AllEmailResponse struct {
 	Data []string `json:"data"`
 }
 
-func GetAllEmail(userRepository repository.UserRepository) http.HandlerFunc {
+func GetAllEmailInterviewee(userRepository repository.UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp := AllEmailResponse{
 			Data: []string{},
@@ -22,7 +22,9 @@ func GetAllEmail(userRepository repository.UserRepository) http.HandlerFunc {
 		}
 
 		for _, user := range users {
-			resp.Data = append(resp.Data, user.Email)
+			if user.Role == "INTERVIEWEE" {
+				resp.Data = append(resp.Data, user.Email)
+			}
 		}
 
 		response.Respond(w, http.StatusOK, resp)

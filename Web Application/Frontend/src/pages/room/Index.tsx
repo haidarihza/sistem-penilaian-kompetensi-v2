@@ -42,6 +42,19 @@ const Index = () => {
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
   const toast = useToast();
+  const colors = [{
+    status: "WAITING ANSWER",
+    color: "main_beige"
+  }, {
+    status: "WAITING REVIEW",
+    color: "#E6F4F1"
+  }, {
+    status: "REJECTED",
+    color: "#8CBCFF"
+  }, {
+    status: "ACCEPTED",
+    color: "#8CBCFF"
+  }];
 
   const [data, setData] = useState<Array<RoomAll>>([] as Array<RoomAll>);
   const [filteredData, setFilteredData] = useState<Array<RoomAll>>([] as Array<RoomAll>);
@@ -218,7 +231,10 @@ const Index = () => {
                           </Box>
                           <Box>
                             <Box display="flex" flexDir="row" alignItems="center" mb="2" justifyContent="space-between">
-                              <Box bg="main_beige" rounded="lg" p="1">
+                              <Box
+                                bg={colors.find((color) => color.status === val.status)?.color}
+                                rounded="lg"
+                                p="1">
                                 <Text fontSize="sm" fontWeight="bold" color="main_blue">{val.status}</Text>
                               </Box>
                               <Text fontSize="sm" fontWeight="bold">{val.submission === "-" ? "No Submission" : formatDateTime(val.submission)}</Text>

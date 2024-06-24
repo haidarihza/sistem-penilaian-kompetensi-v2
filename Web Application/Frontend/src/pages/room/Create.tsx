@@ -37,7 +37,7 @@ import { RoomCreate } from "../../interface/room";
 import { AddIcon } from "@chakra-ui/icons";
 import { getAllQuestion } from "../../api/question";
 import { getAllCompetency } from "../../api/competency";
-import { getAllEmails } from "../../api/auth"; 
+import { getAllEmailsInterviewee } from "../../api/auth"; 
 import ToastModal from "../../components/ToastModal";
 import CompetenciesListModal from "./CompetenciesListModal";
 import QuestionsListModal from "./QuestionsListModal";
@@ -101,7 +101,7 @@ const Detail = () => {
 
   const fetchEmails = async () => {
     try {
-      const emails = await getAllEmails(apiContext.axios);
+      const emails = await getAllEmailsInterviewee(apiContext.axios);
       setEmailList(emails);
       setFilteredEmailList(emails);
     } catch(e) {

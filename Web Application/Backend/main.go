@@ -78,7 +78,7 @@ func main() {
 
 	r.With(corsMiddleware).Route("/auth", func(r chi.Router) {
 		r.Get("/verify", authhandler.Verify(userRepository, jwtImpl))
-		r.With(authMiddleware, roleInterviewerMiddleware).Get("/all-email", authhandler.GetAllEmail(userRepository))
+		r.With(authMiddleware, roleInterviewerMiddleware).Get("/all-email-interviewee", authhandler.GetAllEmailInterviewee(userRepository))
 		r.Post("/register", authhandler.Register(userRepository, jwtImpl, cfg))
 		r.Post("/login", authhandler.Login(userRepository, jwtImpl))
 		r.Get("/verify-email", authhandler.VerifyEmail(userRepository, jwtImpl))
