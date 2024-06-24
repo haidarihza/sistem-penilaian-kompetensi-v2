@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            text-align: center;
+            color: #333333;
+        }
+        .body {
+            margin-top: 20px;
+            color: #333333;
+        }
+        .button {
+            display: block;
+            width: 100px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #40a2d8;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #777777;
+        }
+        a {
+            text-decoration: none;
+        }
+        .link {
+            color: #0b60b0;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="header">Wawancara {{.Judul}}</h2>
+        <div class="body">
+            <p>Halo {{.Nama}},</p>
+            <p>Kami dengan senang hati mengundang Anda untuk mengikuti proses wawancara secara daring. Berikut adalah detail wawancara Anda:</p>
+            <p><strong>Judul: </strong>{{.Judul}}</p>
+            <p><strong>Waktu Mulai: </strong>{{.WaktuMulai}}</p>
+            <p><strong>Waktu Selesai: </strong>{{.WaktuSelesai}}</p>
+            <p>Untuk mengikuti proses wawancara tersebut, silakan untuk mengakses website HireMIF pada pranala berikut.</p>
+            <a href="{{.URL}}" class="button">Klik disini</a>
+        </div>
+        <div class="footer">
+            <p>Terima kasih,<br/>Tim HireMIF</p>
+        </div>
+    </div>
+</body>
+</html>

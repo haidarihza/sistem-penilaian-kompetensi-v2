@@ -117,7 +117,7 @@ func (r *userRepository) SelectIDPasswordRoleByEmail(ctx context.Context, email 
 }
 
 const userSelectIDByEmail = "userSelectIDByEmail"
-const userSelectIDByEmailQuery = `SELECT id
+const userSelectIDByEmailQuery = `SELECT id, name, email
 	FROM "users" WHERE email = $1
 `
 
@@ -126,7 +126,7 @@ func (r *userRepository) SelectIDByEmail(ctx context.Context, email string) (*re
 
 	row := r.ps[userSelectIDByEmail].QueryRowContext(ctx, email)
 	err := row.Scan(
-		&user.ID,
+		&user.ID, &user.Name, &user.Email,
 	)
 	if err != nil {
 		return nil, err
