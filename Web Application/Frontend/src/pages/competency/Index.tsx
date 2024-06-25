@@ -1,5 +1,5 @@
 import Layout from "../../components/Layout";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { ApiContext } from "../../utils/context/api";
 import { ApiError } from "../../interface/api";
 import {
@@ -18,6 +18,12 @@ import {
   useDisclosure,
   IconButton,
   useToast,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react"
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import { Competency, CompetencyLevel } from "../../interface/competency";
@@ -29,6 +35,7 @@ import ToastModal from "../../components/ToastModal";
 const Index = () => {
   const apiContext = useContext(ApiContext);
   const toast = useToast();
+  const cancelRef = useRef(null);
 
   const [data, setData] = useState<Array<Competency>>([] as Array<Competency>);
   const [filteredData, setFilteredData] = useState<Array<Competency>>([] as Array<Competency>);
@@ -40,8 +47,10 @@ const Index = () => {
   } as Competency);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [deleteId, setDeleteId] = useState<string>("" as string);
   const { isOpen:isOpenModal, onOpen:onOpenModal, onClose:onCloseModal } = useDisclosure();
   const { isOpen:isOpenDetails, onOpen:onOpenDetails, onClose:onCloseDetails } = useDisclosure();
+  const { isOpen: isOpenDelete, onOpen: onOpenDelete, onClose: onCloseDelete } = useDisclosure();
     
   const fetch = async () => {
     try {
@@ -115,6 +124,11 @@ const Index = () => {
     }
   }
 
+  const handleDeleteConfirm = (id: string) => {
+    setDeleteId(id);
+    onOpenDelete();
+  }
+
   const handleDelete = async (id: string) => {
     try {
       await deleteCompetency(apiContext.axios, id);
@@ -125,6 +139,8 @@ const Index = () => {
       } else {
         ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
+    } finally {
+      onCloseDelete();
     }
   }
 
@@ -195,7 +211,7 @@ const Index = () => {
                   </Td>
                   <Td>
                     <IconButton aria-label="Edit" mr="2" bg="main_blue" color="white" icon={<EditIcon />} onClick={() => {handleClickEdit(val.id)}} />
-                    <IconButton aria-label="Delete" bg="main_blue" color="white" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
+                    <IconButton aria-label="Delete" bg="main_blue" color="white" icon={<DeleteIcon />} onClick={() => handleDeleteConfirm(val.id)} />
                   </Td>
                 </Tr>
               ))}
@@ -203,6 +219,33 @@ const Index = () => {
           </Table>
         </Box>
       </TableContainer>
+      <AlertDialog
+          isOpen={isOpenDelete}
+          leastDestructiveRef={cancelRef}
+          onClose={onCloseDelete}
+          isCentered={true}
+        >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Hapus Kompetensi
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Apakah Anda yakin ingin menghapus kompetensi ini?
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onCloseDelete}>
+                Batal
+              </Button>
+              <Button colorScheme='red' onClick={() => handleDelete(deleteId)} ml={3}>
+                Hapus
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Layout>
   )
 }

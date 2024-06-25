@@ -1,5 +1,5 @@
 import Layout from "../../components/Layout";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { ApiContext } from "../../utils/context/api";
 import { ApiError } from "../../interface/api";
 import { getAllRoom, deleteRoom } from "../../api/room";
@@ -30,6 +30,13 @@ import {
   TabList,
   TabPanel,
   TabPanels,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  useDisclosure,
 } from "@chakra-ui/react"
 import { AuthContext } from "../../utils/context/auth";
 import { Link, useNavigate } from "react-router-dom";
@@ -42,6 +49,7 @@ const Index = () => {
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
   const toast = useToast();
+  const cancelRef = useRef(null);
   const colors = [{
     status: "WAITING ANSWER",
     color: "main_beige"
@@ -59,7 +67,9 @@ const Index = () => {
   const [data, setData] = useState<Array<RoomAll>>([] as Array<RoomAll>);
   const [filteredData, setFilteredData] = useState<Array<RoomAll>>([] as Array<RoomAll>);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [deleteId, setDeleteId] = useState<string>("" as string);
   const role = authContext.auth?.role;
+  const { isOpen: isOpenDelete, onOpen: onOpenDelete, onClose: onCloseDelete } = useDisclosure();
 
   const getScheduledRoom = (data: Array<RoomAll>) => {
     const currDate = new Date();
@@ -148,6 +158,11 @@ const Index = () => {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
   
+  const handleDeleteConfirm = (id: string) => {
+    setDeleteId(id);
+    onOpenDelete();
+  }
+
   const handleDeleteRoom = async (id: string) => {
     try {
       await deleteRoom(apiContext.axios, id);
@@ -159,6 +174,8 @@ const Index = () => {
       } else {
         ToastModal(toast, "Error!", "Something Went Wrong", "error");
       }
+    } finally {
+      onCloseDelete();
     }
   }
 
@@ -196,7 +213,7 @@ const Index = () => {
                             <MenuButton as={IconButton} colorScheme="white.400" color="main_blue" icon={<BsThreeDotsVertical />}>
                             </MenuButton>
                             <MenuList>
-                              <MenuItem onClick={() => handleDeleteRoom(val.id)} color="main_blue">
+                              <MenuItem onClick={() => handleDeleteConfirm(val.id)} color="main_blue">
                                 <IconButton
                                   aria-label="Delete"
                                   icon={<DeleteIcon />}
@@ -294,6 +311,33 @@ const Index = () => {
           ))}
         </TabPanels>
       </Tabs>
+      <AlertDialog
+        isOpen={isOpenDelete}
+        leastDestructiveRef={cancelRef}
+        onClose={onCloseDelete}
+        isCentered={true}
+      >
+      <AlertDialogOverlay>
+        <AlertDialogContent>
+          <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+            Hapus Ruangan
+          </AlertDialogHeader>
+
+          <AlertDialogBody>
+            Apakah Anda yakin ingin menghapus ruangan ini?
+          </AlertDialogBody>
+
+          <AlertDialogFooter>
+            <Button ref={cancelRef} onClick={onCloseDelete}>
+              Batal
+            </Button>
+            <Button colorScheme='red' onClick={() => handleDeleteRoom(deleteId)} ml={3}>
+              Hapus
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogOverlay>
+    </AlertDialog>
     </Layout>
   )
 }

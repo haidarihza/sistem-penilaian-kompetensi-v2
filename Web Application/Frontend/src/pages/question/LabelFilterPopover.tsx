@@ -33,7 +33,9 @@ const LabelFilterPopover = ({
   };
 
   return (
-    <Popover>
+    <Popover
+      placement='bottom-start'
+    >
       <PopoverTrigger>
         <IconButton
           aria-label="Filter"

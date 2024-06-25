@@ -1,5 +1,5 @@
 import Layout from "../../components/Layout";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { ApiContext } from "../../utils/context/api";
 import { createQuestion, deleteQuestion, getAllQuestion, updateQuestion, getQuestionLabelOptions } from "../../api/question";
 import { Question, QuestionLabel, QuestionLabelOptions } from "../../interface/question";
@@ -20,6 +20,12 @@ import {
   useDisclosure,
   IconButton,
   useToast,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react"
 import { EditIcon, DeleteIcon, SmallCloseIcon } from "@chakra-ui/icons";
 import QuestionModal from "./QuestionModal";
@@ -29,6 +35,7 @@ import ToastModal from "../../components/ToastModal";
 const Index = () => {
   const apiContext = useContext(ApiContext);
   const toast = useToast();
+  const cancelRef = useRef(null);
 
   const [data, setData] = useState<Array<Question>>([] as Array<Question>);
   const [filteredData, setFilteredData] = useState<Array<Question>>([] as Array<Question>);
@@ -42,7 +49,9 @@ const Index = () => {
   const [labelFilter, setLabelFilter] = useState<Array<QuestionLabelOptions>>([] as Array<QuestionLabelOptions>);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [deleteId, setDeleteId] = useState<string>("" as string);
   const { isOpen:isOpenModal, onOpen:onOpenModal, onClose:onCloseModal } = useDisclosure();
+  const { isOpen: isOpenDelete, onOpen: onOpenDelete, onClose: onCloseDelete } = useDisclosure();
 
   const fetch = async () => {
     try {
@@ -134,7 +143,14 @@ const Index = () => {
       } else {
         ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
+    } finally {
+      onCloseDelete();
     }
+  }
+
+  const handleDeleteConfirm = (id: string) => {
+    setDeleteId(id);
+    onOpenDelete();
   }
 
   const handleDeleteLabel = (idx: number) => () => {
@@ -222,7 +238,7 @@ const Index = () => {
                   </Td>
                   <Td>
                     <IconButton aria-label="Edit" mr="2" bg="main_blue" color="white" icon={<EditIcon />} onClick={() => handleClickEdit(val.id)} />
-                    <IconButton aria-label="Delete" bg="main_blue" color="white" icon={<DeleteIcon />} onClick={() => handleDelete(val.id)} />
+                    <IconButton aria-label="Delete" bg="main_blue" color="white" icon={<DeleteIcon />} onClick={() => handleDeleteConfirm(val.id)} />
                   </Td>
                 </Tr>
               ))}
@@ -230,6 +246,33 @@ const Index = () => {
           </Table>
         </Box>
       </TableContainer>
+      <AlertDialog
+          isOpen={isOpenDelete}
+          leastDestructiveRef={cancelRef}
+          onClose={onCloseDelete}
+          isCentered={true}
+        >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Hapus Pertanyaan
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Apakah Anda yakin ingin menghapus pertanyaan ini?
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onCloseDelete}>
+                Batal
+              </Button>
+              <Button colorScheme='red' onClick={() => handleDelete(deleteId)} ml={3}>
+                Hapus
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Layout>
   )
 }
