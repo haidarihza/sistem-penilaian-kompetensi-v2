@@ -1,6 +1,8 @@
 import { AxiosInstance, isAxiosError } from "axios";
 import { RoomAll, RoomDetail } from "../interface/room";
 import { ApiError } from "../interface/api";
+import { storage } from "./firebaseStorage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export async function createRoom(
   axios: AxiosInstance,
@@ -77,10 +79,31 @@ export async function answerQuestion(
   answer: Blob
 ): Promise<void> {
   try {
-    const form = new FormData();
-    form.append("answer", answer, "answer.webm");
+    const storageRef = ref(storage, `interview-video/answer-${room_id}-${question_id}`);
+    const snapshot = await uploadBytes(storageRef, answer);
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+    
+    console.log('File available at', downloadUrl);    // send to backend
 
-    await axios.post(`/room/${room_id}/${question_id}`, form);
+    await axios.post(`/room/${room_id}/${question_id}`, {
+      answer_url: downloadUrl
+    });
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}
+
+export async function finishInterview(
+  axios: AxiosInstance,
+  room_id: string
+): Promise<void> {
+  try {
+    await axios.post(`/room/${room_id}/finish-answer`);
   } catch (e) {
     if (isAxiosError(e)) {
       throw new ApiError(e.response?.data.message ? 

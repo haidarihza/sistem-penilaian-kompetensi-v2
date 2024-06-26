@@ -297,7 +297,11 @@ const Index = () => {
                     <Divider w="90%" mx="auto" borderWidth="1px"/>
                     <CardFooter pt="2" pb="2" justifyContent="flex-end">
                       <Box display="flex" flexDir="row" alignItems="center" mb="2">
-                        <Box bg="main_beige" rounded="lg" p="1">
+                        <Box
+                          bg={colors.find((color) => color.status === val.status)?.color}
+                          rounded="lg"
+                          p="1"
+                        >
                           <Text fontSize="sm" fontWeight="bold" color="main_blue">{val.status}</Text>
                         </Box>
                       </Box>

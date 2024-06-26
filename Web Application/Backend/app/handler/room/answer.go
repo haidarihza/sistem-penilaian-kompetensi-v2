@@ -11,12 +11,13 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"os"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 )
+
+type AnswerReq struct {
+	answerURL string `json:"answer_url,omitempty"`
+}
 
 func Answer(
 	roomRepository repository.RoomRepository,
@@ -28,37 +29,13 @@ func Answer(
 		questionId := chi.URLParam(r, "questionId")
 		// validasi room has question
 
-		err := r.ParseMultipartForm(5 * 1024)
-		if err != nil {
-			fmt.Println("error too large")
-			response.RespondError(w, response.BadRequestError("File too large"))
+		req := AnswerReq{}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			response.RespondError(w, response.BadRequestError("Incorrect Payload Format"))
 			return
 		}
 
-		file, handler, err := r.FormFile("answer")
-		defer file.Close()
-		if err != nil {
-			response.RespondError(w, response.BadRequestError("Error form file"))
-			return
-		}
-
-		splitFileName := strings.Split(handler.Filename, ".")
-		fileId := uuid.NewString()
-		newFileName := fmt.Sprintf("%s.%s", fileId, splitFileName[len(splitFileName)-1])
-		fileLoc := fmt.Sprintf("%s/files/%s", apiHost, newFileName)
-
-		dst, err := os.Create(fmt.Sprintf("data/%s", newFileName))
-		if err != nil {
-			response.RespondError(w, response.InternalServerError())
-			fmt.Println("error creating file", err)
-			return
-		}
-		defer dst.Close()
-		if _, err := io.Copy(dst, file); err != nil {
-			response.RespondError(w, response.InternalServerError())
-			fmt.Println("error copy", err)
-			return
-		}
+		fileLoc := req.answerURL
 
 		go func(ctx context.Context, rRepo repository.RoomRepository, cRepo repository.CompetencyRepository, fileLoc, roomId, questionId string) {
 			fmt.Println("running in the background")
@@ -69,7 +46,7 @@ func Answer(
 			bodySpeech, _ := io.ReadAll(resp.Body)
 			fmt.Println(string(bodySpeech))
 
-			rRepo.InsertTranscript(ctx, roomId, questionId, string(bodySpeech))
+			rRepo.InsertTranscript(ctx, roomId, questionId, fileLoc, string(bodySpeech))
 			if isAnswered, _ := rRepo.IsAnswered(ctx, roomId); isAnswered {
 				answer, _ := rRepo.GetAnswers(ctx, roomId)
 				competencies, _ := cRepo.SelectAllByRoomID(ctx, roomId)

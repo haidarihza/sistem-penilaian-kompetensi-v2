@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS questions(
 CREATE TABLE IF NOT EXISTS rooms_has_questions(
   room_id UUID,
   question_id UUID,
+  file_link TEXT,
   transcript TEXT,
   FOREIGN KEY(room_id) REFERENCES rooms(id),
   FOREIGN KEY(question_id) REFERENCES questions(id),
@@ -105,7 +106,9 @@ CREATE TABLE IF NOT EXISTS feedback_results(
   transcript TEXT,
   competency_id UUID,
   status TEXT,
-  label_result TEXT,
-  label_feedback TEXT,
-  FOREIGN KEY(competency_id) REFERENCES competencies(id)
+  label_result UUID,
+  label_feedback UUID,
+  FOREIGN KEY(competency_id) REFERENCES competencies(id),
+  FOREIGN KEY(label_result) REFERENCES competency_levels(id),
+  FOREIGN KEY(label_feedback) REFERENCES competency_levels(id)
 );

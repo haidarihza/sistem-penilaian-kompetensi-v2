@@ -78,7 +78,6 @@ const Detail = () => {
   const fetch = async () => {
     try {
       const rooms = await getOneRoom(apiContext.axios, params.id!);
-      console.log(rooms);
       setData(rooms);
     } catch(e) {
       if (e instanceof ApiError) {
@@ -132,6 +131,13 @@ const Detail = () => {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
+
+  const checkValidDateRange = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const currentDate = new Date();
+    return startDate < currentDate && currentDate < endDate;
+  }
 
   const countTotalTime = (questions: Question[]) => {
     let total = 0;
@@ -307,7 +313,13 @@ const Detail = () => {
           <Text fontSize="md">{data.note}</Text>
           {data.status === "WAITING ANSWER" && (
             <Box display="flex" flexDir="row" justifyContent="flex-end">
-              <Button bg="main_blue" color="white" mt="5" onClick={onOpen}>Mulai Wawancara</Button>
+              <Button
+                bg="main_blue"
+                color="white"
+                mt="5"
+                onClick={onOpen}
+                isDisabled={!checkValidDateRange(data.start, data.end)}
+                >Mulai Wawancara</Button>
             </Box>
           )}
         </Box>

@@ -57,12 +57,13 @@ type RoomRepository interface {
 	SelectAllByInterviewerID(context.Context, string) ([]*Room, error)
 	SelectAllByIntervieweeID(context.Context, string) ([]*Room, error)
 	SelectOneByIDUserID(context.Context, string, string) (*Room, error)
-	InsertTranscript(context.Context, string, string, string) error
+	InsertTranscript(context.Context, string, string, string, string) error
 	IsAnswered(context.Context, string) (bool, error)
 	GetAnswers(context.Context, string) (string, error)
 	InsertResult(context.Context, string, []string, []string, []float64) error
 	GetResultCompetencies(context.Context, string) (ResultCompetency, error)
 	GetResultQuestions(context.Context, string) (ResultQuestion, error)
+	UpdateStatusAndSubmission(context.Context, *Room) error
 	Review(context.Context, *Room) error
 	DeleteByID(context.Context, string) error
 }

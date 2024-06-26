@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import Webcam from "react-webcam";
 import { Question } from "../../interface/question";
-import { answerQuestion } from "../../api/room";
+import { answerQuestion, finishInterview } from "../../api/room";
 import { ApiError } from "../../interface/api";
 import { ApiContext } from "../../utils/context/api";
 import { RoomDetail } from "../../interface/room";
@@ -73,8 +73,10 @@ const InterviewModal = ({
   }, [webcamRef, setCapturing, mediaRecorderRef, handleDataAvailable]);
 
   const handleStopCaptureClick = useCallback(() => {
-    mediaRecorderRef.current.stop();
-    setCapturing(false);
+    if (mediaRecorderRef.current && typeof mediaRecorderRef.current.stop === 'function') {
+      mediaRecorderRef.current.stop();
+      setCapturing(false);
+    }
   }, [mediaRecorderRef, setCapturing]);
 
   const tick = () => {
@@ -95,6 +97,13 @@ const InterviewModal = ({
       setRecordedChunks([]);
     }
   }, [recordedChunks]);
+
+  const handleEndInterview = () => {
+    finishInterview(apiContext.axios, room.id);
+    onClose();
+    // refresh page
+    window.location.reload();
+  }
 
   const answer = async (value : Blob) => {
     try {
@@ -173,18 +182,11 @@ const InterviewModal = ({
               </Box>
             )}
           </ModalBody>
-
-          <ModalFooter>
-            <Button bg="main_blue" color="white">
-              Lanjut
-            </Button>
-          </ModalFooter>
         </ModalContent>
       )
       : (
         <ModalContent w="100%">
           <ModalHeader>Interview</ModalHeader>
-          <ModalCloseButton />
           <ModalBody pb={6}>
             <Box display="flex" flexDir="row" mb="2" justifyContent="center">
               <Text as="h1">Anda telah menyelesaikan interview</Text>
@@ -192,7 +194,7 @@ const InterviewModal = ({
           </ModalBody>
 
           <ModalFooter>
-            <Button bg="main_blue" color="white">
+            <Button bg="main_blue" color="white" onClick={handleEndInterview}>
               Tutup
             </Button>
           </ModalFooter>

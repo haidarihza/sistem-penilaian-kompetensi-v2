@@ -205,13 +205,14 @@ func (r *roomRepository) SelectOneByIDUserID(ctx context.Context, id, userID str
 }
 
 const roomInsertTranscript = "roomInsertTranscript"
-const roomInsertTranscriptQuery = `UPDATE rooms_has_questions
-	SET transcript = $3
+const roomInsertTranscriptQuery = `UPDATE rooms_has_questions SET
+	file_link = $3,
+	transcript = $4
 	WHERE
 	room_id = $1 AND question_id = $2
 `
 
-func (r *roomRepository) InsertTranscript(ctx context.Context, roomId, questionId, transcript string) error {
+func (r *roomRepository) InsertTranscript(ctx context.Context, roomId, questionId, link string, transcript string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -219,7 +220,7 @@ func (r *roomRepository) InsertTranscript(ctx context.Context, roomId, questionI
 	defer tx.Rollback()
 
 	_, err = tx.StmtContext(ctx, r.ps[roomInsertTranscript]).ExecContext(ctx,
-		roomId, questionId, transcript,
+		roomId, questionId, link, transcript,
 	)
 	if err != nil {
 		return err
@@ -316,16 +317,30 @@ func (r *roomRepository) InsertResult(ctx context.Context, roomId string, compet
 	}
 	defer tx.Rollback()
 
-	submitAt := time.Now().UTC()
-	_, err = tx.StmtContext(ctx, r.ps[roomUpdateStatus]).ExecContext(ctx,
-		roomId, "Menunggu Review", submitAt,
+	_, err = tx.StmtContext(ctx, r.ps[roomInsertResult]).ExecContext(ctx,
+		roomId, competency, level, result,
 	)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.StmtContext(ctx, r.ps[roomInsertResult]).ExecContext(ctx,
-		roomId, competency, level, result,
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *roomRepository) UpdateStatusAndSubmission(ctx context.Context, room *repository.Room) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	submission := time.Now().UTC()
+	_, err = tx.StmtContext(ctx, r.ps[roomUpdateStatus]).ExecContext(ctx,
+		room.ID, room.Status, submission,
 	)
 	if err != nil {
 		return err
