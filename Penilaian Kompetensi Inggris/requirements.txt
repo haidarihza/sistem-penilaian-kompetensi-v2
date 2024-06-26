@@ -1,0 +1,8 @@
+batchbald_redux==2.0.5
+fastapi==0.111.0
+pydantic==2.7.4
+pydantic-settings==2.3.4
+SQLAlchemy==2.0.29
+starlette==0.37.2
+torch==2.0.0
+transformers==4.38.2
