@@ -1,4 +1,0 @@
-.\venv\Scripts\activate
-flask run
-
-ngrok http --domain=ab4d14462f0e-15895428928710761137.ngrok-free.app 5000
