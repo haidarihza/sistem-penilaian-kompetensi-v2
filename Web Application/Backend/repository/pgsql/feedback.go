@@ -36,21 +36,22 @@ var feedbackQueries = map[string]string{
 const feedbackInsert = "feedbackInsert"
 const feedbackInsertQuery = `INSERT INTO
 	"feedback_results"(
-		id, competency_id, transcript, label_result
+		id, transcript, competency_id, status, label_result
 	) values(
-		$1, $2, $3, $4
+		UNNEST($1::uuid[]), UNNEST($2::text[]), UNNEST($3::uuid[]), $4, UNNEST($5::uuid[])
 	)
 `
 
-func (r *feedbackRepository) Insert(ctx context.Context, feedback *repository.Feedback) error {
+func (r *feedbackRepository) Insert(ctx context.Context, feedbackID []string, transcript []string, cID []string, resID []string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
+	status := "UNLABELED"
 	_, err = tx.StmtContext(ctx, r.ps[feedbackInsert]).ExecContext(ctx,
-		feedback.ID, feedback.CompetencyID, feedback.Transcript, feedback.LabelResult,
+		feedbackID, transcript, cID, status, resID,
 	)
 	if err != nil {
 		return err

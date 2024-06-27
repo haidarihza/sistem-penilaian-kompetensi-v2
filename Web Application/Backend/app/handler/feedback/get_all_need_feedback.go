@@ -20,7 +20,7 @@ type GetAllNeedFeedbackResponse struct {
 
 func GetAllNeedFeedback(feedbackRepository repository.FeedbackRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		feedbacks, err := feedbackRepository.SelectByStatus(r.Context(), "NEED_FEEDBACK")
+		feedbacks, err := feedbackRepository.SelectByStatus(r.Context(), "TO_LABEL")
 		if err != nil {
 			response.RespondError(w, response.InternalServerError())
 			return

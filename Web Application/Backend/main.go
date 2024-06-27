@@ -110,15 +110,14 @@ func main() {
 	r.With(corsMiddleware, authMiddleware).Route("/room", func(r chi.Router) {
 		r.Get("/", roomhandler.GetAll(roomRepository))
 		r.Get("/{id}", roomhandler.GetOne(roomRepository, questionRepository, competencyRepository))
-		r.Post("/{roomId}/{questionId}", roomhandler.Answer(roomRepository, competencyRepository, cfg.APIHost, cfg.SpeechToTextHost, cfg.SummarizationHost))
+		r.Post("/{roomId}/{questionId}", roomhandler.Answer(roomRepository, competencyRepository, questionRepository, feedbackRepository, cfg.APIHost, cfg.SpeechToTextHost, cfg.SummarizationHost))
 		r.Post("/{roomId}/finish-answer", roomhandler.FinishAnswer(roomRepository))
 		r.With(roleInterviewerMiddleware).Post("/", roomhandler.Create(roomRepository, userRepository, cfg))
 		r.With(roleInterviewerMiddleware).Post("/{id}/review", roomhandler.Review(roomRepository))
 		r.With(roleInterviewerMiddleware).Delete("/{id}", roomhandler.Delete(roomRepository))
 	})
 
-	r.With(corsMiddleware).Route("/feedback", func(r chi.Router) {
-		r.Post("/", feedbackhandler.Create(feedbackRepository))
+	r.With(corsMiddleware, authMiddleware, roleInterviewerMiddleware).Route("/feedback", func(r chi.Router) {
 		r.Get("/", feedbackhandler.GetAllNeedFeedback(feedbackRepository))
 		r.Put("/{id}", feedbackhandler.UpdateFeedback(feedbackRepository))
 	})

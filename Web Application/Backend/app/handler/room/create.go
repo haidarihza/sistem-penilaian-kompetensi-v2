@@ -114,22 +114,26 @@ func Create(roomRepository repository.RoomRepository, userRepository repository.
 						fmt.Println("Error parsing template:", err)
 						return
 				}
-				
-				timeStart, err := time.Parse("2006-01-02T15:04", room.Start)
+
+				layout := "2006-01-02T15:04:05.000Z"
+
+				timeStart, err := time.Parse(layout, room.End)
 				if err != nil {
-						fmt.Println("Error parsing time:", err)
-						return
+					fmt.Println("Error parsing time:", err)
+					return
 				}
-				formattedTimeStart := timeStart.Format("02 January 2006 15:04:05")
+				localTimeStart := timeStart.Local()
+				formattedTimeStart := localTimeStart.Format("02 January 2006 15:04:05 MST")
 				
-				timeEnd, err := time.Parse("2006-01-02T15:04", room.End)
+				timeEnd, err := time.Parse(layout, room.End)
 				if err != nil {
-						fmt.Println("Error parsing time:", err)
-						return
+					fmt.Println("Error parsing time:", err)
+					return
 				}
-				formattedTimeEnd := timeEnd.Format("02 January 2006 15:04:05")
+				localTimeEnd := timeEnd.Local()
+				formattedTimeEnd := localTimeEnd.Format("02 January 2006 15:04:05 MST")
 		
-				url := fmt.Sprintf("http://%s:%s", cfg.FEHost, cfg.FEPort)
+				url := fmt.Sprintf("http://%s:%s/room/%s", cfg.FEHost, cfg.FEPort, room.ID)
 
 				data := struct {
 					Judul template.HTML
@@ -152,7 +156,7 @@ func Create(roomRepository repository.RoomRepository, userRepository repository.
 						return
 				}
 	
-				content := "Subject: Email Verification Hiremif\nMIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n" + renderedContent.String()
+				content := "Subject: Interview Invitation\nMIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n" + renderedContent.String()
 				err = smtp.SendMail(fmt.Sprintf("%s:%d", cfg.AddressHost, cfg.AddressPort), auth, cfg.SenderEmail, []string{interviewee.Email}, []byte(content))
 				if err != nil {
 						fmt.Println("Error sending email:", err)

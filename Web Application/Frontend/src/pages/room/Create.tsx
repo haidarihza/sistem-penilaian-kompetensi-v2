@@ -231,16 +231,18 @@ const Detail = () => {
             <Textarea value={room.description} onChange={e => setRoom({...room, description: e.target.value})} placeholder="Deskripsi Ruangan" mt="-2"/>
             <FormErrorMessage>Deskripsi harus diisi</FormErrorMessage>
           </FormControl>
-          <FormControl isInvalid={isSubmit && room.start === ""} mb="4">
-            <FormLabel>Waktu Mulai</FormLabel>
-            <Input type="datetime-local" value={room.start} onChange={e => setRoom({...room, start: e.target.value})} placeholder="Waktu Mulai" />
-            <FormErrorMessage>Waktu Mulai harus diisi</FormErrorMessage>
-          </FormControl>
-          <FormControl isInvalid={isSubmit && room.end === ""} mb="4">
-            <FormLabel>Waktu Selesai</FormLabel>
-            <Input type="datetime-local" value={room.end} onChange={e => setRoom({...room, end: e.target.value})} placeholder="Waktu Selesai" />
-            <FormErrorMessage>Waktu Selesai harus diisi</FormErrorMessage>
-          </FormControl>
+          <Box display="flex" flexDir="row" justifyContent="space-between">
+            <FormControl isInvalid={isSubmit && room.start === ""} mb="4" pr="10">
+              <FormLabel>Waktu Mulai</FormLabel>
+              <Input type="datetime-local" value={room.start} onChange={e => setRoom({...room, start: e.target.value})} placeholder="Waktu Mulai" />
+              <FormErrorMessage>Waktu Mulai harus diisi</FormErrorMessage>
+            </FormControl>
+            <FormControl isInvalid={isSubmit && room.end === ""} mb="4" pl="10">
+              <FormLabel>Waktu Selesai</FormLabel>
+              <Input type="datetime-local" value={room.end} onChange={e => setRoom({...room, end: e.target.value})} placeholder="Waktu Selesai" />
+              <FormErrorMessage>Waktu Selesai harus diisi</FormErrorMessage>
+            </FormControl>
+          </Box>
           <FormControl isInvalid={isSubmit && room.interview_email.length === 0} mb="4">
             <FormLabel>Email Kandidat</FormLabel>
             <AutoComplete

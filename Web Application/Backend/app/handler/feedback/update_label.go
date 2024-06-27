@@ -22,7 +22,7 @@ func UpdateFeedback(feedbackRepository repository.FeedbackRepository) http.Handl
 		}
 
 		feedbackID := chi.URLParam(r, "id")
-		status, ok := repository.FeedbackStatusMapper("REVIEWED")
+		status, ok := repository.FeedbackStatusMapper("LABELED")
 		if !ok {
 			response.RespondError(w, response.InternalServerError())
 			return

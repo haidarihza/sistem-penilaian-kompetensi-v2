@@ -206,9 +206,15 @@ const Index = () => {
                 <Box display="flex" p="5" flexWrap="wrap" justifyContent="flex-start">
                   {tab.data ? tab.data.map((val, idx) => (
                     <Card key={idx} width="30%" mr="4" mb="4" variant="outline">
-                      <CardHeader pt="2" pb="2">
+                      <CardHeader pt="2" pb="2" height="16">
                         <Flex alignItems="center" gap="8" justifyContent="space-between">
-                          <Text fontSize="lg" fontWeight="bold">{val.title}</Text>
+                          <Text
+                            fontSize="lg"
+                            fontWeight="bold"
+                            noOfLines={2}
+                            textOverflow="ellipsis"
+                            overflow="hidden"
+                            >{val.title}</Text>
                           <Menu placement="bottom-end">
                             <MenuButton as={IconButton} colorScheme="white.400" color="main_blue" icon={<BsThreeDotsVertical />}>
                             </MenuButton>

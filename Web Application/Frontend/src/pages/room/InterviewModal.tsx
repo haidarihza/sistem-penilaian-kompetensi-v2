@@ -26,6 +26,7 @@ interface Props {
   onClose: () => void;
   room: RoomDetail;
   questions: Array<Question>;
+  updateRoom: () => void;
 }
 
 
@@ -34,11 +35,13 @@ const InterviewModal = ({
   onClose,
   room,
   questions,
+  updateRoom,
 }: Props) => {
   const apiContext = useContext(ApiContext);
   const toast = useToast();
 
   const [timer, setTimer] = useState<number>(0);
+  const [isTImerRunning, setIsTimerRunning] = useState<boolean>(false);
   const webcamRef = useRef<Webcam>({} as Webcam);
   const [capturing, setCapturing] = useState<boolean>(false);
   const questionIdx = useRef<number>(0);
@@ -62,6 +65,7 @@ const InterviewModal = ({
 
   const handleStartCaptureClick = useCallback(() => {
     setCapturing(true);
+    setIsTimerRunning(true);
     mediaRecorderRef.current = new MediaRecorder(webcamRef.current.stream!, {
       mimeType: "video/webm",
     });
@@ -76,13 +80,14 @@ const InterviewModal = ({
     if (mediaRecorderRef.current && typeof mediaRecorderRef.current.stop === 'function') {
       mediaRecorderRef.current.stop();
       setCapturing(false);
+      setIsTimerRunning(false);
     }
   }, [mediaRecorderRef, setCapturing]);
 
   const tick = () => {
     if (timer === 0) {
       handleStopCaptureClick();
-    } else {
+    } else if (isTImerRunning) {
       setTimer(timer-1);
     }
   }
@@ -98,11 +103,10 @@ const InterviewModal = ({
     }
   }, [recordedChunks]);
 
-  const handleEndInterview = () => {
-    finishInterview(apiContext.axios, room.id);
+  const handleEndInterview = async () => {
+    await finishInterview(apiContext.axios, room.id);
+    await updateRoom();
     onClose();
-    // refresh page
-    window.location.reload();
   }
 
   const answer = async (value : Blob) => {
@@ -125,6 +129,7 @@ const InterviewModal = ({
   useEffect(() => {
     if (questions?.length > 0) {
       setCurrent(questions[0]);
+      setTimer(questions[0].duration_limit * 60);
     }
   }, [questions]);
 
@@ -133,6 +138,7 @@ const InterviewModal = ({
       questionIdx.current += 1
       if (questionIdx.current < questions.length) {
         setCurrent(questions[questionIdx.current]);
+        setTimer(questions[questionIdx.current].duration_limit * 60);
       }
       handleSubmit();
     }
@@ -176,7 +182,6 @@ const InterviewModal = ({
             ) : (
               <Box display="flex" flexDir="row" alignItems="flex-end" justifyContent="flex-end">
                 <Button bg="main_blue" color="white" onClick={() => {
-                  setTimer(current.duration_limit * 60);
                   handleStartCaptureClick();
                 }}>Mulai</Button>
               </Box>

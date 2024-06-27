@@ -87,12 +87,14 @@ func GetOne(
 			if resp.Data.Status != "WAITING ANSWER" {
 				resultCompetency, err = roomRepository.GetResultCompetencies(r.Context(), roomId)
 				if err != nil {
+					fmt.Println(err)
 					response.RespondError(w, response.InternalServerError())
 					return
 				}
 
 				resultQuestion, err = roomRepository.GetResultQuestions(r.Context(), roomId)
 				if err != nil {
+					fmt.Println(err)
 					response.RespondError(w, response.InternalServerError())
 					return
 				}
@@ -100,6 +102,7 @@ func GetOne(
 
 			competencies, err := competencyRepository.SelectAllByRoomID(r.Context(), roomId)
 			if err != nil {
+				fmt.Println(err)
 				response.RespondError(w, response.InternalServerError())
 				return
 			}
