@@ -142,7 +142,7 @@ class CompetenceModel(torch.nn.Module):
             eval_dataloader = torch.utils.data.DataLoader(eval_dataset, batch_size=batch_size, shuffle=False, collate_fn=TCDataset.collate_fn)
         
         optimizer = optimizer(self.parameters(), **optimizer_params)
-        loss_fn = torch.nn.NLLLoss(reduction='sum')            # Do consideration CrossEnropyLoss or NLLLoss
+        loss_fn = torch.nn.NLLLoss(reduction='sum')
 
         class EarlyStopping:
             def __init__(self, patience, delta):

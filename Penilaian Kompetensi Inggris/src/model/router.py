@@ -81,12 +81,19 @@ async def train_model(settings: Annotated[Settings, Depends(get_settings)], db: 
     feedback_results = db.query(models.FeedbackResult).filter(models.FeedbackResult.status == "LABELED").all()
     competency_levels = db.query(models.CompetencyLevel).all()
 
-    dataset = TCDataset(feedback_results, competency_levels)
-    train_dataset, eval_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
+    transcripts = [fr.transcript for fr in feedback_results]
+    competence_sets = [[cl.description for cl in competency_levels if cl.competency_id == fr.competency_id] for fr in feedback_results]
+    
+    competence_set_ids = [[cl.competency_id for cl in competency_levels if cl.competency_id == fr.competency_id] for fr in feedback_results]
+    label_ids = [fr.competency_id for fr in feedback_results]
+    label_indices = [competence_set_ids[i].index(label_ids[i]) for i in range(len(label_ids))]
+
+    dataset = TCDataset(transcripts, competence_sets, label_indices)
+    train_dataset, eval_dataset = torch.utils.data.random_split(dataset, [settings.train_split_size, 1 - settings.train_split_size])
     
     new_model = CompetenceModel.load(settings.get_model_path(), settings.cm_model_type, state_dict_path=None, device=g.device)
 
-    new_model.fit(train_dataset, eval_dataset, epochs=10, batch_size=8)
+    new_model.fit(train_dataset, eval_dataset, epochs=settings.train_max_epochs, batch_size=settings.train_batch_size)
 
     filename = f"{int(time.time())}.pt"
     state_dict_path = os.path.join(settings.get_state_dict_dir(), filename)

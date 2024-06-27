@@ -15,9 +15,12 @@ class Settings(BaseSettings):
     cm_state_dict_filename: str
 
     # param_config.json
-    param_cfg_attr: ClassVar[list[str]] = ["al_batch_size", "al_bayesian_samples"]
+    param_cfg_attr: ClassVar[list[str]] = ["al_batch_size", "al_bayesian_samples", "train_batch_size", "train_max_epochs", "train_split_size"]
     al_batch_size: int
     al_bayesian_samples: int
+    train_batch_size: int
+    train_max_epochs: int
+    train_split_size: float
     
     # .env
     env_attr: ClassVar[list[str]] = ["database_user", "database_password", "database_host", "database_port", "database_name"]

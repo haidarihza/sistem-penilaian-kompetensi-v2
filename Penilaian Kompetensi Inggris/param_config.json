@@ -1,4 +1,7 @@
 {
-    "al_batch_size": 4,
-    "al_bayesian_samples": 5
+    "al_batch_size": 10,
+    "al_bayesian_samples": 5,
+    "train_batch_size": 8,
+    "train_max_epochs": 10,
+    "train_split_size": 0.8
 }
