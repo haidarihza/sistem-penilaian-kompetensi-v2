@@ -113,23 +113,35 @@ func (r *feedbackRepository) UpdateFeedback(ctx context.Context, feedback *repos
 
 const feedbackUpdateBulk = "feedbackUpdateBulk"
 const feedbackUpdateBulkQuery = `UPDATE "feedback_results"
-	SET status = $1, label_feedback = $2
-	WHERE id = $3
+	SET status = $1
+	WHERE id = ANY($2::uuid[])
 `
 
-func (r *feedbackRepository) UpdateBulkFeedback(ctx context.Context, feedbacks []*repository.Feedback) error {
+func (r *feedbackRepository) UpdateBulkFeedback(ctx context.Context, ids []string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	for _, feedback := range feedbacks {
-		_, err = tx.StmtContext(ctx, r.ps[feedbackUpdate]).ExecContext(ctx, feedback.Status, feedback.LabelFeedback, feedback.ID)
-		if err != nil {
-			return err
-		}
-	}
+	status := "TO_LABEL"
+	_, err = tx.StmtContext(ctx, r.ps[feedbackUpdateBulk]).ExecContext(ctx, status, ids)
 
 	return tx.Commit()
+}
+
+const feedbackIsNoDataToLabel = "feedbackIsNoDataToLabel"
+const feedbackIsNoDataToLabelQuery = `SELECT COUNT(*) = 0
+	FROM "feedback_results"
+	WHERE status = 'TO_LABEL'
+`
+
+func (r *feedbackRepository) IsNoDataToLabel(ctx context.Context) (bool, error) {
+	var isNoData bool
+	err := r.db.QueryRowContext(ctx, feedbackIsNoDataToLabelQuery).Scan(&isNoData)
+	if err != nil {
+		return false, err
+	}
+
+	return isNoData, nil
 }

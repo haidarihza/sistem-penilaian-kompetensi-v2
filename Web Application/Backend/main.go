@@ -118,8 +118,8 @@ func main() {
 	})
 
 	r.With(corsMiddleware, authMiddleware, roleInterviewerMiddleware).Route("/feedback", func(r chi.Router) {
-		r.Get("/", feedbackhandler.GetAllNeedFeedback(feedbackRepository))
-		r.Put("/{id}", feedbackhandler.UpdateFeedback(feedbackRepository))
+		r.Get("/", feedbackhandler.GetAllNeedFeedback(feedbackRepository, cfg.SummarizationHost))
+		r.Put("/{id}", feedbackhandler.UpdateFeedback(feedbackRepository, cfg.SummarizationHost))
 	})
 
 	log.Printf("Server is listening on port %s", cfg.APIPort)

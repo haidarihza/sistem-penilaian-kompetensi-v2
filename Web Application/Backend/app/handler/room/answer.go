@@ -50,12 +50,12 @@ func Answer(
 			form.Add("link", fileLoc)
 
 			resp, _ := http.PostForm(speechToTextHost, form)
+			defer resp.Body.Close()
 			bodySpeech, _ := io.ReadAll(resp.Body)
 			// fmt.Println(string(bodySpeech))
 
 			rRepo.InsertTranscript(ctx, roomId, questionId, fileLoc, string(bodySpeech))
 			if isAnswered, _ := rRepo.IsAnswered(ctx, roomId); isAnswered {
-				// answer, _ := rRepo.GetAnswers(ctx, roomId)
 				answer, _ := rRepo.GetResultQuestions(ctx, roomId)
 				questions, _ := qRepo.SelectAllByRoomID(ctx, roomId)
 				competencies, _ := cRepo.SelectAllByRoomID(ctx, roomId)

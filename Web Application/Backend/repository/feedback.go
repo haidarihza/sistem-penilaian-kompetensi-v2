@@ -37,5 +37,6 @@ type FeedbackRepository interface {
 	Insert(context.Context, []string, []string, []string, []string) error
 	SelectByStatus(context.Context, string) ([]*Feedback, error)
 	UpdateFeedback(context.Context, *Feedback) error
-	UpdateBulkFeedback(context.Context, []*Feedback) error
+	UpdateBulkFeedback(context.Context, []string) error
+	IsNoDataToLabel(context.Context) (bool, error)
 }

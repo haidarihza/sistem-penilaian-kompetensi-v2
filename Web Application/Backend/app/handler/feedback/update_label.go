@@ -7,13 +7,15 @@ import (
 	"encoding/json"
 	"database/sql"
 	"github.com/go-chi/chi/v5"
+	"context"
+	"fmt"
 )
 
 type FeedbackUpdate struct {
 	LabelFeedback string `json:"label_feedback"`
 }
 
-func UpdateFeedback(feedbackRepository repository.FeedbackRepository) http.HandlerFunc {
+func UpdateFeedback(feedbackRepository repository.FeedbackRepository, summarizationHost string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := FeedbackUpdate{}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -47,6 +49,19 @@ func UpdateFeedback(feedbackRepository repository.FeedbackRepository) http.Handl
 			return
 		}
 
+		go func(ctx context.Context, fRepo repository.FeedbackRepository) {
+			isNoDataToLabel, _ := fRepo.IsNoDataToLabel(ctx)
+
+			if isNoDataToLabel {
+				fmt.Println("Train data")
+				url := summarizationHost + "/train"
+				resp,_ := http.Post(url, "application/json", nil)
+				if resp.StatusCode != http.StatusOK {
+					return
+				}
+				defer resp.Body.Close()
+			}
+		}(context.Background(), feedbackRepository)
 		response.RespondOK(w)
 	}
 }
