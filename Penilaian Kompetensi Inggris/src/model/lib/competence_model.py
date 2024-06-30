@@ -33,18 +33,19 @@ class CompetenceModel(torch.nn.Module):
 
         if type == 'biencoder':
             model = AutoModel.from_pretrained(model_path)
-            if state_dict_path:
-                model.load_state_dict(torch.load(state_dict_path), strict=False)
-            return BiEncoder(model, tokenizer, device)
+            competence_model = BiEncoder(model, tokenizer, device)
 
         elif type == 'crossencoder':
             model = AutoModelForSequenceClassification.from_pretrained(model_path)
-            if state_dict_path:
-                model.load_state_dict(torch.load(state_dict_path), strict=False)
-            return CrossEncoder(model, tokenizer, device)
+            competence_model = CrossEncoder(model, tokenizer, device)
 
         else:
             raise NotImplementedError("Model type is only implemented for biencoder and crossencoder")
+        
+        if state_dict_path:
+            competence_model.load_state_dict(torch.load(state_dict_path), strict=False)
+
+        return competence_model
     
     def save_state_dict(self, state_dict_path: str) -> None:
         torch.save(self.state_dict(), state_dict_path)
