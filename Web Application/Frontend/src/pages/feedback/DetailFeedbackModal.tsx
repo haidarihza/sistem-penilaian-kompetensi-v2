@@ -16,6 +16,9 @@ import {
   Th,
   Td,
   Container,
+  RadioGroup,
+  HStack,
+  Radio,
 } from "@chakra-ui/react";
 
 interface Props {
@@ -37,8 +40,12 @@ const DetailFeedbackModal = ({
   feedback,
   setFeedback,
 }: Props) => {
-  const handleFeedbackChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFeedback({ ...feedback, label_feedback: e.target.value });
+  const handleFeedbackChange = (value: string) => {
+    setFeedback({ ...feedback, label_feedback: value });
+  };
+
+  const getCompetencyLevel = (level_id: string) => {
+    return competency.levels.find((level) => level.id === level_id);
   };
 
   return (
@@ -58,8 +65,8 @@ const DetailFeedbackModal = ({
         <Box bg="main_beige" p="1" w="fit-content" rounded="md" mt="4">
           <Text>Kompetensi: <b>{competency.competency}</b></Text>
         </Box>
-        <Box display="flex" flexDir="row" justifyContent="space-between" mt="2">
-          <Text fontSize="sm" mr="4" mt="2">{competency.description}</Text>
+        <Box display="flex" flexDir="column" justifyContent="space-between" mt="2">
+          <Text fontSize="sm" mb="4" mt="2">{competency.description}</Text>
           <TableContainer>
             <Table size="sm" colorScheme="blue">
               <Thead>
@@ -79,12 +86,19 @@ const DetailFeedbackModal = ({
             </Table>
           </TableContainer>
         </Box>
-        <Text fontSize="sm" mt="2">Result: <b>Level {feedback.label_result}</b></Text>
+        <Text fontSize="sm" mt="2">Result: <b>Level {getCompetencyLevel(feedback.label_result)?.level}</b></Text>
         <Box bg="main_beige" p="1" w="fit-content" rounded="md" mt="4">
           <Text>Feedback</Text>
         </Box>
+        <Text fontSize="sm" mt="2">Pilih level yang tepat berdasarkan hasil transkrip dan deskripsi kompetensi</Text>
         <FormControl mt="2" isRequired>
-          <Input type="text" placeholder="Label Result" onChange={handleFeedbackChange} />
+          <RadioGroup onChange={handleFeedbackChange} value={feedback.label_feedback}>
+            <HStack spacing="8">
+              {competency.levels.map((level: CompetencyLevel) => (
+                <Radio size="md" key={level.id} value={level.id}>{level.level}</Radio>
+              ))}
+            </HStack>
+          </RadioGroup>
         </FormControl>
         <Button type="submit" bg="main_blue" color="white" mt="2" isDisabled={feedback.label_feedback === ""} onClick={handleSubmit}>Beri Feedback</Button>
       </Box>

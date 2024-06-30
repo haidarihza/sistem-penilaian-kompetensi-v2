@@ -86,7 +86,7 @@ const QuestionModal = ({
         <Textarea value={question.question} onChange={handleQuestionChange} placeholder="Pertanyaan" mt="-2"/>
       </FormControl>
       <FormControl isRequired mb="4">
-        <FormLabel>Batas Durasi</FormLabel>
+        <FormLabel>Batas Durasi (menit)</FormLabel>
         <NumberInput value={question.duration_limit} onChange={handleDurationChange} min={1}>
           <NumberInputField />
           <NumberInputStepper>

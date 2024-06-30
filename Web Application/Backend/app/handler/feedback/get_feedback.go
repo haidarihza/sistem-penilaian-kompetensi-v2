@@ -4,6 +4,9 @@ import (
 	"interview/summarization/app/response"
 	"interview/summarization/repository"
 	"net/http"
+	"encoding/json"
+	"io"
+	"fmt"
 )
 type Feedback struct {
 	ID            string `json:"id"`
@@ -18,9 +21,41 @@ type GetAllNeedFeedbackResponse struct {
 	Data []Feedback `json:"data"`
 }
 
-func GetAllNeedFeedback(feedbackRepository repository.FeedbackRepository) http.HandlerFunc {
+type ToLabelResponse struct {
+	Ids 		[]string `json:"id"`
+	Scores 	[]float64 `json:"scores"`
+}
+
+func GetAllNeedFeedback(feedbackRepository repository.FeedbackRepository, summarizationHost string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		feedbacks, err := feedbackRepository.SelectByStatus(r.Context(), "NEED_FEEDBACK")
+		isNoDataToLabel, err := feedbackRepository.IsNoDataToLabel(r.Context())
+		if err != nil {
+			return
+		}
+
+		if isNoDataToLabel {
+			fmt.Println("Get data to labeled")
+			url := summarizationHost + "/to-label"
+			resp,_ := http.Get(url)
+			if resp.StatusCode != http.StatusOK {
+				return
+			}
+			defer resp.Body.Close()
+			bodyLabel, _ := io.ReadAll(resp.Body)
+
+			res := ToLabelResponse{}
+			err := json.Unmarshal(bodyLabel, &res)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			err = feedbackRepository.UpdateBulkFeedback(r.Context(), res.Ids)
+			if err != nil {
+				return
+			}
+		}
+
+		feedbacks, err := feedbackRepository.SelectByStatus(r.Context(), "TO_LABEL")
 		if err != nil {
 			response.RespondError(w, response.InternalServerError())
 			return

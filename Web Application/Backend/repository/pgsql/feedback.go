@@ -36,21 +36,22 @@ var feedbackQueries = map[string]string{
 const feedbackInsert = "feedbackInsert"
 const feedbackInsertQuery = `INSERT INTO
 	"feedback_results"(
-		id, competency_id, transcript, label_result
+		id, transcript, competency_id, status, label_result
 	) values(
-		$1, $2, $3, $4
+		UNNEST($1::uuid[]), UNNEST($2::text[]), UNNEST($3::uuid[]), $4, UNNEST($5::uuid[])
 	)
 `
 
-func (r *feedbackRepository) Insert(ctx context.Context, feedback *repository.Feedback) error {
+func (r *feedbackRepository) Insert(ctx context.Context, feedbackID []string, transcript []string, cID []string, resID []string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
+	status := "UNLABELED"
 	_, err = tx.StmtContext(ctx, r.ps[feedbackInsert]).ExecContext(ctx,
-		feedback.ID, feedback.CompetencyID, feedback.Transcript, feedback.LabelResult,
+		feedbackID, transcript, cID, status, resID,
 	)
 	if err != nil {
 		return err
@@ -112,23 +113,35 @@ func (r *feedbackRepository) UpdateFeedback(ctx context.Context, feedback *repos
 
 const feedbackUpdateBulk = "feedbackUpdateBulk"
 const feedbackUpdateBulkQuery = `UPDATE "feedback_results"
-	SET status = $1, label_feedback = $2
-	WHERE id = $3
+	SET status = $1
+	WHERE id = ANY($2::uuid[])
 `
 
-func (r *feedbackRepository) UpdateBulkFeedback(ctx context.Context, feedbacks []*repository.Feedback) error {
+func (r *feedbackRepository) UpdateBulkFeedback(ctx context.Context, ids []string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	for _, feedback := range feedbacks {
-		_, err = tx.StmtContext(ctx, r.ps[feedbackUpdate]).ExecContext(ctx, feedback.Status, feedback.LabelFeedback, feedback.ID)
-		if err != nil {
-			return err
-		}
-	}
+	status := "TO_LABEL"
+	_, err = tx.StmtContext(ctx, r.ps[feedbackUpdateBulk]).ExecContext(ctx, status, ids)
 
 	return tx.Commit()
+}
+
+const feedbackIsNoDataToLabel = "feedbackIsNoDataToLabel"
+const feedbackIsNoDataToLabelQuery = `SELECT COUNT(*) = 0
+	FROM "feedback_results"
+	WHERE status = 'TO_LABEL'
+`
+
+func (r *feedbackRepository) IsNoDataToLabel(ctx context.Context) (bool, error) {
+	var isNoData bool
+	err := r.db.QueryRowContext(ctx, feedbackIsNoDataToLabelQuery).Scan(&isNoData)
+	if err != nil {
+		return false, err
+	}
+
+	return isNoData, nil
 }

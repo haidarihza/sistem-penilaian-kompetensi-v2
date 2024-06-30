@@ -1,9 +1,15 @@
 import React, {  } from "react";
-import { Competency } from "../../interface/competency";
+import { Competency, CompetencyLevel } from "../../interface/competency";
 import ModalTemplate from "../../components/ModalTemplate";
 import {
-  Box,
   Text,
+  Table,
+  Thead,
+  Tr,
+  Th,
+  Tbody,
+  Td,
+  TableContainer,
 } from "@chakra-ui/react";
 
 interface Props {
@@ -28,17 +34,27 @@ const DetailsCompetencyModal = ({
       handleSubmit={handleSubmit}
       title={title}
       isForm={false}
-      size="2xl"
+      size="4xl"
     >
       <Text mb="4">{competency.description}</Text>
-      {competency.levels.map((level, idx) => (
-        <Box key={idx} mb="4">
-          <Box display="flex" justifyContent="center" justifyItems="center" bg="main_blue" w="20%" rounded="lg">
-            <Text fontSize="md" fontWeight="medium" color="white">{level.level}</Text>
-          </Box>
-          <Text>{level.description}</Text>
-        </Box>
-      ))}
+      <TableContainer>
+        <Table size="sm" colorScheme="blue">
+          <Thead>
+            <Tr>
+              <Th textAlign="center">Level</Th>
+              <Th textAlign="center" w="80%">Deskripsi</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {competency.levels.map((level: CompetencyLevel) => (
+              <Tr key={level.id}>
+                <Td textAlign="center">{level.level}</Td>
+                <Td w="80%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">{level.description}</Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </TableContainer>
     </ModalTemplate>
   );
 };

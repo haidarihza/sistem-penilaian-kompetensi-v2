@@ -34,7 +34,7 @@ import { MdAccessTimeFilled } from "react-icons/md";
 import InterviewModal from "./InterviewModal";
 import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
 import DetailQuestionModal from "./DetailQuestionModal";
-import { Competency } from "../../interface/competency";
+import { Competency, CompetencyLevel } from "../../interface/competency";
 import ToastModal from "../../components/ToastModal";
 
 
@@ -147,6 +147,18 @@ const Detail = () => {
     return total;
   }
 
+  const getBestLevel = (levels: CompetencyLevel[]) => {
+    let max = 0;
+    let best = "";
+    levels.forEach((val) => {
+      if (parseFloat(val.result!) > max) {
+        max = parseFloat(val.result!);
+        best = val.level;
+      }
+    });
+    return best;
+  }
+
   return (
     <Layout>
       <DetailQuestionModal
@@ -238,8 +250,8 @@ const Detail = () => {
                         <Td w="10%" textAlign="center">
                           <Button size="sm" bg="main_blue" color="white" onClick={e => handleDetailCompetency(val.id)}>Detail</Button>
                         </Td>
-                        <Td w="10%" isNumeric>
-                          {val.levels.map((level) => <Text key={level.id}>{level.result? parseFloat(level.result).toFixed(3) : "Belum Ada Hasil"}</Text>)}
+                        <Td w="10%" textAlign="center">
+                          {getBestLevel(val.levels) === "" ? "Belum Ada Hasil" : getBestLevel(val.levels)}
                         </Td>
                       </Tr>
                     )) : <Spinner />}
@@ -329,6 +341,7 @@ const Detail = () => {
         onClose={onClose} 
         questions={data.questions} 
         room={data}
+        updateRoom={fetch}
       />
     </Layout>
   )

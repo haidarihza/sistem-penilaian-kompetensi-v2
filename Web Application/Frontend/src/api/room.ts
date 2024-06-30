@@ -15,11 +15,13 @@ export async function createRoom(
   competencies_id: Array<string>,
 ): Promise<string> {
   try {
+    const start_date = new Date(start);
+    const end_date = new Date(end);
     const res = await axios.post("/room", {
       title,
       description,
-      start,
-      end,
+      start: start_date,
+      end: end_date,
       interviewee_email,
       questions_id,
       competencies_id,
@@ -83,8 +85,6 @@ export async function answerQuestion(
     const snapshot = await uploadBytes(storageRef, answer);
     const downloadUrl = await getDownloadURL(snapshot.ref);
     
-    console.log('File available at', downloadUrl);    // send to backend
-
     await axios.post(`/room/${room_id}/${question_id}`, {
       answer_url: downloadUrl
     });

@@ -8,16 +8,16 @@ import (
 type FeedbackStatus string
 
 const (
-	NoNeedFeedback = FeedbackStatus("NO_NEED_FEEDBACK")
-	NeedFeedback = FeedbackStatus("NEED_FEEDBACK")
-	Reviewed = FeedbackStatus("REVIEWED")
+	UnLabeled = FeedbackStatus("UNLABELED")
+	ToLabel = FeedbackStatus("TO_LABEL")
+	Labeled = FeedbackStatus("LABELED")
 )
 
 func FeedbackStatusMapper(status string) (FeedbackStatus, bool) {
 	mapper := map[string]FeedbackStatus{
-		"NO_NEED_FEEDBACK": NoNeedFeedback,
-		"NEED_FEEDBACK": NeedFeedback,
-		"REVIEWED": Reviewed,
+		"UNLABELED": UnLabeled,
+		"TO_LABEL": 	ToLabel,
+		"LABELED": 	Labeled,
 	}
 
 	feedbackStatus, ok := mapper[status]
@@ -34,8 +34,9 @@ type Feedback struct {
 }	
 
 type FeedbackRepository interface {
-	Insert(context.Context, *Feedback) error
+	Insert(context.Context, []string, []string, []string, []string) error
 	SelectByStatus(context.Context, string) ([]*Feedback, error)
 	UpdateFeedback(context.Context, *Feedback) error
-	UpdateBulkFeedback(context.Context, []*Feedback) error
+	UpdateBulkFeedback(context.Context, []string) error
+	IsNoDataToLabel(context.Context) (bool, error)
 }

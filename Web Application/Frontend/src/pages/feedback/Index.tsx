@@ -14,16 +14,13 @@ import {
   Th,
   Td,
   TableContainer,
-  Input,
-  Flex, 
   Button, 
   Box,
   Text,
   useDisclosure,
-  IconButton,
   useToast,
+  Spinner,
 } from "@chakra-ui/react"
-import { EditIcon, DeleteIcon, SmallCloseIcon } from "@chakra-ui/icons";
 import ToastModal from "../../components/ToastModal";
 import DetailFeedbackModal from "./DetailFeedbackModal";
 
@@ -32,6 +29,7 @@ const Index = () => {
   const toast = useToast();
 
   const [data, setData] = useState<Array<Feedback>>([] as Array<Feedback>);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentFeedback, setCurrentFeedback] = useState<Feedback>({
     id: "",
     competency_id: "",
@@ -52,11 +50,12 @@ const Index = () => {
 
   const fetch = async () => {
     try {
+      setIsLoading(true);
       const feedback = await getAllFeedback(apiContext.axios);
       setData(feedback);
-      console.log(feedback);
       const competency = await getAllCompetency(apiContext.axios);
       setCompetencies(competency);
+      setIsLoading(false);
     } catch(e) {
       if (e instanceof ApiError) {
         ToastModal(toast, "Error!", e.message, "error");
@@ -68,7 +67,7 @@ const Index = () => {
   
   useEffect(() => {
     fetch();
-  }, [isOpenModal]);
+  }, []);
 
   const handleOpenDetail = (feedback_id: string, competency_id: string) => () => {
     const feedback = data.find((val) => val.id === feedback_id);
@@ -80,9 +79,9 @@ const Index = () => {
 
   const handleUpdateFeedback = async () => {
     try {
-      console.log(currentFeedback);
       await updateFeedback(apiContext.axios, currentFeedback);
       ToastModal(toast, "Success!", "Feedback berhasil diperbarui", "success");
+      fetch();
       onCloseModal();
     } catch(e) {
       if (e instanceof ApiError) {
@@ -91,6 +90,12 @@ const Index = () => {
         ToastModal(toast, "Error!", "Terjadi kesalahan pada server.", "error");
       }
     }
+  }
+
+  const getCompetencyLevel = (competency_id: string, level_id: string) => {
+    const competency = competencies.find((val) => val.id === competency_id);
+    const level = competency?.levels.find((val) => val.id === level_id);
+    return level?.level;
   }
 
   return (
@@ -105,34 +110,47 @@ const Index = () => {
         handleSubmit={handleUpdateFeedback}
       />
       <Text as="h1" fontSize="2xl" fontWeight="semibold">Beri Feedback</Text>
-      <TableContainer bg="white" rounded="md" mt="2">
-        <Box overflowY="auto" maxH="100%">
-          <Table variant="simple" colorScheme="blue">
-            <Thead position="sticky" top="0" zIndex="1" bg="white">
-              <Tr>
-                <Th textTransform="capitalize" w="20%">Kompetensi</Th>
-                <Th textTransform="capitalize" w="50%" textAlign="center">Transkrip</Th>
-                <Th textTransform="capitalize" w="20%" textAlign="center">Result (Level)</Th>
-                <Th textTransform="capitalize" textAlign="center">Aksi</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-            {data.map((val) => (
-                <Tr key={val.id}>
-                  <Td w="20%">{competencies.find((competency) => competency.id === val.competency_id)?.competency}</Td>
-                  <Td w="50%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">
-                    <Text noOfLines={3}>{val.transcript}</Text>
-                  </Td>
-                  <Td textAlign="center">{val.label_result}</Td>
-                  <Td>
-                    <Button bg="main_blue" color="white" size="sm" onClick={handleOpenDetail(val.id, val.competency_id)}>Beri Feedback</Button>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
+      {isLoading ? (
+        <Box textAlign="center" justifyItems="center">
+          <Spinner
+            thickness='4px'
+            speed='0.65s'
+            emptyColor='gray.200'
+            color='blue.500'
+            size='xl'
+          />
+          <Text>Loading...</Text>
         </Box>
-      </TableContainer>
+      ) : (
+        <TableContainer bg="white" rounded="md" mt="2">
+          <Box overflowY="auto" maxH="100%">
+            <Table variant="simple" colorScheme="blue">
+              <Thead position="sticky" top="0" zIndex="1" bg="white">
+                <Tr>
+                  <Th textTransform="capitalize" w="20%">Kompetensi</Th>
+                  <Th textTransform="capitalize" w="50%" textAlign="center">Transkrip</Th>
+                  <Th textTransform="capitalize" w="20%" textAlign="center">Result (Level)</Th>
+                  <Th textTransform="capitalize" textAlign="center">Aksi</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+              {data.map((val) => (
+                  <Tr key={val.id}>
+                    <Td w="20%">{competencies.find((competency) => competency.id === val.competency_id)?.competency}</Td>
+                    <Td w="50%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">
+                      <Text noOfLines={3}>{val.transcript}</Text>
+                    </Td>
+                    <Td textAlign="center">{getCompetencyLevel(val.competency_id, val.label_result)}</Td>
+                    <Td>
+                      <Button bg="main_blue" color="white" size="sm" onClick={handleOpenDetail(val.id, val.competency_id)}>Beri Feedback</Button>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
+        </TableContainer>
+      )}
     </Layout>
   )
 }
