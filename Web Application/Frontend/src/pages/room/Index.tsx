@@ -278,7 +278,12 @@ const Index = () => {
             ) : (
               <Box bg="white" rounded="md">
                 <Flex justifyContent="space-between" p="5">
-                  <Input maxW="40%" placeholder="Cari Ruangan" />
+                  <Input 
+                    maxW="60%" 
+                    placeholder="Cari Pertanyaan" 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                  />
                 </Flex>
                 <Box display="flex" p="5" flexWrap="wrap" justifyContent="flex-start">
                   {tab.data ? tab.data.map((val, idx) => (
