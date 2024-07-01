@@ -39,7 +39,7 @@ class Settings(BaseSettings):
         dotenv_settings,
         file_secret_settings,
     ):
-        return DotEnvSettingsSource(settings_cls, ".env"), JsonConfigSettingsSource(settings_cls, "config.json")
+        return DotEnvSettingsSource(settings_cls, ".env"), JsonConfigSettingsSource(settings_cls, "config.json"), JsonConfigSettingsSource(settings_cls, "param_config.json")
 
     def update_json(self):
         with open('config.json', 'w') as f:
@@ -48,8 +48,11 @@ class Settings(BaseSettings):
         with open('param_config.json', 'w') as f:
             json.dump(self.model_dump(include=self.param_cfg_attr), f, indent=4)
 
-    def get_model_path(self):
+    def get_model_dir(self):
         return os.path.join(os.getcwd(), self.cm_model_dir)
+    
+    def get_model_path(self):
+        return os.path.join(self.get_model_dir(), self.cm_model_name)
     
     def get_state_dict_dir(self):
         return os.path.join(os.getcwd(), self.cm_state_dict_dir, self.cm_model_name)

@@ -6,6 +6,9 @@ from src.model.lib import utils
 
 import torch
 
+import logging
+logger = logging.getLogger('uvicorn')
+
 
 class CompetenceModel(torch.nn.Module):
     def __init__(self, model, tokenizer, device):
@@ -28,7 +31,7 @@ class CompetenceModel(torch.nn.Module):
         Returns:
             CompetenceModel: The model instance.
         '''
-
+        logger.info(f"Loading model from {model_path} with type {type} and state dict {state_dict_path}")
         tokenizer = AutoTokenizer.from_pretrained(model_path)
 
         if type == 'biencoder':
