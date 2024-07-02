@@ -43,9 +43,9 @@ var questionQueries = map[string]string{
 const questionInsert = "questionInsert"
 const questionInsertQuery = `INSERT INTO
 	questions(
-		id, question, duration_limit
+		id, question, duration_limit, org_position
 	) values(
-		$1, $2, $3
+		$1, $2, $3, $4
 	)
 `
 const questionLabelInsert = "questionLabelInsert"
@@ -64,7 +64,7 @@ func (r *questionRepository) Insert(ctx context.Context, question *repository.Qu
 	defer tx.Rollback()
 
 	_, err = tx.StmtContext(ctx, r.ps[questionInsert]).ExecContext(ctx,
-		question.ID, question.Question, question.DurationLimit,
+		question.ID, question.Question, question.DurationLimit, question.OrgPosition,
 	)
 	if err != nil {
 		return err
@@ -86,7 +86,7 @@ func (r *questionRepository) Insert(ctx context.Context, question *repository.Qu
 
 const questionSelectAll = "questionSelectAll"
 const questionSelectAllQuery = `SELECT
-	q.id, q.question, q.duration_limit, ql.id, ql.competency_id, ql.question_id
+	q.id, q.question, q.duration_limit, q.org_position, ql.id, ql.competency_id, ql.question_id
 	FROM questions q
 	LEFT JOIN questions_labels ql ON q.id = ql.question_id
 	WHERE q.deleted = false AND ql.deleted = false
@@ -104,7 +104,7 @@ func (r *questionRepository) SelectAll(ctx context.Context) ([]*repository.Quest
 		question := &repository.Question{}
 		questionLabel := &repository.QuestionLabel{}
 		err := rows.Scan(
-			&question.ID, &question.Question, &question.DurationLimit,
+			&question.ID, &question.Question, &question.DurationLimit, &question.OrgPosition,
 			&questionLabel.ID, &questionLabel.CompetencyID, &questionLabel.QuestionID,
 		)
 		if err != nil {
@@ -128,7 +128,7 @@ func (r *questionRepository) SelectAll(ctx context.Context) ([]*repository.Quest
 
 const questionSelectAllByRoomID = "questionSelectAllByRoomID"
 const questionSelectAllByRoomIDQuery = `SELECT
-	q.id, q.question, q.duration_limit, ql.id, ql.competency_id, ql.question_id
+	q.id, q.question, q.duration_limit, q.org_position, ql.id, ql.competency_id, ql.question_id
 	FROM questions q
 	INNER JOIN rooms_has_questions rq ON q.id = rq.question_id
 	LEFT JOIN questions_labels ql ON q.id = ql.question_id
@@ -147,7 +147,7 @@ func (r *questionRepository) SelectAllByRoomID(ctx context.Context, id string) (
 		question := &repository.Question{}
 		questionLabel := &repository.QuestionLabel{}
 		err := rows.Scan(
-			&question.ID, &question.Question, &question.DurationLimit,
+			&question.ID, &question.Question, &question.DurationLimit, &question.OrgPosition,
 			&questionLabel.ID, &questionLabel.CompetencyID, &questionLabel.QuestionID,
 		)
 		if err != nil {
@@ -171,7 +171,7 @@ func (r *questionRepository) SelectAllByRoomID(ctx context.Context, id string) (
 
 const questionSelectOne = "questionSelectOne"
 const questionSelectOneQuery = `SELECT
-	q.id, q.question, q.duration_limit, ql.id, ql.competency_id, ql.question_id
+	q.id, q.question, q.duration_limit, q.org_position, ql.id, ql.competency_id, ql.question_id
 	FROM questions q
 	LEFT JOIN questions_labels ql ON q.id = ql.question_id
 	WHERE q.deleted = false AND ql.deleted = false AND q.id = $1
@@ -188,7 +188,7 @@ func (r *questionRepository) SelectOneByID(ctx context.Context, id string) (*rep
 	for rows.Next() {
 		questionLabel := &repository.QuestionLabel{}
 		err := rows.Scan(
-			&question.ID, &question.Question, &question.DurationLimit,
+			&question.ID, &question.Question, &question.DurationLimit, &question.OrgPosition,
 			&questionLabel.ID, &questionLabel.CompetencyID, &questionLabel.QuestionID,
 		)
 		if err != nil {
@@ -207,7 +207,8 @@ const questionUpdate = "questionUpdate"
 const questionUpdateQuery = `UPDATE questions SET
 	question = $2,
 	duration_limit = $3,
-	updated_at = $4
+	org_position = $4,
+	updated_at = $5
 	WHERE id = $1
 `
 
@@ -237,7 +238,7 @@ func (r *questionRepository) Upsert(ctx context.Context, question *repository.Qu
 
 	updatedAt := time.Now().UTC()
 	res, err := tx.StmtContext(ctx, r.ps[questionUpdate]).ExecContext(ctx,
-		question.ID, question.Question, question.DurationLimit, updatedAt,
+		question.ID, question.Question, question.DurationLimit, question.OrgPosition, updatedAt,
 	)
 	if err != nil {
 		return err

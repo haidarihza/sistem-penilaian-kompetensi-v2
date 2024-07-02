@@ -10,13 +10,14 @@ import {
   Tbody,
   Td,
   TableContainer,
+  Heading,
+  Box,
 } from "@chakra-ui/react";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   handleSubmit: () => Promise<void>;
-  title: string;
   competency: Competency;
 }
 
@@ -24,7 +25,6 @@ const DetailsCompetencyModal = ({
   isOpen,
   onClose,
   handleSubmit,
-  title,
   competency,
 }: Props) => {
   return (
@@ -32,10 +32,18 @@ const DetailsCompetencyModal = ({
       isOpen={isOpen}
       onClose={onClose}
       handleSubmit={handleSubmit}
-      title={title}
+      title={""}
       isForm={false}
       size="4xl"
     >
+      <Box mb="4" display="flex" justifyContent="flex-start" flexDir="row" alignItems="center">
+        <Heading size="md" mr="4">
+          {competency.competency}
+        </Heading>
+        <Box display="flex" alignItems="center" w="fit-content" rounded="md" bg="second_blue">
+          <Text fontSize="sm" fontWeight="normal" color="white" pl="1" pr="1">{competency.category}</Text>
+        </Box>
+      </Box>
       <Text mb="4">{competency.description}</Text>
       <TableContainer>
         <Table size="sm" colorScheme="blue">

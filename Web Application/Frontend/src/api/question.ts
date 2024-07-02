@@ -6,12 +6,14 @@ export async function createQuestion(
   axios: AxiosInstance,
   question: string, 
   duration_limit: number,
+  org_position: string,
   labels: QuestionLabel[]
 ): Promise<void> {
   try {
     await axios.post("/question", {
       question,
       duration_limit,
+      org_position,
       labels,
     });
   } catch (e) {
@@ -64,12 +66,14 @@ export async function updateQuestion(
   id: string,
   question: string, 
   duration_limit: number,
+  org_position: string,
   labels: QuestionLabel[]
 ): Promise<void> {
   try {
     await axios.put(`/question/${id}`, {
       question,
       duration_limit,
+      org_position,
       labels,
     });
   } catch (e) {

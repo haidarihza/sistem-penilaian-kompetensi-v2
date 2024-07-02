@@ -40,6 +40,7 @@ func GetOne(competencyRepository repository.CompetencyRepository) http.HandlerFu
 				ID:         	competency.ID,
 				Competency: 	competency.Competency,
 				Description: 	competency.Description,
+				Category:   	competency.Category,
 				Levels:     	levels,
 			},
 		})

@@ -40,6 +40,7 @@ func GetOne(questionRepository repository.QuestionRepository) http.HandlerFunc {
 				ID:            question.ID,
 				Question:      question.Question,
 				DurationLimit: question.DurationLimit,
+				OrgPosition:   question.OrgPosition,
 				Labels:        labels,
 			},
 		})

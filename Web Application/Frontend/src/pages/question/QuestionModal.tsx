@@ -7,7 +7,6 @@ import {
   Text,
   FormControl,
   FormLabel,
-  Input,
   Select,
   NumberInput,
   NumberInputField,
@@ -17,6 +16,17 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
+import { Form } from "react-router-dom";
+
+const orgPosition: Array<string> = [
+  "Direksi",
+  "Manajerial",
+  "Divisi IT",
+  "Divisi HR",
+  "Divisi Keuangan",
+  "Divisi Pemasaran",
+  "Divisi Produksi"
+];
 
 interface Props {
   isOpen: boolean;
@@ -86,7 +96,7 @@ const QuestionModal = ({
         <Textarea value={question.question} onChange={handleQuestionChange} placeholder="Pertanyaan" mt="-2"/>
       </FormControl>
       <FormControl isRequired mb="4">
-        <FormLabel>Batas Durasi (menit)</FormLabel>
+        <FormLabel>Durasi (menit)</FormLabel>
         <NumberInput value={question.duration_limit} onChange={handleDurationChange} min={1}>
           <NumberInputField />
           <NumberInputStepper>
@@ -94,6 +104,14 @@ const QuestionModal = ({
             <NumberDecrementStepper />
           </NumberInputStepper>
         </NumberInput>
+      </FormControl>
+      <FormControl mb="4">
+        <FormLabel>Posisi Organisasi</FormLabel>
+        <Select placeholder="Pilih Posisi Organisasi" value={question.org_position} onChange={(e) => setQuestion({ ...question, org_position: e.target.value })}>
+          {orgPosition.map((val, i) => (
+            <option key={i} value={val}>{val}</option>
+          ))}
+        </Select>
       </FormControl>
       <FormControl mb="4">
         <FormLabel>Label</FormLabel>

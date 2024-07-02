@@ -10,6 +10,7 @@ type Competency struct {
 	ID         	string
 	Competency 	string
 	Description string
+	Category  	string
 	Deleted    	bool
 	CreatedAt  	time.Time
 	UpdatedAt  	sql.NullTime

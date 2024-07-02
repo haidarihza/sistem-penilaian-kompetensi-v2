@@ -25,6 +25,7 @@ func Update(competencyRepository repository.CompetencyRepository) http.HandlerFu
 			ID:         competencyId,
 			Competency: req.Competency,
 			Description: req.Description,
+			Category:   req.Category,
 		}
 
 		var updatedLevelsUid []string
