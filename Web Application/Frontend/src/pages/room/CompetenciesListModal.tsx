@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ModalTemplate from "../../components/ModalTemplate";
 import { Competency } from "../../interface/competency";
-import { RoomCreate } from "../../interface/room";
+import { RoomCreate, RoomGroupCreate } from "../../interface/room";
 import {
   Table,
   Thead,
@@ -24,8 +24,8 @@ interface Props {
   buttonContent?: string;
   competencyCollections: Array<Competency>;
   questionCollections: Array<Question>;
-  room: RoomCreate;
-  setRoom: (value: RoomCreate) => void;
+  roomGroup: RoomGroupCreate;
+  setRoomGroup: (roomGroup: RoomGroupCreate) => void;
 }
 
 const CompetenciesListModal = ({
@@ -36,21 +36,21 @@ const CompetenciesListModal = ({
   buttonContent,
   competencyCollections,
   questionCollections,
-  room,
-  setRoom,
+  roomGroup,
+  setRoomGroup,
 }: Props) => {
   const [filteredCompetencyCollections, setFilteredCompetencyCollections] = useState<Array<Competency>>([] as Array<Competency>);
 
   useEffect(() => {
     setFilteredCompetencyCollections(
       competencyCollections.filter(
-        (competency) => room.competencies.length === 0 || !room.competencies.map((val) => val?.id).includes(competency.id)
+        (val) => !roomGroup.room.competencies.map((comp) => comp.id).includes(val.id)
       )
     );
-  }, [competencyCollections, room]);
+  }, [competencyCollections, roomGroup.room]);
 
   const handleAddCompetency = (competency: Competency) => {
-    const newRoom = { ...room };
+    const newRoom = { ...roomGroup.room } as RoomCreate;
     newRoom.competencies.push(competency);
     // Add questions that have the same competency_id from labels as the selected competency
     const questions = questionCollections.filter((question) => 
@@ -62,7 +62,7 @@ const CompetenciesListModal = ({
         newRoom.questions.push(question);
       }
     });
-    setRoom(newRoom);
+    setRoomGroup({ ...roomGroup, room: newRoom });
   };
 
   return (

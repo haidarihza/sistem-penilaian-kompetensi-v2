@@ -16,10 +16,12 @@ CREATE TABLE IF NOT EXISTS room_groups(
   id UUID PRIMARY KEY,
   title TEXT NOT NULL,
   org_position TEXT NOT NULL,
+  interviewee_id UUID,
   deleted BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE,
-  deleted_at TIMESTAMP WITH TIME ZONE
+  deleted_at TIMESTAMP WITH TIME ZONE,
+  FOREIGN KEY(interviewee_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS rooms(
@@ -32,14 +34,12 @@ CREATE TABLE IF NOT EXISTS rooms(
   status TEXT,
   note TEXT,
   interviewer_id UUID,
-  interviewee_id UUID,
   room_group_id UUID,
   deleted BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE,
   deleted_at TIMESTAMP WITH TIME ZONE,
   FOREIGN KEY(interviewer_id) REFERENCES users(id),
-  FOREIGN KEY(interviewee_id) REFERENCES users(id),
   FOREIGN KEY(room_group_id) REFERENCES room_groups(id)
 );
 

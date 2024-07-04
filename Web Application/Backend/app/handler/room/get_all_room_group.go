@@ -5,6 +5,7 @@ import (
 	"interview/summarization/app/response"
 	"interview/summarization/repository"
 	"net/http"
+	"fmt"
 )
 type RoomResponse struct {
 	ID              string `json:"id"`
@@ -44,6 +45,7 @@ func GetAllRoomGroup(roomRepository repository.RoomRepository) http.HandlerFunc 
 		if userCred.Role == repository.Interviewer {
 			roomGroups, err := roomRepository.SelectAllRoomGroupByInterviewerID(r.Context(), userCred.ID)
 			if err != nil {
+				fmt.Println(err)
 				response.RespondError(w, response.InternalServerError())
 				return
 			}
@@ -51,6 +53,7 @@ func GetAllRoomGroup(roomRepository repository.RoomRepository) http.HandlerFunc 
 			for _, roomGroup := range roomGroups {
 				rooms, err := roomRepository.SelectAllRoomByGroupID(r.Context(), roomGroup.ID)
 				if err != nil {
+					fmt.Println(err)
 					response.RespondError(w, response.InternalServerError())
 					return
 				}
@@ -124,7 +127,6 @@ func GetAllRoomGroup(roomRepository repository.RoomRepository) http.HandlerFunc 
 				})
 			}
 		}
-
 		response.Respond(w, http.StatusOK, resp)
 	}
 }

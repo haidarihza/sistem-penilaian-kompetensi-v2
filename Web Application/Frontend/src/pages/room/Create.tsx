@@ -20,7 +20,8 @@ import { Box,
   Thead,
   Tr,
   useDisclosure,
-  useToast
+  useToast,
+  Select,
  } from "@chakra-ui/react";
  import {
   AutoComplete,
@@ -29,21 +30,31 @@ import { Box,
   AutoCompleteList,
   AutoCompleteTag,
 } from "@choc-ui/chakra-autocomplete";
-import { createRoom } from "../../api/room";
+import { createRoom, createRoomGroup } from "../../api/room";
 import { ApiError } from "../../interface/api";
 import { Question } from "../../interface/question";
 import { Competency } from "../../interface/competency";
-import { RoomCreate } from "../../interface/room";
+import { RoomGroupCreate, RoomCreate } from "../../interface/room";
+import { UserEmail } from "../../interface/auth";
 import { AddIcon } from "@chakra-ui/icons";
 import { getAllQuestion } from "../../api/question";
 import { getAllCompetency } from "../../api/competency";
-import { getAllEmailsInterviewee } from "../../api/auth"; 
+import { getAllEmails } from "../../api/auth"; 
 import ToastModal from "../../components/ToastModal";
 import CompetenciesListModal from "./CompetenciesListModal";
 import QuestionsListModal from "./QuestionsListModal";
 import SortableTableCompetency from "./SortableTableCompetency";
 import SortableTableQuestion from "./SortableTableQuestion";
 
+const orgPosition: Array<string> = [
+  "Direksi",
+  "Manajerial",
+  "Divisi IT",
+  "Divisi HR",
+  "Divisi Keuangan",
+  "Divisi Pemasaran",
+  "Divisi Produksi"
+];
 
 const Detail = () => {
   const apiContext = useContext(ApiContext);
@@ -57,9 +68,19 @@ const Detail = () => {
     description: "",
     start: "",
     end: "",
-    interview_email: [],
-    questions: [] as Array<Question>,
-    competencies: [] as Array<Competency>
+    interviewer_email: "",
+    questions_id: [] as string[],
+    competencies_id: [] as string[],
+    questions: [] as Question[],
+    competencies: [] as Competency[]
+  });
+
+  const [roomGroup, setRoomGroup] = useState<RoomGroupCreate>({
+    id: "",
+    title: "",
+    org_position: "",
+    interviewee_email: [],
+    room: room
   });
 
   const [isSubmit, setIsSubmit] = useState(false);
@@ -68,8 +89,9 @@ const Detail = () => {
 
   const [questionCollections, setQuestionCollections] = useState<Array<Question>>([]);
   const [competencyCollections, setCompetencyCollections] = useState<Array<Competency>>([]);
-  const [emailList, setEmailList] = useState<Array<string>>([]);
-  const [filteredEmailList, setFilteredEmailList] = useState<Array<string>>([]);
+  const [interviewerEmails, setInterviewerEmails] = useState<Array<UserEmail>>([]);
+  const [intervieweeEmails, setIntervieweeEmails] = useState<Array<UserEmail>>([]);
+  const [filteredIntervieweeEmails, setFilteredIntervieweeEmails] = useState<Array<UserEmail>>([]);
 
   const role = authContext.auth?.role!;
   
@@ -101,9 +123,10 @@ const Detail = () => {
 
   const fetchEmails = async () => {
     try {
-      const emails = await getAllEmailsInterviewee(apiContext.axios);
-      setEmailList(emails);
-      setFilteredEmailList(emails);
+      const emails = await getAllEmails(apiContext.axios);
+      setIntervieweeEmails(emails.filter((email) => email.role === "INTERVIEWEE"));
+      setInterviewerEmails(emails.filter((email) => email.role === "INTERVIEWER"));
+      setFilteredIntervieweeEmails(emails.filter((email) => email.role === "INTERVIEWEE"));
     } catch(e) {
       if (e instanceof ApiError) {
         ToastModal(toast, "Error!", e.message, "error");
@@ -127,11 +150,10 @@ const Detail = () => {
 
   useEffect(() => {
     handleFilterEmail();
-  }, [room.interview_email]);
+  }, [roomGroup.interviewee_email]);
 
   const handleFilterEmail = () => {
-    // set filteredemaillist that not containe email in room.interview_email
-    setFilteredEmailList(emailList.filter((email) => !room.interview_email.includes(email)));
+    setFilteredIntervieweeEmails(intervieweeEmails.filter((email) => !roomGroup.interviewee_email.includes(email.email)));
   }
 
   const handleClickAddQuestion = () => {
@@ -143,45 +165,49 @@ const Detail = () => {
   }
 
   const onSortEndQuestion = ({oldIndex, newIndex}: {oldIndex: number, newIndex: number}) => {
-    setRoom({...room, questions: arrayMove(room.questions, oldIndex, newIndex)});
+    setRoomGroup({...roomGroup, room: {...roomGroup.room, questions: arrayMove(roomGroup.room.questions, oldIndex, newIndex)}});
   }
 
   const onSortEndCompetency = ({oldIndex, newIndex}: {oldIndex: number, newIndex: number}) => {
-    setRoom({...room, competencies: arrayMove(room.competencies, oldIndex, newIndex)});
+    setRoomGroup({...roomGroup, room: {...roomGroup.room, competencies: arrayMove(roomGroup.room.competencies, oldIndex, newIndex)}});
   }
 
   const handleDeleteQuestion = (idx: number) => {
-    const newRoom = { ...room };
+    const newRoom = { ...roomGroup.room };
     newRoom.questions.splice(idx, 1);
-    setRoom(newRoom);
+    setRoomGroup({...roomGroup, room: newRoom});
   }
 
   const handleDeleteCompetency = (idx: number) => {
-    const newRoom = { ...room };
+    const newRoom = { ...roomGroup.room };
     newRoom.competencies.splice(idx, 1);
-    setRoom(newRoom);
+    setRoomGroup({...roomGroup, room: newRoom});
+  }
+
+  const roomCheck = (room: RoomCreate) => {
+    if (room.title === "" || room.description === "" || room.start === "" || room.end === "" ||
+        room.interviewer_email === "" || room.questions.length === 0 || room.competencies.length === 0) {
+      return false;
+    }
+    return true;
+  }
+
+  const roomGroupCheck = (roomGroup: RoomGroupCreate) => {
+    if (roomGroup.title === "" || roomGroup.org_position === "" || roomGroup.interviewee_email.length === 0) {
+      return false;
+    }
+    return roomCheck(roomGroup.room);
   }
 
   const handleSubmit = async () => {
     try {
       setIsSubmit(true);
-      if (room.title === "" || room.description === "" || room.start === "" || room.end === "" ||
-          room.interview_email.length === 0 || room.questions.length === 0 || room.competencies.length === 0) {
+      if (!roomGroupCheck(roomGroup)) {
         ToastModal(toast, "Error!", "Semua kolom harus diisi", "error");
         return;
       }
-      const questionsId = [];
-      for (var q of room.questions) {
-        questionsId.push(q.id);
-      }
 
-      const competenciesId = [];
-      for (var c of room.competencies) {
-        competenciesId.push(c.id);
-      }
-
-      await createRoom(apiContext.axios, room.title, room.description, room.start, room.end, room.interview_email, questionsId, competenciesId);
-
+      await createRoomGroup(apiContext.axios, roomGroup.title, roomGroup.org_position, roomGroup.interviewee_email, roomGroup.room);
       navigate("/")
     } catch(e) {
       if (e instanceof ApiError) {
@@ -201,8 +227,8 @@ const Detail = () => {
         title="Pilih Kompetensi"
         competencyCollections={competencyCollections}
         questionCollections={questionCollections}
-        room={room}
-        setRoom={setRoom}
+        roomGroup={roomGroup}
+        setRoomGroup={setRoomGroup}
       />
       <QuestionsListModal
         isOpen={isOpenQuestion}
@@ -211,44 +237,27 @@ const Detail = () => {
         title="Pilih Pertanyaan"
         questionCollections={questionCollections}
         competencyCollections={competencyCollections}
-        room={room}
-        setRoom={setRoom}
+        roomGroup={roomGroup}
+        setRoomGroup={setRoomGroup}
       />
       <Text as="h1" fontSize="2xl" fontWeight="semibold">Buat Ruangan Interview</Text>
       <Box as="form" onSubmit={(e: { preventDefault: () => void; }) => {
         e.preventDefault();
         handleSubmit();
       }}>
-        <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Informasi Umum</Text>
+        <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Informasi Ruangan</Text>
         <Box bg="white" rounded="md" p="3">
-          <FormControl isInvalid={isSubmit && room.title === ""} mb="4">
-            <FormLabel>Judul</FormLabel>
-            <Input value={room.title} onChange={e => setRoom({...room, title: e.target.value})} placeholder="Judul Ruangan" mt="-2"/>
-            <FormErrorMessage>Judul harus diisi</FormErrorMessage>
+          <FormControl isInvalid={isSubmit && roomGroup.title === ""} mb="4">
+            <FormLabel>Judul Ruangan</FormLabel>
+            <Input value={roomGroup.title} onChange={e => setRoomGroup({...roomGroup, title: e.target.value})} placeholder="Judul Ruangan" />
+            <FormErrorMessage>Judul ruangan harus diisi</FormErrorMessage>
           </FormControl>
-          <FormControl isInvalid={isSubmit && room.description === ""} mb="4">
-            <FormLabel>Deskripsi</FormLabel>
-            <Textarea value={room.description} onChange={e => setRoom({...room, description: e.target.value})} placeholder="Deskripsi Ruangan" mt="-2"/>
-            <FormErrorMessage>Deskripsi harus diisi</FormErrorMessage>
-          </FormControl>
-          <Box display="flex" flexDir="row" justifyContent="space-between">
-            <FormControl isInvalid={isSubmit && room.start === ""} mb="4" pr="10">
-              <FormLabel>Waktu Mulai</FormLabel>
-              <Input type="datetime-local" value={room.start} onChange={e => setRoom({...room, start: e.target.value})} placeholder="Waktu Mulai" />
-              <FormErrorMessage>Waktu Mulai harus diisi</FormErrorMessage>
-            </FormControl>
-            <FormControl isInvalid={isSubmit && room.end === ""} mb="4" pl="10">
-              <FormLabel>Waktu Selesai</FormLabel>
-              <Input type="datetime-local" value={room.end} onChange={e => setRoom({...room, end: e.target.value})} placeholder="Waktu Selesai" />
-              <FormErrorMessage>Waktu Selesai harus diisi</FormErrorMessage>
-            </FormControl>
-          </Box>
-          <FormControl isInvalid={isSubmit && room.interview_email.length === 0} mb="4">
+          <FormControl isInvalid={isSubmit && roomGroup.interviewee_email.length === 0} mb="4">
             <FormLabel>Email Kandidat</FormLabel>
             <AutoComplete
               multiple
               openOnFocus
-              onChange={vals => setRoom({...room, interview_email: vals})}
+              onChange={vals => setRoomGroup({...roomGroup, interviewee_email: vals})}
             >
               <AutoCompleteInput
                 placeholder="Email Kandidat"
@@ -266,14 +275,58 @@ const Detail = () => {
               }
               </AutoCompleteInput>
               <AutoCompleteList>
-                {filteredEmailList.map((val) => (
-                  <AutoCompleteItem key={val} value={val} _focus={{ bg: "main_blue", color: "white" }}> 
-                    {val}
+                {filteredIntervieweeEmails.map((val) => (
+                  <AutoCompleteItem key={val.email} value={val.email} _focus={{ bg: "main_blue", color: "white" }}> 
+                    {val.email}
                   </AutoCompleteItem>
                 ))}
               </AutoCompleteList>
             </AutoComplete>
             <FormErrorMessage>Email Kandidat harus diisi</FormErrorMessage>
+          </FormControl>
+          <FormControl isInvalid={isSubmit && roomGroup.org_position === ""} mb="4">
+            <FormLabel>Posisi Organisasi</FormLabel>
+              <Select placeholder="Pilih Posisi Organisasi" value={roomGroup.org_position} onChange={(e) => setRoomGroup({ ...roomGroup, org_position: e.target.value })}>
+                {orgPosition.map((val, i) => (
+                <option key={i} value={val}>{val}</option>
+                ))}
+              </Select>
+            <FormErrorMessage>Posisi Organisasi harus diisi</FormErrorMessage>
+          </FormControl>
+        </Box>
+        {/* ************************************* */}
+        <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Informasi Interview</Text>
+        <Box bg="white" rounded="md" p="3">
+          <FormControl isInvalid={isSubmit && roomGroup.room.title === ""} mb="4">
+            <FormLabel>Judul Interview</FormLabel>
+            <Input value={roomGroup.room.title} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, title: e.target.value}})} placeholder="Nama Interview" />
+            <FormErrorMessage>Judul ruangan harus diisi</FormErrorMessage>
+          </FormControl>
+          <FormControl isInvalid={isSubmit && roomGroup.room.description === ""} mb="4">
+            <FormLabel>Deskripsi</FormLabel>
+            <Textarea value={roomGroup.room.description} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, description: e.target.value}})} placeholder="Deskripsi Interview" />
+            <FormErrorMessage>Deskripsi harus diisi</FormErrorMessage>
+          </FormControl>
+          <Box display="flex" flexDir="row" justifyContent="space-between">
+            <FormControl isInvalid={isSubmit && roomGroup.room.start === ""} mb="4" pr="10">
+              <FormLabel>Waktu Mulai</FormLabel>
+              <Input type="datetime-local" value={roomGroup.room.start} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, start: e.target.value}})} placeholder="Waktu Mulai" />
+              <FormErrorMessage>Waktu Mulai harus diisi</FormErrorMessage>
+            </FormControl>
+            <FormControl isInvalid={isSubmit && roomGroup.room.end === ""} mb="4" pl="10">
+              <FormLabel>Waktu Selesai</FormLabel>
+              <Input type="datetime-local" value={roomGroup.room.end} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, end: e.target.value}})} placeholder="Waktu Selesai" />
+              <FormErrorMessage>Waktu Selesai harus diisi</FormErrorMessage>
+            </FormControl>
+          </Box>
+          <FormControl isInvalid={isSubmit && roomGroup.room.interviewer_email === ""} mb="4">
+            <FormLabel>Interviewer</FormLabel>
+            <Select placeholder="Pilih Interviewer" value={roomGroup.room.interviewer_email} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, interviewer_email: e.target.value } })}>
+              {interviewerEmails.map((val, i) => (
+                <option key={i} value={val.email}>{val.name}</option>
+              ))}
+            </Select>
+            <FormErrorMessage>Nama interviewer harus diisi</FormErrorMessage>
           </FormControl>
         </Box>
         {/* ************************************* */}
@@ -293,7 +346,7 @@ const Detail = () => {
             </Tr>
           </Thead>
             <SortableTableCompetency
-              items={room.competencies}
+              items={roomGroup.room.competencies}
               onSortEnd={onSortEndCompetency}
               handleDeleteCompetency={handleDeleteCompetency}
             />
@@ -316,7 +369,7 @@ const Detail = () => {
               </Tr>
             </Thead>
               <SortableTableQuestion
-                items={room.questions}
+                items={roomGroup.room.questions}
                 onSortEnd={onSortEndQuestion}
                 handleDeleteQuestion={handleDeleteQuestion}
                 competencyCollections={competencyCollections}

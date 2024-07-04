@@ -30,7 +30,7 @@ func GetOne(
 			return
 		}
 
-		room, err := roomRepository.SelectOneByIDUserID(r.Context(), roomId, userCred.ID)
+		room, err := roomRepository.SelectOneRoomByID(r.Context(), roomId)
 		if err != nil {
 			fmt.Println(err)
 			if err == sql.ErrNoRows {
@@ -78,10 +78,6 @@ func GetOne(
 			})
 		}
 		if userCred.Role == repository.Interviewer {
-			resp.Data.IntervieweeName = room.Interviewee.Name
-			resp.Data.IntervieweeEmail = room.Interviewee.Email
-			resp.Data.IntervieweePhone = room.Interviewee.Phone
-
 			var resultCompetency repository.ResultCompetency
 			var resultQuestion repository.ResultQuestion
 			if resp.Data.Status != "WAITING ANSWER" {

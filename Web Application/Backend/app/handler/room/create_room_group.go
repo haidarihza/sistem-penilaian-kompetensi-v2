@@ -24,7 +24,7 @@ type RoomGroupsCreate struct {
 	Title            	string                 `json:"title,omitempty"`
 	OrgPosition				string                 `json:"org_position,omitempty"`
 	IntervieweeEmail 	[]string       	       `json:"interviewee_email,omitempty"`
-	Room	           	*Room       	         `json:"room,omitempty"`
+	Room	           	RoomCreate       	     `json:"room,omitempty"`
 }
 
 func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository repository.UserRepository, cfg config.Config) http.HandlerFunc {
@@ -37,6 +37,17 @@ func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository re
 
 		status, ok := repository.RoomStatusMapper("WAITING ANSWER")
 		if !ok {
+			response.RespondError(w, response.InternalServerError())
+			return
+		}
+
+		interviewer, err := userRepository.SelectIDByEmail(r.Context(), req.Room.InterviewerEmail)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				response.RespondError(w, response.NotFoundError("User not found"))
+				return
+			}
+
 			response.RespondError(w, response.InternalServerError())
 			return
 		}
@@ -62,12 +73,12 @@ func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository re
 
 			newRoom := &repository.Room{
 				ID:            uuid.NewString(),
-				InterviewerID: req.Room.InterviewerID,
+				InterviewerID: interviewer.ID,
 				RoomGroupID:   newRoomGroup.ID,
 				Title:         req.Room.Title,
+				Description:   req.Room.Description,
 				Start:         req.Room.Start,
 				End:           req.Room.End,
-				Description:   req.Room.Description,
 				Status:        status,
 			}
 
@@ -136,7 +147,13 @@ func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository re
 				}
 			}(context.Background(), *newRoom, *interviewee)
 
-			if err := roomRepository.InsertRoomGroup(r.Context(), newRoomGroup, newRoom, req.Room.QuestionsID, req.Room.CompetenciesID); err != nil {
+			if err := roomRepository.InsertRoomGroup(r.Context(), newRoomGroup); err != nil {
+				fmt.Println(err)
+				response.RespondError(w, response.InternalServerError())
+				return
+			}
+			if err := roomRepository.Insert(r.Context(), newRoom, req.Room.QuestionsID, req.Room.CompetenciesID); err != nil {
+				fmt.Println(err)
 				response.RespondError(w, response.InternalServerError())
 				return
 			}

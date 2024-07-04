@@ -78,7 +78,7 @@ func main() {
 
 	r.With(corsMiddleware).Route("/auth", func(r chi.Router) {
 		r.Get("/verify", authhandler.Verify(userRepository, jwtImpl))
-		r.With(authMiddleware, roleInterviewerMiddleware).Get("/all-email-interviewee", authhandler.GetAllEmailInterviewee(userRepository))
+		r.With(authMiddleware, roleInterviewerMiddleware).Get("/all-emails", authhandler.GetAllEmails(userRepository))
 		r.Post("/register", authhandler.Register(userRepository, jwtImpl, cfg))
 		r.Post("/login", authhandler.Login(userRepository, jwtImpl))
 		r.Get("/verify-email", authhandler.VerifyEmail(userRepository, jwtImpl))
@@ -108,11 +108,15 @@ func main() {
 		})
 
 	r.With(corsMiddleware, authMiddleware).Route("/room", func(r chi.Router) {
-		r.Get("/", roomhandler.GetAll(roomRepository))
+		// r.Get("/", roomhandler.GetAll(roomRepository))
+		r.With(roleInterviewerMiddleware).Post("/group", roomhandler.CreateRoom(roomRepository, userRepository, cfg))
+		r.Get("/group", roomhandler.GetAllRoomGroup(roomRepository))
+		r.Get("/group/{id}", roomhandler.GetOneRoomGroup(roomRepository))
 		r.Get("/{id}", roomhandler.GetOne(roomRepository, questionRepository, competencyRepository))
 		r.Post("/{roomId}/{questionId}", roomhandler.Answer(roomRepository, competencyRepository, questionRepository, feedbackRepository, cfg.APIHost, cfg.SpeechToTextHost, cfg.SummarizationHost))
 		r.Post("/{roomId}/finish-answer", roomhandler.FinishAnswer(roomRepository))
-		r.With(roleInterviewerMiddleware).Post("/", roomhandler.Create(roomRepository, userRepository, cfg))
+		r.With(roleInterviewerMiddleware).Post("/", roomhandler.CreateRoom(roomRepository, userRepository, cfg))
+		r.With(roleInterviewerMiddleware).Post("/group", roomhandler.CreateRoomGroup(roomRepository, userRepository, cfg))
 		r.With(roleInterviewerMiddleware).Post("/{id}/review", roomhandler.Review(roomRepository))
 		r.With(roleInterviewerMiddleware).Delete("/{id}", roomhandler.Delete(roomRepository))
 	})
