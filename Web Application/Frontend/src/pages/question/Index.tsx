@@ -109,7 +109,7 @@ const Index = () => {
 
   const handleSubmitCreate = async () => {
     try {
-      await createQuestion(apiContext.axios, question.question, question.duration_limit, question.labels);
+      await createQuestion(apiContext.axios, question.question, question.duration_limit, question.org_position, question.labels);
       onCloseModal();
     } catch (e) {
       if (e instanceof ApiError) {
@@ -122,7 +122,7 @@ const Index = () => {
 
   const handleSubmitEdit = async () => {
     try {
-      await updateQuestion(apiContext.axios, question.id, question.question, question.duration_limit, question.labels);
+      await updateQuestion(apiContext.axios, question.id, question.question, question.duration_limit, question.org_position, question.labels);
       onCloseModal();
     } catch (e) {
       if (e instanceof ApiError) {
@@ -215,16 +215,24 @@ const Index = () => {
             <Thead position="sticky" top="0" zIndex="1" bg="white">
               <Tr>
                 <Th textTransform="capitalize" w="40%">Pertanyaan</Th>
-                <Th textTransform="capitalize" textAlign="center">Batas Durasi</Th>
-                <Th textTransform="capitalize" w="30%" textAlign="center">Label</Th>
+                <Th textTransform="capitalize" textAlign="center" w="10%">Durasi</Th>
+                <Th textTransform="capitalize" textAlign="center" w="10%">Posisi Organisasi</Th>
+                <Th textTransform="capitalize" w="30%" textAlign="center">Kategori Kompetensi</Th>
                 <Th textTransform="capitalize" textAlign="center">Aksi</Th>
               </Tr>
             </Thead>
             <Tbody>
             {filteredData.map((val) => (
                 <Tr key={val.id}>
-                  <Td w="50%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">{val.question}</Td>
-                  <Td textAlign="center">{val.duration_limit} menit</Td>
+                  <Td w="40%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">{val.question}</Td>
+                  <Td textAlign="center" w="10%">{val.duration_limit} menit</Td>
+                  <Td textAlign="center" w="10%">
+                    <Box display="flex" flexDir="row" p="0" flexWrap="wrap" justifyContent="center">
+                      <Box display="flex" alignItems="center" w="fit-content" rounded="md" bg="second_blue" mr="2" mb="2">
+                        <Text fontSize="sm" fontWeight="normal" color="white" pl="1" pr="1">{val.org_position}</Text>
+                      </Box>
+                    </Box>
+                  </Td>
                   <Td textAlign="center">
                     <Box display="flex" flexDir="row" p="0" flexWrap="wrap" justifyContent="center">
                       {val.labels.map((val, idx) => (

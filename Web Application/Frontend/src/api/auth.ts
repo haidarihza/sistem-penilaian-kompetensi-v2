@@ -1,5 +1,5 @@
 import { AxiosInstance, isAxiosError } from "axios";
-import { AuthData, ProfileData } from "../interface/auth";
+import { AuthData, ProfileData, UserEmail } from "../interface/auth";
 import { ApiError } from "../interface/api";
 
 export async function login(
@@ -145,13 +145,13 @@ export async function verifyEmail(
    }
 }
 
-export async function getAllEmailsInterviewee(
+export async function getAllEmails(
   axios: AxiosInstance
-): Promise<Array<string>> {
+): Promise<Array<UserEmail>> {
   try {
-    const res = await axios.get("/auth/all-email-interviewee");
+    const res = await axios.get("/auth/all-emails");
 
-    return res.data.data as Array<string>;
+    return res.data.data as Array<UserEmail>;
   } catch (e) {
     if (isAxiosError(e)) {
       throw new ApiError(e.response?.data.message ? 

@@ -34,6 +34,7 @@ func GetAll(questionRepository repository.QuestionRepository) http.HandlerFunc {
 				ID:            tr.ID,
 				Question:      tr.Question,
 				DurationLimit: tr.DurationLimit,
+				OrgPosition:   tr.OrgPosition,
 				Labels:        labels,
 			})
 		}

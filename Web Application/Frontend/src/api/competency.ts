@@ -6,12 +6,14 @@ export async function createCompetency(
   axios: AxiosInstance,
   competency: string,
   description: string,
+  category: string,
   levels: CompetencyLevel[]
 ): Promise<void> {
   try {
     await axios.post("/competency", {
       competency,
       description,
+      category,
       levels,
     });
   } catch (e) {
@@ -64,12 +66,14 @@ export async function updateCompetency(
   id: string,
   competency: string,
   description: string,
+  category: string,
   levels: CompetencyLevel[]
 ): Promise<void> {
   try {
     await axios.put(`/competency/${id}`, {
       competency,
       description,
+      category,
       levels,
     });
   } catch (e) {

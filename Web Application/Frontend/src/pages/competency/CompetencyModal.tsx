@@ -10,6 +10,7 @@ import {
   FormLabel,
   Input,
   Textarea,
+  Select
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 
@@ -22,6 +23,8 @@ interface Props {
   competency: Competency;
   setCompetency: (value: Competency) => void;
 }
+
+const competencyCategory: Array<string> = ["Teknis", "Non-teknis"];
 
 const CompetencyModal = ({
   isOpen,
@@ -37,6 +40,9 @@ const CompetencyModal = ({
   };
   const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setCompetency({ ...competency, description: event.target.value });
+  }
+  const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setCompetency({ ...competency, category: event.target.value });
   }
   const handleAddLevel = () => {
     const newLevels = [...competency.levels, {
@@ -65,6 +71,14 @@ const CompetencyModal = ({
       <FormControl isRequired mb="4">
         <FormLabel>Deskripsi</FormLabel>
         <Textarea value={competency.description} onChange={handleDescriptionChange} placeholder="Deskripsi" mt="-2"/>
+      </FormControl>
+      <FormControl isRequired mb="4">
+        <FormLabel>Kategori</FormLabel>
+        <Select value={competency.category} onChange={handleCategoryChange} placeholder="Pilih Kategori" mt="-2">
+          {competencyCategory.map((category, i) => (
+            <option key={i} value={category}>{category}</option>
+          ))}
+        </Select>
       </FormControl>
       <Text fontSize="lg" fontWeight="bold" mt="4">
         Tingkat Kompetensi

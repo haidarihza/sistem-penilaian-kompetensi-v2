@@ -1,8 +1,44 @@
 import { AxiosInstance, isAxiosError } from "axios";
-import { RoomAll, RoomDetail } from "../interface/room";
+import { RoomGroup, RoomAll, RoomDetail, RoomCreate } from "../interface/room";
 import { ApiError } from "../interface/api";
 import { storage } from "./firebaseStorage";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+export async function createRoomGroup(
+  axios: AxiosInstance,
+  title: string,
+  org_position: string,
+  interviewee_email: Array<string>,
+  room: RoomCreate
+): Promise<string> {
+  try {
+    room.competencies_id = room.competencies.map((competency) => competency.id);
+    room.questions_id = room.questions.map((question) => question.id);
+    const res = await axios.post("/room/group", {
+      title,
+      org_position,
+      interviewee_email,
+      room: {
+        title: room.title,
+        description: room.description,
+        start: new Date(room.start),
+        end: new Date(room.end),
+        interviewer_email: room.interviewer_email,
+        questions_id: room.questions_id,
+        competencies_id: room.competencies_id,
+      }
+    });
+
+    return res.data.id;
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}
 
 export async function createRoom(
   axios: AxiosInstance,
@@ -10,7 +46,7 @@ export async function createRoom(
   description: string,
   start: string,
   end: string,
-  interviewee_email: Array<string>,
+  interviewee_email: string,
   questions_id: Array<string>,
   competencies_id: Array<string>,
 ): Promise<string> {
@@ -38,6 +74,21 @@ export async function createRoom(
   }
 }
 
+export async function getAllRoomGroup(
+  axios: AxiosInstance
+): Promise<Array<RoomGroup>> {
+  try {
+    const res = await axios.get("/room/group");
+
+    return res.data.data as Array<RoomGroup>;
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+    throw new ApiError("Something Went Wrong");
+  }
+}
 
 export async function getAllRoom(
   axios: AxiosInstance

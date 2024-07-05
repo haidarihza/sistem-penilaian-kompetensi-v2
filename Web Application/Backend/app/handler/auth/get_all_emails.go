@@ -6,15 +6,22 @@ import (
 	"net/http"
 )
 
-type AllEmailResponse struct {
-	Data []string `json:"data"`
+type EmailResponse struct {
+	Name 	string `json:"name"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
 }
 
-func GetAllEmailInterviewee(userRepository repository.UserRepository) http.HandlerFunc {
+type AllEmailResponse struct {
+	Data []EmailResponse `json:"data"`
+}
+
+func GetAllEmails(userRepository repository.UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp := AllEmailResponse{
-			Data: []string{},
+			Data: []EmailResponse{},
 		}
+
 		users, err := userRepository.SelectAll(r.Context())
 		if err != nil {
 			response.RespondError(w, response.InternalServerError())
@@ -22,9 +29,11 @@ func GetAllEmailInterviewee(userRepository repository.UserRepository) http.Handl
 		}
 
 		for _, user := range users {
-			if user.Role == "INTERVIEWEE" {
-				resp.Data = append(resp.Data, user.Email)
-			}
+			resp.Data = append(resp.Data, EmailResponse{
+				Name:  user.Name,
+				Email: user.Email,
+				Role: string(user.Role),
+			})
 		}
 
 		response.Respond(w, http.StatusOK, resp)

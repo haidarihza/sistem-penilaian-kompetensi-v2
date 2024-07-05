@@ -21,3 +21,9 @@ export interface UpdatePassword {
   new_password: string,
   confirm_password: string,
 }
+
+export interface UserEmail {
+  name: string,
+  email: string,
+  role: string,
+}

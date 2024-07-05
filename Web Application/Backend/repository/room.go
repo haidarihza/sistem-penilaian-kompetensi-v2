@@ -29,10 +29,19 @@ func RoomStatusMapper(status string) (RoomStatus, bool) {
 	return roomStatus, ok
 }
 
+type RoomGroup struct {
+	ID        		string
+	Title 	 			string
+	OrgPosition 	string
+	IntervieweeID string
+	Rooms 				[]*Room
+	Interviewee 	*User
+}
+
 type Room struct {
 	ID            string
 	InterviewerID string
-	IntervieweeID string
+	RoomGroupID   string
 	Title         string
 	Description   string
 	Start         string
@@ -45,7 +54,6 @@ type Room struct {
 	UpdatedAt     sql.NullTime
 	DeletedAt     sql.NullTime
 	Interviewer   *User
-	Interviewee   *User
 }
 
 type ResultCompetency map[string]map[string]float64
@@ -53,10 +61,12 @@ type ResultCompetency map[string]map[string]float64
 type ResultQuestion map[string]string
 
 type RoomRepository interface {
+	InsertRoomGroup(context.Context, *RoomGroup) error
 	Insert(context.Context, *Room, []string, []string) error
-	SelectAllByInterviewerID(context.Context, string) ([]*Room, error)
-	SelectAllByIntervieweeID(context.Context, string) ([]*Room, error)
-	SelectOneByIDUserID(context.Context, string, string) (*Room, error)
+	SelectAllRoomGroupByInterviewerID(context.Context, string) ([]*RoomGroup, error)
+	SelectAllRoomGroupByIntervieweeID(context.Context, string) ([]*RoomGroup, error)
+	SelectAllRoomByGroupID(context.Context, string) ([]*Room, error)
+	SelectOneRoomByID(context.Context, string) (*Room, error)
 	InsertTranscript(context.Context, string, string, string, string) error
 	IsAnswered(context.Context, string) (bool, error)
 	GetAnswers(context.Context, string) (string, error)

@@ -18,6 +18,7 @@ type Question struct {
 	ID            string `json:"id,omitempty"`
 	Question      string `json:"question,omitempty"`
 	DurationLimit int    `json:"duration_limit,omitempty"`
+	OrgPosition	 	string `json:"org_position,omitempty"`
 	Transcript    string `json:"transcript,omitempty"`
 	Labels				[]QuestionLabel `json:"labels,omitempty"`
 }
@@ -34,6 +35,7 @@ func Create(questionRepository repository.QuestionRepository) http.HandlerFunc {
 			ID:            uuid.NewString(),
 			Question:      req.Question,
 			DurationLimit: req.DurationLimit,
+			OrgPosition:   req.OrgPosition,
 		}
 
 		var newLabelsUid []string

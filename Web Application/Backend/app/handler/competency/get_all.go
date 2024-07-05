@@ -35,6 +35,7 @@ func GetAll(competencyRepository repository.CompetencyRepository) http.HandlerFu
 				ID:         cp.ID,
 				Competency: cp.Competency,
 				Description: cp.Description,
+				Category:   cp.Category,
 				Levels:     levels,
 			})
 		}

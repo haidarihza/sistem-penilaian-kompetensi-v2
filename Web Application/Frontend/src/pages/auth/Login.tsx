@@ -50,6 +50,7 @@ const Login = () => {
       const authData = await login(apiContext.axios, email, password);
       authContext.login(authData);
 
+      console.log(navigate(-1));
       navigate(-1);
     } catch (e) {
       if (e instanceof ApiError) {

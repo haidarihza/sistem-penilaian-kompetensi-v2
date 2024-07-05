@@ -4,9 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"interview/summarization/app/handler"
-	"interview/summarization/app/handler/competency"
-	"interview/summarization/app/handler/question"
 	"interview/summarization/app/response"
 	"interview/summarization/repository"
 	"interview/summarization/config"
@@ -22,56 +19,35 @@ import (
 	"github.com/google/uuid"
 )
 
-type Room struct {
-	ID               string                  `json:"id,omitempty"`
-	Title            string                  `json:"title,omitempty"`
-	Description      string                  `json:"description,omitempty"`
-	Start            string                  `json:"start,omitempty"`
-	End              string                  `json:"end,omitempty"`
-	Submission       string                  `json:"submission,omitempty"`
-	Status           string                  `json:"status,omitempty"`
-	Note             string                  `json:"note,omitempty"`
-	IntervieweeEmail string                `json:"interviewee_email,omitempty"`
-	IntervieweeName  string                  `json:"interviewee_name,omitempty"`
-	IntervieweePhone string                  `json:"interviewee_phone,omitempty"`
-	QuestionsID      []string                `json:"questions_id,omitempty"`
-	CompetenciesID   []string                `json:"competencies_id,omitempty"`
-	Questions        []question.Question     `json:"questions,omitempty"`
-	Competencies     []competency.Competency `json:"competencies,omitempty"`
+type RoomGroupsCreate struct {
+	ID               	string                 `json:"id,omitempty"`
+	Title            	string                 `json:"title,omitempty"`
+	OrgPosition				string                 `json:"org_position,omitempty"`
+	IntervieweeEmail 	[]string       	       `json:"interviewee_email,omitempty"`
+	Room	           	RoomCreate       	     `json:"room,omitempty"`
 }
 
-type RoomCreate struct {
-	ID               string                  `json:"id,omitempty"`
-	Title            string                  `json:"title,omitempty"`
-	Description      string                  `json:"description,omitempty"`
-	Start            string                  `json:"start,omitempty"`
-	End              string                  `json:"end,omitempty"`
-	Submission       string                  `json:"submission,omitempty"`
-	Status           string                  `json:"status,omitempty"`
-	Note             string                  `json:"note,omitempty"`
-	IntervieweeEmail []string                `json:"interviewee_email,omitempty"`
-	QuestionsID      []string                `json:"questions_id,omitempty"`
-	CompetenciesID   []string                `json:"competencies_id,omitempty"`
-	Questions        []question.Question     `json:"questions,omitempty"`
-	Competencies     []competency.Competency `json:"competencies,omitempty"`
-}
-
-func Create(roomRepository repository.RoomRepository, userRepository repository.UserRepository, cfg config.Config) http.HandlerFunc {
+func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository repository.UserRepository, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := RoomCreate{}
+		req := RoomGroupsCreate{}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			response.RespondError(w, response.BadRequestError("Incorrect Payload Format"))
 			return
 		}
 
-		interviewerCred, ok := r.Context().Value(handler.UserContextKey).(handler.UserCtx)
+		status, ok := repository.RoomStatusMapper("WAITING ANSWER")
 		if !ok {
 			response.RespondError(w, response.InternalServerError())
 			return
 		}
 
-		status, ok := repository.RoomStatusMapper("WAITING ANSWER")
-		if !ok {
+		interviewer, err := userRepository.SelectIDByEmail(r.Context(), req.Room.InterviewerEmail)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				response.RespondError(w, response.NotFoundError("User not found"))
+				return
+			}
+
 			response.RespondError(w, response.InternalServerError())
 			return
 		}
@@ -88,14 +64,21 @@ func Create(roomRepository repository.RoomRepository, userRepository repository.
 				return
 			}
 
+			newRoomGroup := &repository.RoomGroup{
+				ID:            uuid.NewString(),
+				Title:         req.Title,
+				OrgPosition:   req.OrgPosition,
+				IntervieweeID: interviewee.ID,
+			}
+
 			newRoom := &repository.Room{
 				ID:            uuid.NewString(),
-				InterviewerID: interviewerCred.ID,
-				IntervieweeID: interviewee.ID,
-				Title:         req.Title,
-				Start:         req.Start,
-				End:           req.End,
-				Description:   req.Description,
+				InterviewerID: interviewer.ID,
+				RoomGroupID:   newRoomGroup.ID,
+				Title:         req.Room.Title,
+				Description:   req.Room.Description,
+				Start:         req.Room.Start,
+				End:           req.Room.End,
 				Status:        status,
 			}
 
@@ -164,7 +147,13 @@ func Create(roomRepository repository.RoomRepository, userRepository repository.
 				}
 			}(context.Background(), *newRoom, *interviewee)
 
-			if err := roomRepository.Insert(r.Context(), newRoom, req.QuestionsID, req.CompetenciesID); err != nil {
+			if err := roomRepository.InsertRoomGroup(r.Context(), newRoomGroup); err != nil {
+				fmt.Println(err)
+				response.RespondError(w, response.InternalServerError())
+				return
+			}
+			if err := roomRepository.Insert(r.Context(), newRoom, req.Room.QuestionsID, req.Room.CompetenciesID); err != nil {
+				fmt.Println(err)
 				response.RespondError(w, response.InternalServerError())
 				return
 			}

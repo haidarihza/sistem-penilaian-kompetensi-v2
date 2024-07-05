@@ -25,6 +25,7 @@ func Update(questionRepository repository.QuestionRepository) http.HandlerFunc {
 			ID:            questionId,
 			Question:      req.Question,
 			DurationLimit: req.DurationLimit,
+			OrgPosition:   req.OrgPosition,
 		}
 
 		var updatedLabelsUid []string

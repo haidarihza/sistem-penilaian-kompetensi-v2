@@ -10,6 +10,7 @@ type Question struct {
 	ID            string
 	Question      string
 	DurationLimit int
+	OrgPosition   string
 	Deleted       bool
 	CreatedAt     time.Time
 	UpdatedAt     sql.NullTime

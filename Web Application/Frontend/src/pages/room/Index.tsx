@@ -2,8 +2,8 @@ import Layout from "../../components/Layout";
 import { useContext, useEffect, useState, useRef } from "react";
 import { ApiContext } from "../../utils/context/api";
 import { ApiError } from "../../interface/api";
-import { getAllRoom, deleteRoom } from "../../api/room";
-import { RoomAll } from "../../interface/room";
+import { getAllRoomGroup, deleteRoom } from "../../api/room";
+import { RoomGroup, RoomAll } from "../../interface/room";
 import {
   Box,
   Input,
@@ -43,6 +43,7 @@ import { Link, useNavigate } from "react-router-dom";
 import ToastModal from "../../components/ToastModal";
 import { BsThreeDotsVertical, BsFillFilePersonFill } from "react-icons/bs";
 import { DeleteIcon, CalendarIcon, EmailIcon } from "@chakra-ui/icons";
+import RoomCard from "./RoomCard";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -64,37 +65,51 @@ const Index = () => {
     color: "#8CBCFF"
   }];
 
-  const [data, setData] = useState<Array<RoomAll>>([] as Array<RoomAll>);
-  const [filteredData, setFilteredData] = useState<Array<RoomAll>>([] as Array<RoomAll>);
+  const [data, setData] = useState<Array<RoomGroup>>([] as Array<RoomGroup>);
+  const [filteredData, setFilteredData] = useState<Array<RoomGroup>>([] as Array<RoomGroup>);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [deleteId, setDeleteId] = useState<string>("" as string);
   const role = authContext.auth?.role;
   const { isOpen: isOpenDelete, onOpen: onOpenDelete, onClose: onCloseDelete } = useDisclosure();
 
-  const getScheduledRoom = (data: Array<RoomAll>) => {
+  const getLatestRoom = (data: RoomGroup) => {
+    const latest = data.room.reduce((prev, current) => {
+      return (new Date(prev.end) > new Date(current.end)) ? prev : current;
+    });
+  
+    return latest;
+  };
+
+  const getScheduledRoom = (data: Array<RoomGroup>) => {
     const currDate = new Date();
     return data.filter((val) => {
-      const start = new Date(val.start);
+      const latest_room = getLatestRoom(val);
+      if (!latest_room) return false;
+      const start = new Date(latest_room.start);
       return start > currDate;
     });
-  }
+  };
 
-  const getOngoingRoom = (data: Array<RoomAll>) => {
+  const getOngoingRoom = (data: Array<RoomGroup>) => {
     const currDate = new Date();
     return data.filter((val) => {
-      const start = new Date(val.start);
-      const end = new Date(val.end);
+      const latest_room = getLatestRoom(val);
+      if (!latest_room) return false;
+      const start = new Date(latest_room.start);
+      const end = new Date(latest_room.end);
       return start < currDate && end > currDate;
     });
-  }
+  };
 
-  const getFinishedRoom = (data: Array<RoomAll>) => {
+  const getFinishedRoom = (data: Array<RoomGroup>) => {
     const currDate = new Date();
     return data.filter((val) => {
-      const end = new Date(val.end);
+      const latest_room = getLatestRoom(val);
+      if (!latest_room) return false;
+      const end = new Date(latest_room.end);
       return end < currDate;
     });
-  }
+  };
 
   const tabList = [
     {
@@ -118,10 +133,11 @@ const Index = () => {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const rooms = await getAllRoom(apiContext.axios);
-        setData(rooms);
-        setFilteredData(rooms);
+        const room_groups = await getAllRoomGroup(apiContext.axios);
+        setData(room_groups);
+        setFilteredData(room_groups);
       } catch(e) {
+        console.log(e);
         if (e instanceof ApiError) {
           ToastModal(toast, "Error!", e.message, "error");
         } else {
@@ -131,7 +147,7 @@ const Index = () => {
     }
 
     fetch();
-  }, [data.length]);
+  }, []);
 
   const filterAndSearchData = () => {
     if (searchTerm === "") {
@@ -148,7 +164,8 @@ const Index = () => {
     filterAndSearchData();
   }, [searchTerm, data]);
 
-  const formatDateTime = (dateTimeString: string) => {
+  const formatDateTime = (dateTimeString?: string) => {
+    if (!dateTimeString) return "-";
     const date = new Date(dateTimeString);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -205,73 +222,11 @@ const Index = () => {
                 </Flex>
                 <Box display="flex" p="5" flexWrap="wrap" justifyContent="flex-start">
                   {tab.data ? tab.data.map((val, idx) => (
-                    <Card key={idx} width="30%" mr="4" mb="4" variant="outline">
-                      <CardHeader pt="2" pb="2" height="16">
-                        <Flex alignItems="center" gap="8" justifyContent="space-between">
-                          <Text
-                            fontSize="lg"
-                            fontWeight="bold"
-                            noOfLines={2}
-                            textOverflow="ellipsis"
-                            overflow="hidden"
-                            >{val.title}</Text>
-                          <Menu placement="bottom-end">
-                            <MenuButton as={IconButton} colorScheme="white.400" color="main_blue" icon={<BsThreeDotsVertical />}>
-                            </MenuButton>
-                            <MenuList>
-                              <MenuItem onClick={() => handleDeleteConfirm(val.id)} color="main_blue">
-                                <IconButton
-                                  aria-label="Delete"
-                                  icon={<DeleteIcon />}
-                                  colorScheme='white.400'
-                                  color="main_blue"
-                                  size="sm"/>
-                                Delete
-                              </MenuItem>
-                            </MenuList>
-                          </Menu>
-                        </Flex>
-                      </CardHeader>
-                      <Divider w="90%" mx="auto" borderWidth="1px" mb="4"/>
-                      <CardBody pt="2" pb="2">
-                        <Stack divider={<StackDivider/> } spacing={4}>
-                          <Box display="flex" flexDir="column">
-                            <Box display="flex" flexDir="row" alignItems="center" mb="4">
-                              <Icon color="main_blue" mr="4" boxSize="25px" as={CalendarIcon} />
-                              <Box display="flex" flexDir="column">
-                                <Text fontSize="sm" fontWeight="normal">Start: {formatDateTime(val.start)}</Text>
-                                <Text fontSize="sm" fontWeight="normal">End: {formatDateTime(val.end)}</Text>
-                              </Box>
-                            </Box>
-                            <Box display="flex" flexDir="row" alignItems="center" mb="4">
-                              <Icon color="main_blue" mr="4" boxSize="25px" as={BsFillFilePersonFill} />
-                              <Text fontSize="sm" fontWeight="normal">{val.interviewee_name}</Text>
-                            </Box>
-                            <Box display="flex" flexDir="row" alignItems="center" mb="4">
-                              <Icon color="main_blue" mr="4" boxSize="25px" as={EmailIcon} />
-                              <Text fontSize="sm" fontWeight="normal">{val.interviewee_email}</Text>
-                            </Box>
-                          </Box>
-                          <Box>
-                            <Box display="flex" flexDir="row" alignItems="center" mb="2" justifyContent="space-between">
-                              <Box
-                                bg={colors.find((color) => color.status === val.status)?.color}
-                                rounded="lg"
-                                p="1">
-                                <Text fontSize="sm" fontWeight="bold" color="main_blue">{val.status}</Text>
-                              </Box>
-                              <Text fontSize="sm" fontWeight="bold">{val.submission === "-" ? "No Submission" : formatDateTime(val.submission)}</Text>
-                            </Box>
-                          </Box>
-                        </Stack>
-                      </CardBody>
-                      <Divider w="90%" mx="auto" borderWidth="1px"/>
-                      <CardFooter pt="2" pb="2" justifyContent="flex-end">
-                        <Link to={`/room/${val.id}`}>
-                          <Text fontSize="sm" fontWeight="normal" color="main_blue" textDecoration="underline">Lihat Detail</Text>
-                        </Link>
-                      </CardFooter>
-                    </Card>
+                    <RoomCard
+                      roomGroup={val}
+                      handleDeleteConfirm={handleDeleteConfirm}
+                      role={role}
+                    />
                   )) : <Spinner />}
                 </Box>
               </Box>
@@ -287,37 +242,11 @@ const Index = () => {
                 </Flex>
                 <Box display="flex" p="5" flexWrap="wrap" justifyContent="flex-start">
                   {tab.data ? tab.data.map((val, idx) => (
-                    <Card key={idx} width="30%" mr="4" mb="4" variant="outline" cursor="pointer" onClick={() => navigate(`/room/${val.id}`)}>
-                    <CardHeader pt="2" pb="2">
-                      <Text fontSize="lg" fontWeight="bold" isTruncated maxWidth="100%">{val.title}</Text>
-                    </CardHeader>
-                    <Divider w="90%" mx="auto" borderWidth="1px" mb="4"/>
-                    <CardBody pt="2" pb="2">
-                      <Stack divider={<StackDivider/> } spacing={4}>
-                        <Box display="flex" flexDir="column">
-                          <Box display="flex" flexDir="row" alignItems="center" mb="4">
-                            <Icon color="main_blue" mr="4" boxSize="25px" as={CalendarIcon} />
-                            <Box display="flex" flexDir="column">
-                              <Text fontSize="sm" fontWeight="normal">Start: {formatDateTime(val.start)}</Text>
-                              <Text fontSize="sm" fontWeight="normal">End: {formatDateTime(val.end)}</Text>
-                            </Box>
-                          </Box>
-                        </Box>
-                      </Stack>
-                    </CardBody>
-                    <Divider w="90%" mx="auto" borderWidth="1px"/>
-                    <CardFooter pt="2" pb="2" justifyContent="flex-end">
-                      <Box display="flex" flexDir="row" alignItems="center" mb="2">
-                        <Box
-                          bg={colors.find((color) => color.status === val.status)?.color}
-                          rounded="lg"
-                          p="1"
-                        >
-                          <Text fontSize="sm" fontWeight="bold" color="main_blue">{val.status}</Text>
-                        </Box>
-                      </Box>
-                    </CardFooter>
-                  </Card>
+                    <RoomCard
+                      roomGroup={val}
+                      handleDeleteConfirm={handleDeleteConfirm}
+                      role={role ? role : "INTERVIEWEE"}
+                    />
                 )) : <Spinner />}
               </Box>
             </Box>

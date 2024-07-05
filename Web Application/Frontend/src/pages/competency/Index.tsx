@@ -100,7 +100,7 @@ const Index = () => {
         competency.levels = competency.levels.filter((level) => level.level !== "" && level.description !== "");
       }
 
-      await createCompetency(apiContext.axios, competency.competency, competency.description, competency.levels);
+      await createCompetency(apiContext.axios, competency.competency, competency.description, competency.category, competency.levels);
       onCloseModal();
     } catch (e) {
       if (e instanceof ApiError) {
@@ -113,7 +113,7 @@ const Index = () => {
 
   const handleSubmitEdit = async () => {
     try {
-      await updateCompetency(apiContext.axios, competency.id, competency.competency, competency.description, competency.levels);
+      await updateCompetency(apiContext.axios, competency.id, competency.competency, competency.description, competency.category, competency.levels);
       onCloseModal();
     } catch (e) {
       if (e instanceof ApiError) {
@@ -164,7 +164,6 @@ const Index = () => {
         isOpen={isOpenDetails}
         onClose={onCloseDetails}
         handleSubmit={handleSubmitCreate}
-        title={competency.competency}
         competency={competency}
       />
       <Text as="h1" fontSize="2xl" fontWeight="semibold">Koleksi Kompetensi</Text>
@@ -178,13 +177,14 @@ const Index = () => {
           />
           <Button bg="main_blue" color="white" onClick={handleClickCreate}>Buat Kompetensi</Button>
         </Flex>
-        <Box overflowY="auto" maxHeight="80%">
+        <Box overflowY="auto" maxHeight="90%">
           <Table variant="simple" colorScheme="blue">
             <Thead position="sticky" top="0" zIndex="1" bg="white">
               <Tr>
                 <Th textTransform="capitalize" w="20%">Kompetensi</Th>
-                <Th textTransform="capitalize" textAlign="center" w="60%">Deskripsi</Th>
+                <Th textTransform="capitalize" textAlign="center" w="50%">Deskripsi</Th>
                 <Th textTransform="capitalize" textAlign="center" w="10%">Level</Th>
+                <Th textTransform="capitalize" textAlign="center" w="10%">Kategori</Th>
                 <Th textTransform="capitalize" textAlign="center">Aksi</Th>
               </Tr>
             </Thead>
@@ -192,7 +192,7 @@ const Index = () => {
               {filteredData.map((val) => (
                 <Tr key={val.id}>
                   <Td w="20%">{val.competency}</Td>
-                  <Td w="60%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">
+                  <Td w="50%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">
                     {val.description}
                   </Td>
                   <Td w="10%">
@@ -208,6 +208,13 @@ const Index = () => {
                     >
                     Lihat detail
                     </Text>
+                  </Td>
+                  <Td w="10%" justifyContent="center">
+                    <Box display="flex" flexDir="row" p="0" flexWrap="wrap" justifyContent="center">
+                      <Box display="flex" alignItems="center" w="fit-content" rounded="md" bg="second_blue" mr="2" mb="2">
+                        <Text fontSize="sm" fontWeight="normal" color="white" pl="1" pr="1">{val.category}</Text>
+                      </Box>
+                    </Box>
                   </Td>
                   <Td>
                     <IconButton aria-label="Edit" mr="2" bg="main_blue" color="white" icon={<EditIcon />} onClick={() => {handleClickEdit(val.id)}} />

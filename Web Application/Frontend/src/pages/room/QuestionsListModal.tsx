@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ModalTemplate from "../../components/ModalTemplate";
 import { Question } from "../../interface/question";
-import { RoomCreate } from "../../interface/room";
+import { RoomCreate, RoomGroupCreate } from "../../interface/room";
 import {
   Table,
   Thead,
@@ -25,8 +25,8 @@ interface Props {
   buttonContent?: string;
   questionCollections: Array<Question>;
   competencyCollections: Array<Competency>;
-  room: RoomCreate;
-  setRoom: (value: RoomCreate) => void;
+  roomGroup: RoomGroupCreate;
+  setRoomGroup: (roomGroup: RoomGroupCreate) => void;
 }
 
 const QuestionsListModal = ({
@@ -37,23 +37,23 @@ const QuestionsListModal = ({
   buttonContent,
   questionCollections,
   competencyCollections,
-  room,
-  setRoom,
+  roomGroup,
+  setRoomGroup,
 }: Props) => {
   const [filteredQuestionCollections, setFilteredQuestionCollections] = useState<Array<Question>>([] as Array<Question>);
 
   useEffect(() => {
     setFilteredQuestionCollections(
       questionCollections.filter(
-        (question) => room.questions.length === 0 || !room.questions.map((val) => val?.id).includes(question.id)
+        (val) => !roomGroup.room.questions.map((question) => question.id).includes(val.id)
       )
     );
-  }, [questionCollections, room]);
+  }, [questionCollections, roomGroup.room]);
 
   const handleAddQuestion = (question: Question) => {
-    const newRoom = { ...room };
+    const newRoom = { ...roomGroup.room } as RoomCreate;
     newRoom.questions.push(question);
-    setRoom(newRoom);
+    setRoomGroup({ ...roomGroup, room: newRoom });
   };
 
   return (
