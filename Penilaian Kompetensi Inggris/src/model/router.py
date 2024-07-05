@@ -118,7 +118,7 @@ async def get_to_label_data(settings: Annotated[Settings, Depends(get_settings)]
     transcripts = [fr.transcript for fr in feedback_results]
     competence_sets = [[cl.description for cl in competency_levels if cl.competency_id == fr.competency_id] for fr in feedback_results]
 
-    bayesian_model = BayesianCompetenceModel(copy.deepcopy(g.model))
+    bayesian_model = BayesianCompetenceModel(g.model)
     
     with torch.no_grad():
         scores = bayesian_model(transcripts, competence_sets, k=settings.al_bayesian_samples)

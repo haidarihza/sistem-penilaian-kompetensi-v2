@@ -7,7 +7,7 @@ class TCDataset(torch.utils.data.Dataset):
         
         self.transcripts = transcripts
         self.competence_sets = competence_sets
-        self.label_indices = label_indices
+        self.label_indices = torch.tensor(label_indices)
 
     def __len__(self):
         return len(self.transcripts)

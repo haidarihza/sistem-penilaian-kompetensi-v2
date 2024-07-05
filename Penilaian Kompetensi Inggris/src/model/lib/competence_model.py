@@ -6,9 +6,6 @@ from src.model.lib import utils
 
 import torch
 
-import logging
-logger = logging.getLogger('uvicorn')
-
 
 class CompetenceModel(torch.nn.Module):
     def __init__(self, model, tokenizer, device):
@@ -31,7 +28,6 @@ class CompetenceModel(torch.nn.Module):
         Returns:
             CompetenceModel: The model instance.
         '''
-        logger.info(f"Loading model from {model_path} with type {type} and state dict {state_dict_path}")
         tokenizer = AutoTokenizer.from_pretrained(model_path)
 
         if type == 'biencoder':
@@ -119,7 +115,7 @@ class CompetenceModel(torch.nn.Module):
         prob = self(transcripts, competences, type='single', **kwargs)
         prob = utils.reshape_with_padding_2d(prob, lc_mask, pad_value=0)
         prob = utils.normalize_prob(prob, dim=1, p=1)
-        prob = torch.clamp(prob, min=1e-100)
+        prob = torch.clamp(prob, min=1e-20)
 
         return prob
 
@@ -253,7 +249,7 @@ class BiEncoder(CompetenceModel):
         embeddings_c = self.pooling(embeddings_c, features_c['attention_mask'])
 
         prob = torch.nn.functional.cosine_similarity(embeddings_t, embeddings_c, dim=1)
-        prob = torch.clamp(prob, min=0)
+        prob = torch.clamp(prob, min=1e-20)
 
         return prob
 

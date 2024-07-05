@@ -3,18 +3,20 @@ from batchbald_redux.consistent_mc_dropout import *
 from src.model.lib.competence_model import *
 from src.model.lib import utils
 
+import copy
+
 
 class BayesianCompetenceModel(BayesianModule):
-    def __init__(self, competence_model: CompetenceModel):
+    def __init__(self, competence_model: CompetenceModel, inplace: bool=False):
         super().__init__()
-        self.competence_model = competence_model
+        self.competence_model = copy.deepcopy(competence_model) if inplace else competence_model
         self.device = competence_model.device
         BayesianCompetenceModel.transform_dropout(self.competence_model.model)
 
     @staticmethod
     def load(model_path: str, type: str, state_dict_path: str=None, device='cpu'):
         competence_model = CompetenceModel.load(model_path, type, state_dict_path, device)
-        return BayesianCompetenceModel(competence_model)
+        return BayesianCompetenceModel(competence_model, inplace=True)
     
     def forward(self, *args, type: str='set', **kwargs) -> torch.Tensor:
         if type == 'single':
@@ -24,17 +26,17 @@ class BayesianCompetenceModel(BayesianModule):
         else:
             raise ValueError("Forward type should be either 'single' or 'set'.")
     
-    def forward_single(self, transcripts: list[str], competences: list[str], k: int, **kwargs):
+    def forward_single(self, transcripts: list[str], competences: list[str], k: int, tokenizer_padding, **kwargs):
         BayesianModule.k = k
         transcripts = BayesianCompetenceModel.mc_list(transcripts, k)
         competences = BayesianCompetenceModel.mc_list(competences, k)
         
-        prob = self.competence_model(transcripts, competences, type='single', tokenizer_padding='max_length', **kwargs)
+        prob = self.competence_model(transcripts, competences, type='single', tokenizer_padding=tokenizer_padding, **kwargs)
         prob = BayesianModule.unflatten_tensor(prob, k)
 
         return prob
 
-    def forward_set(self, transcripts: list[str], competence_sets: list[list[str]], k: int, **kwargs):
+    def forward_set(self, transcripts: list[str], competence_sets: list[list[str]], k: int, tokenizer_padding=True, **kwargs):
         lc_list = [len(competences) for competences in competence_sets]
         max_lc = max(lc_list)
         lc_mask = torch.tensor([[1] * lc + [0] * (max_lc - lc) for lc in lc_list], device=self.device)
@@ -42,11 +44,11 @@ class BayesianCompetenceModel(BayesianModule):
         transcripts = [transcript for i, transcript in enumerate(transcripts) for _ in range(lc_list[i])]
         competences = [competence for competences in competence_sets for competence in competences]
         
-        prob = self(transcripts, competences, k, type='single', **kwargs)
+        prob = self(transcripts, competences, k, tokenizer_padding, type='single', **kwargs)
         prob = utils.reshape_with_padding_2d(prob, lc_mask, pad_value=0)
         prob = prob.transpose(1, 2)
         prob = utils.normalize_prob(prob, dim=2, p=1)
-        prob = torch.clamp(prob, min=1e-100)
+        prob = torch.clamp(prob, min=1e-20)
 
         return prob
 
