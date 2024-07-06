@@ -11,7 +11,7 @@ const Register = lazy(() => import('./pages/auth/Register'));
 const Profile = lazy(() => import('./pages/auth/Profile'));
 const VerifyEmail = lazy(() => import('./pages/auth/EmailVerification'));
 const Dashboard = lazy(() => import('./pages/room/Index'));
-const RoomDetail = lazy(() => import('./pages/room/Detail'));
+const RoomGroupDetail = lazy(() => import('./pages/room/RoomGroupDetail'));
 const Question = lazy(() => import('./pages/question/Index'));
 const Competency = lazy(() => import('./pages/competency/Index'));
 const RoomCreate = lazy(() => import('./pages/room/Create'));
@@ -29,7 +29,7 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/auth/verify-email" element={<VerifyEmail />} />
               <Route path="/" element={<Dashboard />} />
-              <Route path="/room/:id" element={<RoomDetail />} />
+              <Route path="/room-group/:id" element={<RoomGroupDetail />} />
               <Route path="/room/create" element={<RoomCreate />} />
               <Route path="/question" element={<Question />} />
               <Route path="/competency" element={<Competency />} />

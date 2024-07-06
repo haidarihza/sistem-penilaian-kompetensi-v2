@@ -23,6 +23,7 @@ type RoomGroupResponse struct {
 	OrgPosition      string 				`json:"org_position"`
 	IntervieweeName	 string 				`json:"interviewee_name"`
 	IntervieweeEmail string 				`json:"interviewee_email"`
+	IntervieweePhone string 				`json:"interviewee_phone"`
 	Room						 []RoomResponse `json:"room"`
 }
 

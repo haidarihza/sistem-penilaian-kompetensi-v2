@@ -66,6 +66,7 @@ type RoomRepository interface {
 	SelectAllRoomGroupByInterviewerID(context.Context, string) ([]*RoomGroup, error)
 	SelectAllRoomGroupByIntervieweeID(context.Context, string) ([]*RoomGroup, error)
 	SelectAllRoomByGroupID(context.Context, string) ([]*Room, error)
+	SelectRoomGroupByID(context.Context, string) (*RoomGroup, error)
 	SelectOneRoomByID(context.Context, string) (*Room, error)
 	InsertTranscript(context.Context, string, string, string, string) error
 	IsAnswered(context.Context, string) (bool, error)

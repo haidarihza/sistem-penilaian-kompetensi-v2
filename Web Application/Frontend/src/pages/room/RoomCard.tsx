@@ -127,7 +127,7 @@ const RoomCard = ({
       </CardBody>
       <Divider w="90%" mx="auto" borderWidth="1px"/>
       <CardFooter pt="2" pb="2" justifyContent="flex-end">
-        <Link to={`/room/${roomGroup.id}`}>
+        <Link to={`/room-group/${roomGroup.id}`}>
           <Text fontSize="sm" fontWeight="normal" color="main_blue" textDecoration="underline">Lihat Detail</Text>
         </Link>
       </CardFooter>
@@ -135,7 +135,7 @@ const RoomCard = ({
     )
   
   const intervieweeCard = (
-    <Card key={roomGroup.id} width="30%" mr="4" mb="4" variant="outline" cursor="pointer" onClick={() => navigate(`/room/${roomGroup.id}`)}>
+    <Card key={roomGroup.id} width="30%" mr="4" mb="4" variant="outline" cursor="pointer" onClick={() => navigate(`/room-group/${roomGroup.id}`)}>
     <CardHeader pt="2" pb="2">
       <Text fontSize="lg" fontWeight="bold" isTruncated maxWidth="100%">{roomGroup.title}</Text>
     </CardHeader>
