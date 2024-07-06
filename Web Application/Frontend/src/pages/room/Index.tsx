@@ -25,7 +25,6 @@ import {
   AlertDialogFooter,
   useDisclosure,
   IconButton,
-  List,
 } from "@chakra-ui/react"
 import { AuthContext } from "../../utils/context/auth";
 import { useNavigate } from "react-router-dom";

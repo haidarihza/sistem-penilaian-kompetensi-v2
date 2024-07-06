@@ -92,8 +92,8 @@ func (r *feedbackRepository) SelectByStatus(ctx context.Context, status string) 
 
 const feedbackUpdate = "feedbackUpdate"
 const feedbackUpdateQuery = `UPDATE "feedback_results"
-	SET status = $1, label_feedback = $2
-	WHERE id = $3
+	SET status = $1, label_feedback = $2, transcript = $3
+	WHERE id = $4
 `
 
 func (r *feedbackRepository) UpdateFeedback(ctx context.Context, feedback *repository.Feedback) error {
@@ -103,7 +103,7 @@ func (r *feedbackRepository) UpdateFeedback(ctx context.Context, feedback *repos
 	}
 	defer tx.Rollback()
 
-	_, err = tx.StmtContext(ctx, r.ps[feedbackUpdate]).ExecContext(ctx, feedback.Status, feedback.LabelFeedback, feedback.ID)
+	_, err = tx.StmtContext(ctx, r.ps[feedbackUpdate]).ExecContext(ctx, feedback.Status, feedback.LabelFeedback, feedback.Transcript, feedback.ID)
 	if err != nil {
 		return err
 	}
