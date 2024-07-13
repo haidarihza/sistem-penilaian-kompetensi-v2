@@ -9,7 +9,7 @@ import (
 )
 
 type GetOneRoomGroupResponse struct {
-	Data []Room `json:"data"`
+	Data RoomGroupResponse `json:"data"`
 }
 
 func GetOneRoomGroup(
@@ -18,26 +18,41 @@ func GetOneRoomGroup(
 	return func(w http.ResponseWriter, r *http.Request) {
 		roomGroupId := chi.URLParam(r, "id")
 
+		roomGroup, err := roomRepository.SelectRoomGroupByID(r.Context(), roomGroupId)
 		rooms, err := roomRepository.SelectAllRoomByGroupID(r.Context(), roomGroupId)
 		if err != nil {
 			response.RespondError(w, response.InternalServerError())
 			return
 		}
 
-		resp := []Room{}
+		resp := GetOneRoomGroupResponse{
+			Data: RoomGroupResponse{
+				ID:               roomGroup.ID,
+				Title:            roomGroup.Title,
+				OrgPosition:      roomGroup.OrgPosition,
+				IntervieweeName:  roomGroup.Interviewee.Name,
+				IntervieweeEmail: roomGroup.Interviewee.Email,
+				IntervieweePhone: roomGroup.Interviewee.Phone,
+				Room:             []RoomResponse{},
+			},
+		}
+
 		for _, room := range rooms {
 			submission := "-"
 			if room.Submission.Valid {
 				submission = room.Submission.String
 			}
-			resp = append(resp, Room{
-				ID:               room.ID,
-				Title:            room.Title,
-				Start:            room.Start,
-				End:              room.End,
-				Submission:       submission,
-				Status:           string(room.Status),
-			})
+
+			roomResponse := RoomResponse{
+				ID:              room.ID,
+				Title:           room.Title,
+				Start:           room.Start,
+				End:             room.End,
+				Submission:      submission,
+				Status:          string(room.Status),
+			}
+
+			resp.Data.Room = append(resp.Data.Room, roomResponse)
 		}
 
 		response.Respond(w, http.StatusOK, resp)

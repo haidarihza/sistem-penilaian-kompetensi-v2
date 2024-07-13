@@ -12,6 +12,7 @@ import (
 )
 
 type FeedbackUpdate struct {
+	Transkrip 		string `json:"transcript"`
 	LabelFeedback string `json:"label_feedback"`
 }
 
@@ -33,6 +34,7 @@ func UpdateFeedback(feedbackRepository repository.FeedbackRepository, summarizat
 		feedbackUpdate := &repository.Feedback{
 			ID: feedbackID,
 			Status: status,
+			Transcript: req.Transkrip,
 			LabelFeedback: sql.NullString{
 				String: req.LabelFeedback,
 				Valid:  true,

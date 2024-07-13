@@ -2,9 +2,8 @@ import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ApiContext } from "../../utils/context/api";
 import { getOneRoom, reviewRoom } from "../../api/room";
-import { RoomDetail } from "../../interface/room";
+import { RoomDetail, RoomGroup } from "../../interface/room";
 import { ApiError } from "../../interface/api";
-import Layout from "../../components/Layout";
 import { 
   Box, 
   Text,
@@ -37,8 +36,15 @@ import DetailQuestionModal from "./DetailQuestionModal";
 import { Competency, CompetencyLevel } from "../../interface/competency";
 import ToastModal from "../../components/ToastModal";
 
+interface Props {
+  roomGroup: RoomGroup;
+  room_id: string;
+}
 
-const Detail = () => {
+const Detail = ({
+  roomGroup,
+  room_id
+} : Props ) => {
   const params = useParams();
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
@@ -67,17 +73,12 @@ const Detail = () => {
 
   const { isOpen:isOpenDetailQuestion, onOpen:onOpenDetailQuestion, onClose:onCloseDetailQuestion } = useDisclosure();
   const { isOpen:isOpenDetailCompetency, onOpen:onOpenDetailCompetency, onClose:onCloseDetailCompetency } = useDisclosure();
-  const [selectedCompetency, setSelectedCompetency] = useState<Competency>({
-    id: "",
-    competency: "",
-    description: "",
-    levels: [],
-  } as Competency);
+  const [selectedCompetency, setSelectedCompetency] = useState<Competency>({} as Competency);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const fetch = async () => {
     try {
-      const rooms = await getOneRoom(apiContext.axios, params.id!);
+      const rooms = await getOneRoom(apiContext.axios, room_id!);
       setData(rooms);
     } catch(e) {
       if (e instanceof ApiError) {
@@ -160,7 +161,7 @@ const Detail = () => {
   }
 
   return (
-    <Layout>
+    <Box>
       <DetailQuestionModal
         isOpen={isOpenDetailQuestion}
         onClose={onCloseDetailQuestion}
@@ -170,7 +171,6 @@ const Detail = () => {
       <DetailsCompetencyModal
         isOpen={isOpenDetailCompetency}
         onClose={onCloseDetailCompetency}
-        title="Detail Kompetensi"
         competency={selectedCompetency}
         handleSubmit={async () => {}}
       />
@@ -194,14 +194,16 @@ const Detail = () => {
               <Text mb="2"><b>Tanggal Wawancara :</b> {formatDateTime(data.start)} - {formatDateTime(data.end)}</Text>
               <Text mb="2"><b>Submission :</b> {data.submission === "-" ? "-" : formatDateTime(data.submission)}</Text>
               <Text mb="2"><b>Waktu Total :</b> ~ {countTotalTime(data.questions)} menit</Text>
+              <Text mb="2"><b>Posisi Organisasi :</b> {roomGroup.org_position}</Text>
+              <Text mb="2"><b>Interviewer :</b> {data.interviewer_name}</Text>
             </Box>
             <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
               <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
                 <Text fontWeight="bold">Informasi Kandidat</Text>
               </Box>
-              <Text mb="2"><b>Nama :</b> {data.interviewee_name}</Text>
-              <Text mb="2"><b>Email :</b> {data.interviewee_email}</Text>
-              <Text mb="2"><b>Phone :</b> {data.interviewee_phone}</Text>
+              <Text mb="2"><b>Nama :</b> {roomGroup.interviewee_name}</Text>
+              <Text mb="2"><b>Email :</b> {roomGroup.interviewee_email}</Text>
+              <Text mb="2"><b>Phone :</b> {roomGroup.interviewee_phone}</Text>
             </Box>
             <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
               <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
@@ -240,7 +242,7 @@ const Detail = () => {
                     <Tr>
                       <Th textTransform="capitalize" w="30%">Kompetensi</Th>
                       <Th textTransform="capitalize" textAlign="center" w="10%">Aksi</Th>
-                      <Th textTransform="capitalize" textAlign="center" w="10%">Hasil</Th>
+                      <Th textTransform="capitalize" textAlign="center" w="10%">Hasil Penilaian</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -343,7 +345,7 @@ const Detail = () => {
         room={data}
         updateRoom={fetch}
       />
-    </Layout>
+    </Box>
   )
 }
 

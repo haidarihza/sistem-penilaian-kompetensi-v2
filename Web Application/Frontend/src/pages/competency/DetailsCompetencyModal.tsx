@@ -54,7 +54,7 @@ const DetailsCompetencyModal = ({
             </Tr>
           </Thead>
           <Tbody>
-            {competency.levels.map((level: CompetencyLevel) => (
+            {competency.levels?.map((level: CompetencyLevel) => (
               <Tr key={level.id}>
                 <Td textAlign="center">{level.level}</Td>
                 <Td w="80%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">{level.description}</Td>

@@ -42,25 +42,23 @@ export async function createRoomGroup(
 
 export async function createRoom(
   axios: AxiosInstance,
-  title: string,
-  description: string,
-  start: string,
-  end: string,
+  room: RoomCreate,
+  room_group_id: string,
   interviewee_email: string,
-  questions_id: Array<string>,
-  competencies_id: Array<string>,
 ): Promise<string> {
+  room.competencies_id = room.competencies.map((competency) => competency.id);
+  room.questions_id = room.questions.map((question) => question.id);
   try {
-    const start_date = new Date(start);
-    const end_date = new Date(end);
     const res = await axios.post("/room", {
-      title,
-      description,
-      start: start_date,
-      end: end_date,
+      title: room.title,
+      description: room.description,
+      start: new Date(room.start),
+      end: new Date(room.end),
+      room_group_id,
+      interviewer_email: room.interviewer_email,
       interviewee_email,
-      questions_id,
-      competencies_id,
+      questions_id: room.questions_id,
+      competencies_id: room.competencies_id,
     });
 
     return res.data.id;
@@ -97,6 +95,24 @@ export async function getAllRoom(
     const res = await axios.get("/room");
 
     return res.data.data as Array<RoomAll>;
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}
+
+export async function getOneRoomGroup(
+  axios: AxiosInstance,
+  id: string
+): Promise<RoomGroup> {
+  try {
+    const res = await axios.get(`/room/group/${id}`);
+    console.log(res.data)
+    return res.data.data as RoomGroup;
   } catch (e) {
     if (isAxiosError(e)) {
       throw new ApiError(e.response?.data.message ? 

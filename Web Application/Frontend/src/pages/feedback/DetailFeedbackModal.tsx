@@ -7,7 +7,6 @@ import {
   Box,
   Text,
   FormControl,
-  Input,
   TableContainer,
   Table,
   Thead,
@@ -15,11 +14,13 @@ import {
   Tr,
   Th,
   Td,
-  Container,
   RadioGroup,
   HStack,
   Radio,
+  IconButton,
+  Textarea,
 } from "@chakra-ui/react";
+import { EditIcon, CheckIcon } from "@chakra-ui/icons";
 
 interface Props {
   isOpen: boolean;
@@ -40,6 +41,16 @@ const DetailFeedbackModal = ({
   feedback,
   setFeedback,
 }: Props) => {
+  const [isEditTranscript, setIsEditTranscript] = React.useState<boolean>(false);
+
+  const handleEditClick = () => {
+    setIsEditTranscript(true);
+  };
+
+  const handleSaveClick = () => {
+    setIsEditTranscript(false);
+  };
+
   const handleFeedbackChange = (value: string) => {
     setFeedback({ ...feedback, label_feedback: value });
   };
@@ -61,7 +72,25 @@ const DetailFeedbackModal = ({
         <Box bg="main_beige" p="1" w="fit-content" rounded="md">
           <Text>Transkrip Interview</Text>
         </Box>
-        <Text mt="2" fontSize="sm">{feedback.transcript}</Text>
+        <Box display="flex" flexDir="row" justifyContent="space-between" mt="2" alignContent="center" alignItems="center">
+          {isEditTranscript ? (
+          <Textarea
+            mt="2"
+            fontSize="sm"
+            value={feedback.transcript}
+            onChange={(e) => setFeedback({ ...feedback, transcript: e.target.value })}
+          />
+          ) : (
+          <Text mt="2" fontSize="sm">{feedback.transcript}</Text>
+          )}
+          <IconButton
+            ml="2"
+            size="sm"
+            icon={isEditTranscript ? <CheckIcon /> : <EditIcon />}
+            aria-label={isEditTranscript ? "Save" : "Edit"}
+            onClick={isEditTranscript ? handleSaveClick : handleEditClick}
+          />
+        </Box>
         <Box bg="main_beige" p="1" w="fit-content" rounded="md" mt="4">
           <Text>Kompetensi: <b>{competency.competency}</b></Text>
         </Box>

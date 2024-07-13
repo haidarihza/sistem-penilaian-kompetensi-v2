@@ -17,7 +17,7 @@ type GetOneRoomResponse struct {
 	Data Room `json:"data"`
 }
 
-func GetOne(
+func GetOneRoom(
 	roomRepository repository.RoomRepository,
 	questionRepository repository.QuestionRepository,
 	competencyRepository repository.CompetencyRepository,
@@ -53,14 +53,16 @@ func GetOne(
 
 		resp := GetOneRoomResponse{
 			Data: Room{
-				ID:          room.ID,
-				Title:       room.Title,
-				Description: room.Description,
-				Start:       room.Start,
-				End:         room.End,
-				Submission:  submission,
-				Status:      string(room.Status),
-				Note:        note,
+				ID:          			room.ID,
+				Title:       			room.Title,
+				Description: 			room.Description,
+				Start:       			room.Start,
+				End:         			room.End,
+				InterviewerName: 	room.Interviewer.Name,
+				InterviewerEmail: room.Interviewer.Email,
+				Submission:  			submission,
+				Status:      			string(room.Status),
+				Note:        			note,
 			},
 		}
 
@@ -75,6 +77,7 @@ func GetOne(
 				ID:            qt.ID,
 				Question:      qt.Question,
 				DurationLimit: qt.DurationLimit,
+				OrgPosition:   qt.OrgPosition,
 			})
 		}
 		if userCred.Role == repository.Interviewer {
@@ -105,9 +108,11 @@ func GetOne(
 
 			for _, cp := range competencies {
 				compe := competency.Competency{
-					ID:         cp.ID,
-					Competency: cp.Competency,
-					Levels:     []competency.CompetencyLevel{},
+					ID:         	cp.ID,
+					Competency: 	cp.Competency,
+					Description: 	cp.Description,
+					Category:   	cp.Category,
+					Levels:     	[]competency.CompetencyLevel{},
 				}
 				for _, cpl := range cp.Levels {
 					level := competency.CompetencyLevel{

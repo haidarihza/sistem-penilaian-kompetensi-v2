@@ -6,6 +6,7 @@ export interface RoomGroup {
   title: string,
   interviewee_name: string,
   interviewee_email: string,
+  interviewee_phone: string,
   org_position: string,
   room: Array<RoomAll>
 }
@@ -23,9 +24,8 @@ export interface RoomDetail {
   id: string,
   title: string,
   description: string,
-  interviewee_name: string,
-  interviewee_phone: string,
-  interviewee_email: string,
+  interviewer_name: string,
+  interviewer_email: string,
   start: string,
   end: string,
   submission: string,

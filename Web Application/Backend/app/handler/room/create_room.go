@@ -172,6 +172,7 @@ func CreateRoom(roomRepository repository.RoomRepository, userRepository reposit
 		}(context.Background(), *newRoom, *interviewee)
 
 		if err := roomRepository.Insert(r.Context(), newRoom, req.QuestionsID, req.CompetenciesID); err != nil {
+			fmt.Println(err)
 			response.RespondError(w, response.InternalServerError())
 			return
 		}

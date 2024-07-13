@@ -3,7 +3,7 @@ import { useContext, useEffect, useState, useRef } from "react";
 import { ApiContext } from "../../utils/context/api";
 import { ApiError } from "../../interface/api";
 import { getAllRoomGroup, deleteRoom } from "../../api/room";
-import { RoomGroup, RoomAll } from "../../interface/room";
+import { RoomGroup } from "../../interface/room";
 import {
   Box,
   Input,
@@ -11,20 +11,7 @@ import {
   Button, 
   Spinner, 
   Text,
-  Card, 
-  CardBody, 
-  CardFooter,
-  CardHeader,
   useToast,
-  MenuList,
-  MenuItem,
-  Menu,
-  MenuButton,
-  IconButton,
-  Stack,
-  StackDivider,
-  Divider,
-  Icon,
   Tab,
   Tabs,
   TabList,
@@ -37,13 +24,14 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
   useDisclosure,
+  IconButton,
 } from "@chakra-ui/react"
 import { AuthContext } from "../../utils/context/auth";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ToastModal from "../../components/ToastModal";
-import { BsThreeDotsVertical, BsFillFilePersonFill } from "react-icons/bs";
-import { DeleteIcon, CalendarIcon, EmailIcon } from "@chakra-ui/icons";
 import RoomCard from "./RoomCard";
+import ListView from "./ListView";
+import { IoList, IoGrid } from "react-icons/io5";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -51,19 +39,6 @@ const Index = () => {
   const authContext = useContext(AuthContext);
   const toast = useToast();
   const cancelRef = useRef(null);
-  const colors = [{
-    status: "WAITING ANSWER",
-    color: "main_beige"
-  }, {
-    status: "WAITING REVIEW",
-    color: "#E6F4F1"
-  }, {
-    status: "REJECTED",
-    color: "#8CBCFF"
-  }, {
-    status: "ACCEPTED",
-    color: "#8CBCFF"
-  }];
 
   const [data, setData] = useState<Array<RoomGroup>>([] as Array<RoomGroup>);
   const [filteredData, setFilteredData] = useState<Array<RoomGroup>>([] as Array<RoomGroup>);
@@ -71,6 +46,7 @@ const Index = () => {
   const [deleteId, setDeleteId] = useState<string>("" as string);
   const role = authContext.auth?.role;
   const { isOpen: isOpenDelete, onOpen: onOpenDelete, onClose: onCloseDelete } = useDisclosure();
+  const [view, setView] = useState<"LIST" | "GRID">("GRID");
 
   const getLatestRoom = (data: RoomGroup) => {
     const latest = data.room.reduce((prev, current) => {
@@ -134,6 +110,7 @@ const Index = () => {
     const fetch = async () => {
       try {
         const room_groups = await getAllRoomGroup(apiContext.axios);
+        console.log(room_groups);
         setData(room_groups);
         setFilteredData(room_groups);
       } catch(e) {
@@ -145,7 +122,6 @@ const Index = () => {
         }
       }
     }
-
     fetch();
   }, []);
 
@@ -209,37 +185,51 @@ const Index = () => {
         <TabPanels>
           {tabList.map((tab, idx) => (
             <TabPanel>
-            {role === "INTERVIEWER" ? (
               <Box bg="white" rounded="md">
-                <Flex justifyContent="space-between" p="5">
-                  <Input 
-                    maxW="60%" 
-                    placeholder="Cari Pertanyaan" 
-                    value={searchTerm} 
-                    onChange={(e) => setSearchTerm(e.target.value)} 
-                  />
-                  <Button bg="main_blue" color="white" mr="4" onClick={() => navigate("/room/create")}>Buat Ruangan</Button>
-                </Flex>
-                <Box display="flex" p="5" flexWrap="wrap" justifyContent="flex-start">
-                  {tab.data ? tab.data.map((val, idx) => (
-                    <RoomCard
-                      roomGroup={val}
-                      handleDeleteConfirm={handleDeleteConfirm}
-                      role={role}
+                <Flex justifyContent="space-between" p="5" pr="10">
+                <Box display="flex" flexDir="row" w="80%">
+                    <Input
+                      maxW="60%"
+                      placeholder="Cari Ruangan"
+                      mr="4"
+                      value={searchTerm} 
+                      onChange={(e) => setSearchTerm(e.target.value)} 
                     />
-                  )) : <Spinner />}
-                </Box>
-              </Box>
-            ) : (
-              <Box bg="white" rounded="md">
-                <Flex justifyContent="space-between" p="5">
-                  <Input 
-                    maxW="60%" 
-                    placeholder="Cari Pertanyaan" 
-                    value={searchTerm} 
-                    onChange={(e) => setSearchTerm(e.target.value)} 
-                  />
+                    {role === "INTERVIEWER" && (
+                      <Button bg="main_blue" color="white" mr="4" onClick={() => navigate("/room/create")}>Buat Ruangan</Button>   
+                    )}
+                  </Box>
+                  <Box display="flex" flexDir="row">
+                    <IconButton 
+                      isActive={view === "GRID"}
+                      aria-label="Grid View"
+                      bg="white" 
+                      color="main_blue" 
+                      border="1px"
+                      borderRight="0"
+                      icon={<IoGrid />}
+                      onClick={() => {setView("GRID")}}
+                      sx={{
+                        borderTopRightRadius: 0,
+                        borderBottomRightRadius: 0,
+                      }}
+                    />
+                    <IconButton 
+                      isActive={view === "LIST"}
+                      aria-label="List View"
+                      bg="white"
+                      color="main_blue" 
+                      border="1px"
+                      icon={<IoList fontSize="xl"/>} 
+                      onClick={() => {setView("LIST")}}
+                      sx={{
+                        borderTopLeftRadius: 0,
+                        borderBottomLeftRadius: 0,
+                      }}
+                    />
+                  </Box>
                 </Flex>
+                {view === "GRID" && (
                 <Box display="flex" p="5" flexWrap="wrap" justifyContent="flex-start">
                   {tab.data ? tab.data.map((val, idx) => (
                     <RoomCard
@@ -247,10 +237,16 @@ const Index = () => {
                       handleDeleteConfirm={handleDeleteConfirm}
                       role={role ? role : "INTERVIEWEE"}
                     />
-                )) : <Spinner />}
+                  )) : <Spinner />}
+                </Box>
+                )}
+                {view === "LIST" && (
+                  <ListView
+                    filteredData={tab.data}
+                    handleDeleteConfirm={handleDeleteConfirm}
+                  />
+                )}
               </Box>
-            </Box>
-            )}
             </TabPanel>
           ))}
         </TabPanels>
