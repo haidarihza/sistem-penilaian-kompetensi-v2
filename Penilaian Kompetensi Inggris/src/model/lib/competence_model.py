@@ -120,7 +120,7 @@ class CompetenceModel(torch.nn.Module):
         return prob
 
     def fit(self, train_dataset: TCDataset, eval_dataset: Optional[TCDataset], epochs: int, batch_size: int, 
-            optimizer: type[torch.optim.Optimizer]=torch.optim.Adam, optimizer_params: dict={'lr': 2e-5},
+            optimizer_cls: type[torch.optim.Optimizer]=torch.optim.Adam, optimizer_params: dict={'lr': 2e-5},
             early_stop: bool=True) -> None:
         '''
         Fit the model with the given arguments.
@@ -141,7 +141,7 @@ class CompetenceModel(torch.nn.Module):
         if has_eval:
             eval_dataloader = torch.utils.data.DataLoader(eval_dataset, batch_size=batch_size, shuffle=False, collate_fn=TCDataset.collate_fn)
         
-        optimizer = optimizer(self.parameters(), **optimizer_params)
+        optimizer = optimizer_cls(self.parameters(), **optimizer_params)
         loss_fn = torch.nn.NLLLoss(reduction='sum')
 
         class EarlyStopping:
@@ -178,7 +178,7 @@ class CompetenceModel(torch.nn.Module):
             self.train()
 
             for transcripts, competence_sets, label_indices in train_dataloader:
-                label_indices = label_indices.to(self.device)
+                label_indices = torch.tensor(label_indices, device=self.device)
                 
                 optimizer.zero_grad()
 
@@ -211,9 +211,9 @@ class CompetenceModel(torch.nn.Module):
                 self.eval()
 
                 for transcripts, competence_sets, label_indices in eval_dataloader:
+                    label_indices = torch.tensor(label_indices, device=self.device)
                     prob = self(transcripts, competence_sets)
                     log_prob = torch.log(prob)
-                    label_indices = label_indices.to(self.device)
                     loss = loss_fn(log_prob, label_indices)
 
                     val_loss += loss.item()

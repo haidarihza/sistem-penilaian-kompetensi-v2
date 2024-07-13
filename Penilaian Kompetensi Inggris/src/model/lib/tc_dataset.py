@@ -7,7 +7,7 @@ class TCDataset(torch.utils.data.Dataset):
         
         self.transcripts = transcripts
         self.competence_sets = competence_sets
-        self.label_indices = torch.tensor(label_indices)
+        self.label_indices = label_indices
 
     def __len__(self):
         return len(self.transcripts)
@@ -18,4 +18,4 @@ class TCDataset(torch.utils.data.Dataset):
     @staticmethod
     def collate_fn(batch):
         transcripts, competence_sets, label_indices = zip(*batch)
-        return list(transcripts), list(competence_sets), torch.tensor(label_indices)
+        return list(transcripts), list(competence_sets), list(label_indices)
