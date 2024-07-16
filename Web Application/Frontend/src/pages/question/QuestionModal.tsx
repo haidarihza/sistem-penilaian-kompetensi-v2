@@ -114,7 +114,7 @@ const QuestionModal = ({
         </Select>
       </FormControl>
       <FormControl mb="4">
-        <FormLabel>Label</FormLabel>
+        <FormLabel>Kategori Kompetensi</FormLabel>
         <Box display="flex" flexDir="row" p="0" flexWrap="wrap">
         {question.labels.map((val, idx) => (
         <Box key={idx} display="flex" alignItems="center" w="fit-content" rounded="md" bg="second_blue" mr="2" mb="2">
@@ -137,7 +137,7 @@ const QuestionModal = ({
         </Box>
         ))}
         </Box>
-        <Select value={selectedLabel} onChange={handleAddLabel} placeholder="Tambah Label">
+        <Select value={selectedLabel} onChange={handleAddLabel} placeholder="Tambah Kategori Kompetensi">
           {filteredLabels.map((val, i) => (
             <option key={i} value={val.competency}>{val.competency}</option>
           ))}

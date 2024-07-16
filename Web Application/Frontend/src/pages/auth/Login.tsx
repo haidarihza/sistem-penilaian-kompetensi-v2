@@ -51,7 +51,7 @@ const Login = () => {
       authContext.login(authData);
 
       console.log(navigate(-1));
-      navigate(-1);
+      navigate("/");
     } catch (e) {
       if (e instanceof ApiError) {
         ToastModal(toast, "Error!", e.message, "error");
