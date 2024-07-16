@@ -509,13 +509,19 @@ func (r *roomRepository) GetResultQuestions(ctx context.Context, roomId string) 
 	results := repository.ResultQuestion{}
 	for rows.Next() {
 		var questionId string
-		var transcript string
+		var transcript sql.NullString
 		err := rows.Scan(&questionId, &transcript)
 		if err != nil {
+			fmt.Println("error scan", err)
 			return nil, err
 		}
 
-		results[questionId] = transcript
+		// Check if transcript is valid or not
+		if transcript.Valid {
+			results[questionId] = transcript.String
+		} else {
+			results[questionId] = ""
+		}
 	}
 
 	return results, nil
