@@ -58,9 +58,6 @@ class BayesianCompetenceModel(BayesianModule):
             if not name.endswith('dropout'):
                 continue
 
-            if name.endswith('pos_dropout'):  # for deBERTa
-                continue
-
             if type(layer).__name__.endswith('ConsistentMCDropout'):
                 continue
 
