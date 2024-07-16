@@ -16,7 +16,6 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
-import { Form } from "react-router-dom";
 
 const orgPosition: Array<string> = [
   "Direksi",

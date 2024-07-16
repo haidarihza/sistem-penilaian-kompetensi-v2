@@ -17,6 +17,7 @@ import {
 import { RoomGroup } from '../../interface/room';
 import { DeleteIcon } from '@chakra-ui/icons';
 import { BsThreeDotsVertical } from 'react-icons/bs';
+import { useNavigate } from "react-router-dom";
 
 const formatDateTime = (dateTimeString?: string) => {
   if (!dateTimeString) return "-";
@@ -52,11 +53,16 @@ const Row = ({
   roomGroup,
   handleDeleteConfirm,
 }: RowProps) => {
+  const navigate = useNavigate();
   const latest_room = roomGroup.room.reduce((prev, current) => {
     return (new Date(prev.end) > new Date(current.end)) ? prev : current;
   });
+
+  const handleClicked = () => {
+    navigate(`/room-group/${roomGroup.id}`);
+  }
   return (
-  <Tr key={roomGroup.id}>
+  <Tr key={roomGroup.id} _hover={{ bg: "gray.100" }} onDoubleClick={handleClicked}>
     <Td textAlign="center" w="15%" pt="1" pb="1" fontSize="sm">{roomGroup.title}</Td>
     <Td textAlign="center" w="15%" pt="1" pb="1" fontSize="sm">{roomGroup.interviewee_name}</Td>
     <Td textAlign="center" w="15%" pt="1" pb="1" fontSize="sm">{formatDateTime(latest_room.start)}</Td>

@@ -1,7 +1,6 @@
-import { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useContext, useEffect, useState, useRef } from "react";
 import { ApiContext } from "../../utils/context/api";
-import { getOneRoom, reviewRoom } from "../../api/room";
+import { deleteRoom, getOneRoom, reviewRoom } from "../../api/room";
 import { RoomDetail, RoomGroup } from "../../interface/room";
 import { ApiError } from "../../interface/api";
 import { 
@@ -25,10 +24,22 @@ import {
   Icon,
   Divider,
   useToast,
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  HStack,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react";
 import { Question } from "../../interface/question";
 import { AuthContext } from "../../utils/context/auth";
-import { CalendarIcon } from "@chakra-ui/icons";
+import { CalendarIcon, DeleteIcon, TriangleDownIcon } from "@chakra-ui/icons";
 import { MdAccessTimeFilled } from "react-icons/md";
 import InterviewModal from "./InterviewModal";
 import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
@@ -39,13 +50,14 @@ import ToastModal from "../../components/ToastModal";
 interface Props {
   roomGroup: RoomGroup;
   room_id: string;
+  updateRoomGroup: () => void;
 }
 
 const Detail = ({
   roomGroup,
-  room_id
+  room_id,
+  updateRoomGroup
 } : Props ) => {
-  const params = useParams();
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
   const toast = useToast();
@@ -75,6 +87,8 @@ const Detail = ({
   const { isOpen:isOpenDetailCompetency, onOpen:onOpenDetailCompetency, onClose:onCloseDetailCompetency } = useDisclosure();
   const [selectedCompetency, setSelectedCompetency] = useState<Competency>({} as Competency);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isOpenDelete, onOpen: onOpenDelete, onClose: onCloseDelete } = useDisclosure();
+  const cancelRef = useRef(null);
 
   const fetch = async () => {
     try {
@@ -112,7 +126,7 @@ const Detail = ({
 
   const submitReview = async (status: string) => {
     try {
-      await reviewRoom(apiContext.axios, params.id!, status, note);
+      await reviewRoom(apiContext.axios, room_id, status, note);
       fetch();
     } catch(e) {
       if (e instanceof ApiError) {
@@ -160,6 +174,26 @@ const Detail = ({
     return best;
   }
 
+  const handleDeleteConfirm = (id: string) => {
+    onOpenDelete();
+  }
+
+  const handleDeleteRoom = async () => {
+    try {
+      await deleteRoom(apiContext.axios, room_id);
+      ToastModal(toast, "Success!", "Room Deleted", "success");
+      updateRoomGroup();
+    } catch(e) {
+      if (e instanceof ApiError) {
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Something Went Wrong", "error");
+      }
+    } finally {
+      onCloseDelete();
+    }
+  }
+
   return (
     <Box>
       <DetailQuestionModal
@@ -176,15 +210,39 @@ const Detail = ({
       />
       {role === "INTERVIEWER" ? (
         <Box bg="white" rounded="md" p="3">
-          <Heading mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
-            <Text fontWeight="bold" fontSize="2xl">{data.title}</Text>
+          <Box mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
+            <Menu placement="bottom-start">
+              <MenuButton 
+                as={Button} 
+                colorScheme="whiteAlpha"
+                color="main_blue"
+                _hover={{ bg: "gray.100", color: "main_blue" }}
+                rightIcon={<TriangleDownIcon w="3" />}
+                pl="0"
+              >
+                <HStack>
+                  <Text fontWeight="bold" fontSize="xl">{data.title}</Text>
+                </HStack>
+              </MenuButton>
+              <MenuList>
+                <MenuItem onClick={() => handleDeleteConfirm(room_id)} color="main_blue">
+                  <IconButton
+                    aria-label="Delete"
+                    icon={<DeleteIcon />}
+                    colorScheme='white.400'
+                    color="main_blue"
+                    size="sm"/>
+                  Delete
+                </MenuItem>
+              </MenuList>
+            </Menu>
             <Box
               bg={colors.find((val) => val.status === data.status)?.color}
               color="main_blue"
               rounded="md">
               <Text fontSize="lg" p="2" fontWeight="extrabold">{data.status}</Text>
             </Box>
-          </Heading>
+          </Box>
           <Text as="h3" fontSize="md" mb="6">{data.description}</Text>
           <Box display="flex" flexDir="row" mb="4" flexWrap="wrap" alignItems="flex-start">
             <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
@@ -345,6 +403,33 @@ const Detail = ({
         room={data}
         updateRoom={fetch}
       />
+      <AlertDialog
+        isOpen={isOpenDelete}
+        leastDestructiveRef={cancelRef}
+        onClose={onCloseDelete}
+        isCentered={true}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Hapus Ruangan
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Apakah Anda yakin ingin menghapus ruangan ini?
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onCloseDelete}>
+                Batal
+              </Button>
+              <Button colorScheme='red' onClick={() => handleDeleteRoom()} ml={3}>
+                Hapus
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   )
 }

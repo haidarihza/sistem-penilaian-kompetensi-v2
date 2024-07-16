@@ -111,7 +111,6 @@ export async function getOneRoomGroup(
 ): Promise<RoomGroup> {
   try {
     const res = await axios.get(`/room/group/${id}`);
-    console.log(res.data)
     return res.data.data as RoomGroup;
   } catch (e) {
     if (isAxiosError(e)) {
