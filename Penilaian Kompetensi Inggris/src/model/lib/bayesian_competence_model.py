@@ -9,7 +9,7 @@ import copy
 class BayesianCompetenceModel(BayesianModule):
     def __init__(self, competence_model: CompetenceModel, inplace: bool=False):
         super().__init__()
-        self.competence_model = copy.deepcopy(competence_model) if inplace else competence_model
+        self.competence_model = competence_model if inplace else copy.deepcopy(competence_model)
         self.device = competence_model.device
         BayesianCompetenceModel.transform_dropout(self.competence_model.model)
 
