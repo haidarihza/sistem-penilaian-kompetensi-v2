@@ -9,7 +9,7 @@ class Item(BaseModel):
   link: str
 
 def predict_speech(link):
-  client = Client("https://a80514782efb51f0b5.gradio.live") #link gradio
+  client = Client("https://5f181cf4f16acdf1d9.gradio.live") #link gradio
   result = client.predict(
     link,
     api_name = "/predict"
@@ -23,4 +23,4 @@ async def predict(item: Item):
 
 @app.get("/")
 async def predict():
-  return {"message": "Welcome to this fantastic app!"}
+  return {"message": "Welcome to pseech to text processing!"}

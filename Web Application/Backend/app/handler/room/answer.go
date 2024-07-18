@@ -10,7 +10,7 @@ import (
 	"io"
 
 	"net/http"
-	"net/url"
+	// "net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -46,10 +46,17 @@ func Answer(
 
 		go func(ctx context.Context, rRepo repository.RoomRepository, cRepo repository.CompetencyRepository, qRepo repository.QuestionRepository, fRepo repository.FeedbackRepository, fileLoc, roomId, questionId string) {
 			fmt.Println("running in the background")
-			form := url.Values{}
-			form.Add("link", fileLoc)
-
-			resp, _ := http.PostForm(speechToTextHost, form)
+			payload := map[string]string{"link": fileLoc}
+			jsonData, err := json.Marshal(payload)
+			if err != nil {
+				panic(err)
+			}
+		
+			// Set the URL for the POST request
+			url := speechToTextHost + "/predict"
+		
+			// Create the POST request with JSON payload
+			resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 			defer resp.Body.Close()
 			bodySpeech, _ := io.ReadAll(resp.Body)
 			// fmt.Println(string(bodySpeech))

@@ -46,6 +46,7 @@ var roomQueries = map[string]string{
 	roomGetResultQuestions:				      roomGetResultQuestionsQuery,
 	roomReview:				                  roomReviewQuery,
 	roomDeleteByID:											roomDeleteByIDQuery,
+	roomGroupDeleteByID:								roomGroupDeleteByIDQuery,
 	roomCompetenciesDelete:							roomCompetenciesDeleteQuery,
 	roomQuestionsDelete:								roomQuestionsDeleteQuery,
 	roomResultCompetenciesDelete:				roomResultCompetenciesDeleteQuery,
@@ -283,7 +284,7 @@ func (r *roomRepository) SelectRoomGroupByID(ctx context.Context, id string) (*r
 
 const roomSelectOneByIDUserID = "roomSelectOneByIDUserID"
 const roomSelectOneByIDUserIDQuery = `SELECT 
-	r.id, r.title, r.description, r."start", r."end", r.submission, r.status, r.note,
+	r.id, r.title, r.description, r."start", r."end", r.submission, r.status, r.note, r.room_group_id,
 	u.name, u.email
 	FROM rooms r
 	INNER JOIN "users" u ON r.interviewer_id = u.id
@@ -297,7 +298,7 @@ func (r *roomRepository) SelectOneRoomByID(ctx context.Context, id string) (*rep
 
 	row := r.ps[roomSelectOneByIDUserID].QueryRowContext(ctx, id)
 	err := row.Scan(&room.ID, &room.Title, &room.Description,
-		&room.Start, &room.End, &room.Submission, &room.Status, &room.Note,
+		&room.Start, &room.End, &room.Submission, &room.Status, &room.Note, &room.RoomGroupID,
 		&room.Interviewer.Name, &room.Interviewer.Email,
 	)
 	if err != nil {
@@ -585,28 +586,54 @@ const roomDeleteByIDQuery = `UPDATE rooms SET
 	WHERE id = $1
 `
 
-func (r *roomRepository) DeleteByID(ctx context.Context, id string) error {
+const roomGroupDeleteByID = "roomGroupDeleteByID"
+const roomGroupDeleteByIDQuery = `UPDATE room_groups SET
+	deleted = true,
+	deleted_at = $2
+	WHERE id = $1
+`
+
+func (r *roomRepository) DeleteByID(ctx context.Context, roomId string, roomGroupId string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	_, err = tx.StmtContext(ctx, r.ps[roomDeleteByID]).ExecContext(ctx, id, time.Now().UTC())
+	_, err = tx.StmtContext(ctx, r.ps[roomDeleteByID]).ExecContext(ctx, roomId, time.Now().UTC())
 	if err != nil {
 		return err
 	}
-	_, err = tx.StmtContext(ctx, r.ps[roomQuestionsDelete]).ExecContext(ctx, id)
+	_, err = tx.StmtContext(ctx, r.ps[roomQuestionsDelete]).ExecContext(ctx, roomId)
 	if err != nil {
 		return err
 	}
-	_, err = tx.StmtContext(ctx, r.ps[roomCompetenciesDelete]).ExecContext(ctx, id)
+	_, err = tx.StmtContext(ctx, r.ps[roomCompetenciesDelete]).ExecContext(ctx, roomId)
 	if err != nil {
 		return err
 	}
-	_, err = tx.StmtContext(ctx, r.ps[roomResultCompetenciesDelete]).ExecContext(ctx, id)
+	_, err = tx.StmtContext(ctx, r.ps[roomResultCompetenciesDelete]).ExecContext(ctx, roomId)
 	if err != nil {
 		return err
 	}
+	//check if room group has no more rooms
+	rows, err := tx.StmtContext(ctx, r.ps[roomSelectAllByRoomGroupID]).QueryContext(ctx, roomGroupId)
+	if err != nil {
+		return err
+	}
+
+	var count int
+
+	for rows.Next() {
+		count++
+	}
+
+	if count == 0 {
+		_, err = tx.StmtContext(ctx, r.ps[roomGroupDeleteByID]).ExecContext(ctx, roomGroupId, time.Now().UTC())
+		if err != nil {
+			return err
+		}
+	}
+
 	if err = tx.Commit(); err != nil {
 		return err
 	}

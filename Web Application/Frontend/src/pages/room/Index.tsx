@@ -110,11 +110,9 @@ const Index = () => {
     const fetch = async () => {
       try {
         const room_groups = await getAllRoomGroup(apiContext.axios);
-        console.log(room_groups);
         setData(room_groups);
         setFilteredData(room_groups);
       } catch(e) {
-        console.log(e);
         if (e instanceof ApiError) {
           ToastModal(toast, "Error!", e.message, "error");
         } else {

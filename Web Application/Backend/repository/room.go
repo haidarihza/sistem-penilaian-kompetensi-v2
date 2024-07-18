@@ -76,5 +76,5 @@ type RoomRepository interface {
 	GetResultQuestions(context.Context, string) (ResultQuestion, error)
 	UpdateStatusAndSubmission(context.Context, *Room) error
 	Review(context.Context, *Room) error
-	DeleteByID(context.Context, string) error
+	DeleteByID(context.Context, string, string) error
 }
