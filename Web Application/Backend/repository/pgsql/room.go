@@ -55,9 +55,9 @@ var roomQueries = map[string]string{
 const roomInsert = "roomInsert"
 const roomInsertQuery = `INSERT INTO
 	rooms(
-		id, title, description, "start", "end", status, interviewer_id, room_group_id
+		id, title, description, "start", "end", status, language, interviewer_id, room_group_id
 	) values(
-		$1, $2, $3, $4, $5, $6, $7, $8
+		$1, $2, $3, $4, $5, $6, $7, $8, $9
 	)
 	RETURNING id
 `
@@ -91,7 +91,7 @@ func (r *roomRepository) Insert(
 	var id string
 	row := tx.StmtContext(ctx, r.ps[roomInsert]).QueryRowContext(ctx,
 		room.ID, room.Title, room.Description, room.Start, room.End,
-		room.Status, room.InterviewerID, room.RoomGroupID,
+		room.Status, room.Language, room.InterviewerID, room.RoomGroupID,
 	)
 	err = row.Scan(&id)
 	if err != nil {
@@ -225,7 +225,7 @@ func (r *roomRepository) SelectAllRoomGroupByIntervieweeID(ctx context.Context, 
 
 const roomSelectAllByRoomGroupID = "roomSelectAllByRoomGroupID"
 const roomSelectAllByRoomGroupIDQuery = `SELECT
-	r.id, r.title, r.description, r."start", r."end", r.submission, r.status, r.note, u.name
+	r.id, r.title, r.description, r."start", r."end", r.submission, r.status, r.note, r.language, u.name
 	FROM rooms r
 	INNER JOIN users u ON r.interviewer_id = u.id
 	WHERE r.room_group_id = $1 AND r.deleted = false
@@ -243,7 +243,7 @@ func (r *roomRepository) SelectAllRoomByGroupID(ctx context.Context, id string) 
 		room := &repository.Room{}
 		interviewer := &repository.User{}
 		err := rows.Scan(&room.ID, &room.Title, &room.Description,
-			&room.Start, &room.End, &room.Submission, &room.Status, &room.Note,
+			&room.Start, &room.End, &room.Submission, &room.Status, &room.Note, &room.Language,
 			&interviewer.Name,
 		)
 
@@ -284,7 +284,7 @@ func (r *roomRepository) SelectRoomGroupByID(ctx context.Context, id string) (*r
 
 const roomSelectOneByIDUserID = "roomSelectOneByIDUserID"
 const roomSelectOneByIDUserIDQuery = `SELECT 
-	r.id, r.title, r.description, r."start", r."end", r.submission, r.status, r.note, r.room_group_id,
+	r.id, r.title, r.description, r."start", r."end", r.submission, r.status, r.note, r.language, r.room_group_id,
 	u.name, u.email
 	FROM rooms r
 	INNER JOIN "users" u ON r.interviewer_id = u.id
@@ -298,7 +298,7 @@ func (r *roomRepository) SelectOneRoomByID(ctx context.Context, id string) (*rep
 
 	row := r.ps[roomSelectOneByIDUserID].QueryRowContext(ctx, id)
 	err := row.Scan(&room.ID, &room.Title, &room.Description,
-		&room.Start, &room.End, &room.Submission, &room.Status, &room.Note, &room.RoomGroupID,
+		&room.Start, &room.End, &room.Submission, &room.Status, &room.Note, &room.Language, &room.RoomGroupID,
 		&room.Interviewer.Name, &room.Interviewer.Email,
 	)
 	if err != nil {

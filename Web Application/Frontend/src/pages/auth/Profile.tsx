@@ -5,7 +5,6 @@ import { profile, updatePassword, updateProfile } from "../../api/auth";
 import { ApiContext } from "../../utils/context/api";
 import { ApiError } from "../../interface/api";
 import { EmailIcon, PhoneIcon, EditIcon } from "@chakra-ui/icons";
-import ModalForm from "../../components/ModalForm";
 import { ProfileData, UpdatePassword } from "../../interface/auth";
 import ToastModal from "../../components/ToastModal";
 import { useToast } from "@chakra-ui/react";

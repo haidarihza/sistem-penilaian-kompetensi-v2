@@ -15,7 +15,7 @@ import {
   Box,
   Button
 } from "@chakra-ui/react";
-import Detail from './Detail';
+import Detail from './RoomDetail';
 import { useNavigate } from 'react-router-dom';
 import { getOneRoomGroup } from '../../api/room';
 import { ApiError } from "../../interface/api";

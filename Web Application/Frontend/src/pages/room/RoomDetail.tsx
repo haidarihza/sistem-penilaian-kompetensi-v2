@@ -46,6 +46,7 @@ import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
 import DetailQuestionModal from "./DetailQuestionModal";
 import { Competency, CompetencyLevel } from "../../interface/competency";
 import ToastModal from "../../components/ToastModal";
+import { languageOptions } from "../../utils/utils";
 
 interface Props {
   roomGroup: RoomGroup;
@@ -254,6 +255,7 @@ const Detail = ({
               <Text mb="2"><b>Waktu Total :</b> ~ {countTotalTime(data.questions)} menit</Text>
               <Text mb="2"><b>Posisi Organisasi :</b> {roomGroup.org_position}</Text>
               <Text mb="2"><b>Interviewer :</b> {data.interviewer_name}</Text>
+              <Text mb="2"><b>Bahasa :</b> {languageOptions.find((val) => val.value === data.language)?.label}</Text>
             </Box>
             <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
               <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">

@@ -46,18 +46,9 @@ import QuestionsListModal from "./QuestionsListModal";
 import SortableTableCompetency from "./SortableTableCompetency";
 import SortableTableQuestion from "./SortableTableQuestion";
 import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
+import { orgPosition, languageOptions } from "../../utils/utils";
 
-const orgPosition: Array<string> = [
-  "Direksi",
-  "Manajerial",
-  "Divisi IT",
-  "Divisi HR",
-  "Divisi Keuangan",
-  "Divisi Pemasaran",
-  "Divisi Produksi"
-];
-
-const Create = () => {
+const CreateRoom = () => {
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
   const navigate = useNavigate();
@@ -73,6 +64,7 @@ const Create = () => {
     start: "",
     end: "",
     interviewer_email: "",
+    language: "",
     questions_id: [] as string[],
     competencies_id: [] as string[],
     questions: [] as Question[],
@@ -358,6 +350,15 @@ const Create = () => {
             </Select>
             <FormErrorMessage>Nama interviewer harus diisi</FormErrorMessage>
           </FormControl>
+          <FormControl isInvalid={isSubmit && roomGroup.room.language === ""} mb="4">
+            <FormLabel>Bahasa</FormLabel>
+            <Select placeholder="Pilih Bahasa" value={roomGroup.room.language} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, language: e.target.value } })}>
+              {languageOptions.map((val, i) => (
+                <option key={i} value={val.value}>{val.label}</option>
+              ))}
+            </Select>
+            <FormErrorMessage>Bahasa harus diisi</FormErrorMessage>
+          </FormControl>
         </Box>
         {/* ************************************* */}
         <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Kompetensi yang dinilai</Text>
@@ -408,10 +409,10 @@ const Create = () => {
               />
           </Table>
         </TableContainer>
-        <Button bg="main_blue" color="white" type="submit" mt="4">Kirim</Button>
+        <Button bg="main_blue" color="white" type="submit" mt="4">Buat Ruangan</Button>
       </Box>
     </Layout>
   )
 }
 
-export default Create;
+export default CreateRoom;

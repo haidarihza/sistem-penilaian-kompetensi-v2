@@ -111,7 +111,7 @@ const InterviewModal = ({
 
   const answer = async (value : Blob) => {
     try {
-      await answerQuestion(apiContext.axios, room.id, room.questions[questionIdx.current-1].id, value);
+      await answerQuestion(apiContext.axios, room.id, room.questions[questionIdx.current-1].id, value, room.language);
     } catch(e) {
       if (e instanceof ApiError) {
         ToastModal(toast, "Error!", e.message, "error");

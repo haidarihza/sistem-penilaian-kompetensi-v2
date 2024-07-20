@@ -49,6 +49,7 @@ type Room struct {
 	Submission    sql.NullString
 	Status        RoomStatus
 	Note          sql.NullString
+	Language			string
 	Deleted       bool
 	CreatedAt     time.Time
 	UpdatedAt     sql.NullTime

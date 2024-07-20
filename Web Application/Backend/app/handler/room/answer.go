@@ -8,6 +8,8 @@ import (
 	"interview/summarization/app/response"
 	"interview/summarization/repository"
 	"io"
+	"interview/summarization/config"
+
 
 	"net/http"
 	// "net/url"
@@ -18,6 +20,7 @@ import (
 
 type AnswerReq struct {
 	AnswerURL string `json:"answer_url,omitempty"`
+	Language	string `json:"language,omitempty"`
 }
 
 type PredictResponse struct {
@@ -29,7 +32,7 @@ func Answer(
 	competencyRepository repository.CompetencyRepository,
 	questionRepository repository.QuestionRepository,
 	feedbackRepository repository.FeedbackRepository,
-	apiHost, speechToTextHost, summarizationHost string,
+	cfg config.Config,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		roomId := chi.URLParam(r, "roomId")
@@ -42,9 +45,7 @@ func Answer(
 			return
 		}
 
-		fileLoc := req.AnswerURL
-
-		go func(ctx context.Context, rRepo repository.RoomRepository, cRepo repository.CompetencyRepository, qRepo repository.QuestionRepository, fRepo repository.FeedbackRepository, fileLoc, roomId, questionId string) {
+		go func(ctx context.Context, rRepo repository.RoomRepository, cRepo repository.CompetencyRepository, qRepo repository.QuestionRepository, fRepo repository.FeedbackRepository, roomId, questionId, fileLoc, language string) {
 			fmt.Println("running in the background")
 			payload := map[string]string{"link": fileLoc}
 			jsonData, err := json.Marshal(payload)
@@ -53,7 +54,13 @@ func Answer(
 			}
 		
 			// Set the URL for the POST request
-			url := speechToTextHost + "/predict"
+			url := ""
+			if language == "ENGLISH" {
+				url = cfg.SpeechToTextHostEN
+			} else if language == "INDONESIA" {
+				url = cfg.SpeechToTextHostID
+			}
+			url += "/predict"
 		
 			// Create the POST request with JSON payload
 			resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
@@ -91,7 +98,14 @@ func Answer(
 					"competence_sets":  mapKamus,
 				})
 
-				url := summarizationHost + "/predict"
+				url := ""
+				if language == "ENGLISH" {
+					url = cfg.SummarizationHostEN
+				} else if language == "INDONESIA" {
+					url = cfg.SummarizationHostID
+				}
+				url += "/predict"
+	
 				resp, _ := http.Post(url, "application/json", bytes.NewBuffer(body))
 				bodySummary, _ := io.ReadAll(resp.Body)
 
@@ -132,7 +146,7 @@ func Answer(
 				rRepo.InsertResult(ctx, roomId, competencyRes, levelRes, resultRes)
 				fRepo.Insert(ctx, feedbackID, transcriptFeedback, competencyFeedback, resultFeedback)
 			}
-		}(context.Background(), roomRepository, competencyRepository, questionRepository, feedbackRepository, fileLoc, roomId, questionId)
+		}(context.Background(), roomRepository, competencyRepository, questionRepository, feedbackRepository, roomId, questionId, req.AnswerURL, req.Language)
 		response.RespondOK(w)
 	}
 }

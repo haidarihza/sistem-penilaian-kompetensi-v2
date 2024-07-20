@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS rooms(
   submission TIMESTAMP WITH TIME ZONE,
   status TEXT,
   note TEXT,
+  language TEXT,
   interviewer_id UUID,
   room_group_id UUID,
   deleted BOOLEAN DEFAULT false NOT NULL,

@@ -35,6 +35,7 @@ type Room struct {
 	IntervieweePhone string                  `json:"interviewee_phone,omitempty"`
 	InterviewerEmail string                  `json:"interviewer_email,omitempty"`
 	InterviewerName  string                  `json:"interviewer_name,omitempty"`
+	Language				 string									 `json:"language",omitempty`
 	QuestionsID      []string                `json:"questions_id,omitempty"`
 	CompetenciesID   []string                `json:"competencies_id,omitempty"`
 	Questions        []question.Question     `json:"questions,omitempty"`
@@ -53,6 +54,7 @@ type RoomCreate struct {
 	Note             string                  `json:"note,omitempty"`
 	InterviewerEmail string                  `json:"interviewer_email,omitempty"`
 	IntervieweeEmail string		 	             `json:"interviewee_email,omitempty"`
+	Language				 string									 `json:"language,omitempty"`
 	QuestionsID      []string                `json:"questions_id,omitempty"`
 	CompetenciesID   []string                `json:"competencies_id,omitempty"`
 	Questions        []question.Question     `json:"questions,omitempty"`
@@ -104,6 +106,7 @@ func CreateRoom(roomRepository repository.RoomRepository, userRepository reposit
 			End:           req.End,
 			Description:   req.Description,
 			Status:        status,
+			Language:			 req.Language,
 		}
 
 		go func(ctx context.Context, room repository.Room, interviewee repository.User) {

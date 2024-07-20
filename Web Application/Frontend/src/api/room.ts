@@ -24,6 +24,7 @@ export async function createRoomGroup(
         start: new Date(room.start),
         end: new Date(room.end),
         interviewer_email: room.interviewer_email,
+        language: room.language,
         questions_id: room.questions_id,
         competencies_id: room.competencies_id,
       }
@@ -57,6 +58,7 @@ export async function createRoom(
       room_group_id,
       interviewer_email: room.interviewer_email,
       interviewee_email,
+      language: room.language,
       questions_id: room.questions_id,
       competencies_id: room.competencies_id,
     });
@@ -144,7 +146,8 @@ export async function answerQuestion(
   axios: AxiosInstance,
   room_id: string,
   question_id: string,
-  answer: Blob
+  answer: Blob,
+  language: string
 ): Promise<void> {
   try {
     const storageRef = ref(storage, `interview-video/answer-${room_id}-${question_id}`);
@@ -152,7 +155,8 @@ export async function answerQuestion(
     const downloadUrl = await getDownloadURL(snapshot.ref);
     
     await axios.post(`/room/${room_id}/${question_id}`, {
-      answer_url: downloadUrl
+      answer_url: downloadUrl,
+      language
     });
   } catch (e) {
     if (isAxiosError(e)) {

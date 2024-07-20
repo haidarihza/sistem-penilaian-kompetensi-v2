@@ -63,6 +63,7 @@ func GetOneRoom(
 				Submission:  			submission,
 				Status:      			string(room.Status),
 				Note:        			note,
+				Language:					room.Language,
 			},
 		}
 
