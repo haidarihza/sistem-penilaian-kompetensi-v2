@@ -46,7 +46,7 @@ import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
 import DetailQuestionModal from "./DetailQuestionModal";
 import { Competency, CompetencyLevel } from "../../interface/competency";
 import ToastModal from "../../components/ToastModal";
-import { languageOptions, statusColors } from "../../utils/utils";
+import { languageOptions, statusColors, formatDateTime } from "../../utils/utils";
 
 interface Props {
   roomGroup: RoomGroup;
@@ -123,16 +123,6 @@ const Detail = ({
       }
     }
   }
-
-  const formatDateTime = (dateTimeString: string) => {
-    const date = new Date(dateTimeString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
 
   const checkValidDateRange = (start: string, end: string) => {
     const startDate = new Date(start);
@@ -236,20 +226,72 @@ const Detail = ({
               <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
                 <Text fontWeight="bold">Informasi Umum</Text>
               </Box>
-              <Text mb="2"><b>Tanggal Wawancara :</b> {formatDateTime(data.start)} - {formatDateTime(data.end)}</Text>
-              <Text mb="2"><b>Submission :</b> {data.submission === "-" ? "-" : formatDateTime(data.submission)}</Text>
-              <Text mb="2"><b>Waktu Total :</b> ~ {countTotalTime(data.questions)} menit</Text>
-              <Text mb="2"><b>Posisi Organisasi :</b> {roomGroup.org_position}</Text>
-              <Text mb="2"><b>Interviewer :</b> {data.interviewer_name}</Text>
-              <Text mb="2"><b>Bahasa :</b> {languageOptions.find((val) => val.value === data.language)?.label}</Text>
+              <TableContainer bg="white" rounded="md" w="100%">
+                <Table variant="simple" size="md" w="50%" colorScheme="blackAlpha">
+                  <Tbody>
+                      <Tr key={1}>
+                        <Td border="none" p="0" pr="4" py="1"><b>Waktu Wawancara</b></Td>
+                        <Td border="none" p="0" pr="4" py="1">:</Td>
+                      </Tr>
+                      <Tr key={2}>
+                        <Td border="none" pl="4" pr="4" py="1"><b>Mulai</b></Td>
+                        <Td border="none" p="0" pr="4" py="1">:</Td>
+                        <Td border="none" p="0" py="1">{formatDateTime(data.start)}</Td>
+                      </Tr>
+                      <Tr key={3}>
+                        <Td border="none" pl="4" pr="4" py="1"><b>Selesai</b></Td>
+                        <Td border="none" p="0" pr="4" py="1">:</Td>
+                        <Td border="none" p="0" py="1">{formatDateTime(data.end)}</Td>
+                      </Tr>
+                      <Tr key={4}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Submission</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{data.submission === "-" ? "-" : formatDateTime(data.submission)}</Td>
+                      </Tr>
+                      <Tr key={5}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Posisi Organisasi</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{roomGroup.org_position}</Td>
+                      </Tr>
+                      <Tr key={6}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Interviewer</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{data.interviewer_name}</Td>
+                      </Tr>
+                      <Tr key={7}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Bahasa</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{languageOptions.find((val) => val.value === data.language)?.label}</Td>
+                      </Tr>
+                  </Tbody>
+                </Table>
+              </TableContainer>
             </Box>
             <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
               <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
                 <Text fontWeight="bold">Informasi Kandidat</Text>
               </Box>
-              <Text mb="2"><b>Nama :</b> {roomGroup.interviewee_name}</Text>
-              <Text mb="2"><b>Email :</b> {roomGroup.interviewee_email}</Text>
-              <Text mb="2"><b>Phone :</b> {roomGroup.interviewee_phone}</Text>
+              <TableContainer bg="white" rounded="md" w="100%">
+                <Table variant="simple" size="md" w="50%" colorScheme="blackAlpha">
+                  <Tbody>
+                      <Tr key={1}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Nama</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{roomGroup.interviewee_name}</Td>
+                      </Tr>
+                      <Tr key={2}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Email</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{roomGroup.interviewee_email}</Td>
+                      </Tr>
+                      <Tr key={3}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Phone</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{roomGroup.interviewee_phone}</Td>
+                      </Tr>
+                  </Tbody>
+                </Table>
+              </TableContainer>
             </Box>
             <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
               <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
@@ -345,19 +387,36 @@ const Detail = ({
           <Text as="h3" fontSize="md" mb="6">{data.description}</Text>
           <Divider mb="6"/>
           <Stack spacing="2">
-              <Box display="flex" flexDir="row" alignItems="center" mb="4">
-                <Icon color="main_blue" mr="4" boxSize="25px" as={CalendarIcon} />
-                <Box display="flex" flexDir="column">
-                  <Text fontSize="sm" fontWeight="normal">Start: {formatDateTime(data.start)}</Text>
-                  <Text fontSize="sm" fontWeight="normal">End: {formatDateTime(data.end)}</Text>
-                </Box>
-              </Box>
-              <Box display="flex" flexDir="row" alignItems="center" mb="4">
-                <Icon color="main_blue" mr="4" boxSize="25px" as={MdAccessTimeFilled} />
-                <Box display="flex" flexDir="column">
-                  <Text fontSize="sm" fontWeight="normal">~ {countTotalTime(data.questions)} menit</Text>
-                </Box>
-              </Box>
+            <TableContainer bg="white" rounded="md" w="100%">
+              <Table variant="simple" size="md" w="50%" colorScheme="blackAlpha">
+                <Tbody>
+                  <Tr key={1}>
+                    <Td border="none" p="0" pr="4" py="1"><b>Waktu Wawancara</b></Td>
+                    <Td border="none" p="0" pr="4" py="1">:</Td>
+                  </Tr>
+                  <Tr key={2}>
+                    <Td border="none" pl="4" pr="4" py="1"><b>Mulai</b></Td>
+                    <Td border="none" p="0" pr="4" py="1">:</Td>
+                    <Td border="none" p="0" py="1">{formatDateTime(data.start)}</Td>
+                  </Tr>
+                  <Tr key={3}>
+                    <Td border="none" pl="4" pr="4" py="1"><b>Selesai</b></Td>
+                    <Td border="none" p="0" pr="4" py="1">:</Td>
+                    <Td border="none" p="0" py="1">{formatDateTime(data.end)}</Td>
+                  </Tr>
+                  <Tr key={4}>
+                    <Td border="none" p="0" pr="4" py="2"><b>Submission</b></Td>
+                    <Td border="none" p="0" pr="4" py="2">:</Td>
+                    <Td border="none" p="0" py="2">{data.submission === "-" ? "-" : formatDateTime(data.submission)}</Td>
+                  </Tr>
+                  <Tr key={5}>
+                    <Td border="none" p="0" pr="4" py="2"><b>Total Waktu</b></Td>
+                    <Td border="none" p="0" pr="4" py="2">:</Td>
+                    <Td border="none" p="0" py="2">~{countTotalTime(data.questions)} menit</Td>
+                  </Tr>
+                </Tbody>
+              </Table>
+            </TableContainer>
           </Stack>
           {data.status === "WAITING REVIEW" && (
             <Box display="flex" alignItems="center" flexDir="column">

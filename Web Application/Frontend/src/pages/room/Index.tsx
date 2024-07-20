@@ -219,6 +219,7 @@ const Index = () => {
                 {view === "LIST" && (
                   <ListView
                     filteredData={tab.data}
+                    role={role ? role : "INTERVIEWEE"}
                     handleDeleteConfirm={handleDeleteConfirm}
                   />
                 )}

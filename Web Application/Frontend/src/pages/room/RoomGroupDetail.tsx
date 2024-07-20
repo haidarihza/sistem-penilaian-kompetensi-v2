@@ -43,8 +43,8 @@ const RoomGroupDetail = () => {
   const fetch = async () => {
     try {
       const res = await getOneRoomGroup(apiContext.axios, params.id!);
-      // sort room by end date
-      res.room.sort((a, b) => new Date(a.end).getTime() - new Date(b.end).getTime());
+      // sort room by start date
+      res.room.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
       setData(res);
       setActiveTabIndex(res.room.length - 1);
       if (res.room.length === 0) {
