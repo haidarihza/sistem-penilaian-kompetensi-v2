@@ -18,6 +18,7 @@ import { RoomGroup } from '../../interface/room';
 import { DeleteIcon } from '@chakra-ui/icons';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { useNavigate } from "react-router-dom";
+import { statusColors } from '../../utils/utils';
 
 const formatDateTime = (dateTimeString?: string) => {
   if (!dateTimeString) return "-";
@@ -29,20 +30,6 @@ const formatDateTime = (dateTimeString?: string) => {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 };
-
-const colors = [{
-  status: "WAITING ANSWER",
-  color: "main_beige"
-}, {
-  status: "WAITING REVIEW",
-  color: "#E6F4F1"
-}, {
-  status: "REJECTED",
-  color: "#8CBCFF"
-}, {
-  status: "ACCEPTED",
-  color: "#8CBCFF"
-}];
 
 interface RowProps {
   roomGroup: RoomGroup;
@@ -74,7 +61,7 @@ const Row = ({
         alignItems="center"
         w="fit-content"
         rounded="md"
-        bg={colors.find((color) => color.status === latest_room?.status)?.color}
+        bg={statusColors.find((color) => color.status === latest_room?.status)?.color}
         >
         <Text fontSize="sm" fontWeight="semibold" color="main_blue" pl="1" pr="1">{latest_room.status}</Text>
       </Box>

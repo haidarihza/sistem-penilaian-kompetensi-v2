@@ -16,16 +16,7 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
-
-const orgPosition: Array<string> = [
-  "Direksi",
-  "Manajerial",
-  "Divisi IT",
-  "Divisi HR",
-  "Divisi Keuangan",
-  "Divisi Pemasaran",
-  "Divisi Produksi"
-];
+import { orgPosition } from "../../utils/utils";
 
 interface Props {
   isOpen: boolean;

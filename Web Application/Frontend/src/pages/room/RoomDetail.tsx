@@ -46,7 +46,7 @@ import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
 import DetailQuestionModal from "./DetailQuestionModal";
 import { Competency, CompetencyLevel } from "../../interface/competency";
 import ToastModal from "../../components/ToastModal";
-import { languageOptions } from "../../utils/utils";
+import { languageOptions, statusColors } from "../../utils/utils";
 
 interface Props {
   roomGroup: RoomGroup;
@@ -62,20 +62,6 @@ const Detail = ({
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
   const toast = useToast();
-  const colors = [{
-    status: "WAITING ANSWER",
-    color: "main_beige"
-  }, {
-    status: "WAITING REVIEW",
-    color: "#E6F4F1"
-  }, {
-    status: "REJECTED",
-    color: "#8CBCFF"
-  }, {
-    status: "ACCEPTED",
-    color: "#8CBCFF"
-  }];
-
   const [data, setData] = useState<RoomDetail>({} as RoomDetail);
   const [note, setNote] = useState<string>("");
 
@@ -238,7 +224,7 @@ const Detail = ({
               </MenuList>
             </Menu>
             <Box
-              bg={colors.find((val) => val.status === data.status)?.color}
+              bg={statusColors.find((val) => val.status === data.status)?.color}
               color="main_blue"
               rounded="md">
               <Text fontSize="lg" p="2" fontWeight="extrabold">{data.status}</Text>
@@ -350,7 +336,7 @@ const Detail = ({
           <Heading mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
             <Text fontWeight="bold" fontSize="2xl">{data.title}</Text>
             <Box 
-              bg={colors.find((val) => val.status === data.status)?.color}
+              bg={statusColors.find((val) => val.status === data.status)?.color}
               color="main_blue"
               rounded="md">
               <Text fontSize="lg" p="2" fontWeight="extrabold">{data.status}</Text>

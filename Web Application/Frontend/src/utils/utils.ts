@@ -20,3 +20,17 @@ export const languageOptions: Array<FormOptions> = [
     label: "Indonesia"
   }
 ]
+
+export const statusColors = [{
+  status: "WAITING ANSWER",
+  color: "main_beige"
+}, {
+  status: "WAITING REVIEW",
+  color: "#E6F4F1"
+}, {
+  status: "REJECTED",
+  color: "#8CBCFF"
+}, {
+  status: "ACCEPTED",
+  color: "#8CBCFF"
+}];

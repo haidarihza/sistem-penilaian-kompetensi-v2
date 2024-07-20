@@ -21,26 +21,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { DeleteIcon, CalendarIcon, EmailIcon } from "@chakra-ui/icons";
 import { BsFillFilePersonFill } from "react-icons/bs";
+import { statusColors } from "../../utils/utils";
 
 interface Props {
   roomGroup: RoomGroup;
   handleDeleteConfirm: (id: string) => void;
   role: string;
 }
-
-const colors = [{
-  status: "WAITING ANSWER",
-  color: "main_beige"
-}, {
-  status: "WAITING REVIEW",
-  color: "#E6F4F1"
-}, {
-  status: "REJECTED",
-  color: "#8CBCFF"
-}, {
-  status: "ACCEPTED",
-  color: "#8CBCFF"
-}];
 
 const RoomCard = ({
   roomGroup,
@@ -115,7 +102,7 @@ const RoomCard = ({
           <Box>
             <Box display="flex" flexDir="row" alignItems="center" mb="2" justifyContent="space-between">
               <Box
-                bg={colors.find((color) => color.status === lastRoom?.status)?.color}
+                bg={statusColors.find((color) => color.status === lastRoom?.status)?.color}
                 rounded="lg"
                 p="1">
                 <Text fontSize="sm" fontWeight="bold" color="main_blue">{lastRoom?.status}</Text>
@@ -157,7 +144,7 @@ const RoomCard = ({
     <CardFooter pt="2" pb="2" justifyContent="flex-end">
       <Box display="flex" flexDir="row" alignItems="center" mb="2">
         <Box
-          bg={colors.find((color) => color.status === lastRoom.status)?.color}
+          bg={statusColors.find((color) => color.status === lastRoom.status)?.color}
           rounded="lg"
           p="1"
         >
