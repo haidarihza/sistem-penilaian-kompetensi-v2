@@ -51,6 +51,11 @@ func GetOneRoom(
 			note = room.Note.String
 		}
 
+		currQuestion := 0
+		if room.CurrQuestion.Valid {
+			currQuestion = int(room.CurrQuestion.Int32)
+		}
+	
 		resp := GetOneRoomResponse{
 			Data: Room{
 				ID:          			room.ID,
@@ -58,6 +63,8 @@ func GetOneRoom(
 				Description: 			room.Description,
 				Start:       			room.Start,
 				End:         			room.End,
+				IsStarted:				room.IsStarted,
+				CurrQuestion:			currQuestion,
 				InterviewerName: 	room.Interviewer.Name,
 				InterviewerEmail: room.Interviewer.Email,
 				Submission:  			submission,

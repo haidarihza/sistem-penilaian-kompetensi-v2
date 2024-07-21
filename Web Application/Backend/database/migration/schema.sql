@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS rooms(
   description TEXT,
   "start" TIMESTAMP WITH TIME ZONE NOT NULL,
   "end" TIMESTAMP WITH TIME ZONE NOT NULL,
+  is_started BOOLEAN DEFAULT false,
+  current_question INTEGER,
   submission TIMESTAMP WITH TIME ZONE,
   status TEXT,
   note TEXT,
@@ -58,6 +60,7 @@ CREATE TABLE IF NOT EXISTS questions(
 CREATE TABLE IF NOT EXISTS rooms_has_questions(
   room_id UUID,
   question_id UUID,
+  start_answer TIMESTAMP WITH TIME ZONE,
   file_link TEXT,
   transcript TEXT,
   FOREIGN KEY(room_id) REFERENCES rooms(id),

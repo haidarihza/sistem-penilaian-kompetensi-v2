@@ -29,6 +29,8 @@ export interface RoomDetail {
   language: string,
   start: string,
   end: string,
+  is_started: boolean,
+  current_question: number,
   submission: string,
   status: string,
   note: string,

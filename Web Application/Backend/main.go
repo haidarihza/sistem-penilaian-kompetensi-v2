@@ -114,6 +114,8 @@ func main() {
 		r.Get("/group/{id}", roomhandler.GetOneRoomGroup(roomRepository))
 		r.Get("/{id}", roomhandler.GetOneRoom(roomRepository, questionRepository, competencyRepository))
 		r.Post("/{roomId}/{questionId}", roomhandler.Answer(roomRepository, competencyRepository, questionRepository, feedbackRepository, cfg))
+		r.Get("/get-question/{roomId}/{questionId}", roomhandler.GetOneQuestionRoom(roomRepository))
+		r.Put("/update-current-question/{roomId}/{questionId}", roomhandler.UpdateQuestionCond(roomRepository))
 		r.Post("/{roomId}/finish-answer", roomhandler.FinishAnswer(roomRepository))
 		r.With(roleInterviewerMiddleware).Post("/", roomhandler.CreateRoom(roomRepository, userRepository, cfg))
 		r.With(roleInterviewerMiddleware).Post("/group", roomhandler.CreateRoomGroup(roomRepository, userRepository, cfg))

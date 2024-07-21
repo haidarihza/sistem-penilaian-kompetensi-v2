@@ -39,8 +39,7 @@ import {
 } from "@chakra-ui/react";
 import { Question } from "../../interface/question";
 import { AuthContext } from "../../utils/context/auth";
-import { CalendarIcon, DeleteIcon, TriangleDownIcon } from "@chakra-ui/icons";
-import { MdAccessTimeFilled } from "react-icons/md";
+import { DeleteIcon, TriangleDownIcon } from "@chakra-ui/icons";
 import InterviewModal from "./InterviewModal";
 import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
 import DetailQuestionModal from "./DetailQuestionModal";
@@ -230,7 +229,7 @@ const Detail = ({
                 <Table variant="simple" size="md" w="50%" colorScheme="blackAlpha">
                   <Tbody>
                       <Tr key={1}>
-                        <Td border="none" p="0" pr="4" py="1"><b>Waktu Wawancara</b></Td>
+                        <Td border="none" p="0" pr="4" py="1"><b>Waktu Interview</b></Td>
                         <Td border="none" p="0" pr="4" py="1">:</Td>
                       </Tr>
                       <Tr key={2}>
@@ -391,7 +390,7 @@ const Detail = ({
               <Table variant="simple" size="md" w="50%" colorScheme="blackAlpha">
                 <Tbody>
                   <Tr key={1}>
-                    <Td border="none" p="0" pr="4" py="1"><b>Waktu Wawancara</b></Td>
+                    <Td border="none" p="0" pr="4" py="1"><b>Waktu Interview</b></Td>
                     <Td border="none" p="0" pr="4" py="1">:</Td>
                   </Tr>
                   <Tr key={2}>
@@ -438,7 +437,7 @@ const Detail = ({
                 mt="5"
                 onClick={onOpen}
                 isDisabled={!checkValidDateRange(data.start, data.end)}
-                >Mulai Wawancara</Button>
+                >Mulai Interview</Button>
             </Box>
           )}
         </Box>
@@ -448,6 +447,7 @@ const Detail = ({
         onClose={onClose} 
         questions={data.questions} 
         room={data}
+        setRoom={setData}
         updateRoom={fetch}
       />
       <AlertDialog

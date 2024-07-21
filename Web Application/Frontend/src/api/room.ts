@@ -3,6 +3,7 @@ import { RoomGroup, RoomAll, RoomDetail, RoomCreate } from "../interface/room";
 import { ApiError } from "../interface/api";
 import { storage } from "./firebaseStorage";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Question } from "../interface/question";
 
 export async function createRoomGroup(
   axios: AxiosInstance,
@@ -130,9 +131,71 @@ export async function getOneRoom(
 ): Promise<RoomDetail> {
   try {
     const res = await axios.get(`/room/${id}`);
-
     return res.data.data as RoomDetail;
   } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}
+
+export async function getQuestionDetail(
+  axios: AxiosInstance,
+  room_id: string,
+  question_id: string,
+): Promise<Question> {
+  try{
+    const res = await axios.get(`/room/get-question/${room_id}/${question_id}`)
+    return res.data.data as Question
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}
+
+export async function updateRoomQuestion(
+  axios: AxiosInstance,
+  room_id: string,
+  question_id: string,
+  start_answer: Date,
+  is_started: boolean,
+  current_question: number
+) : Promise<void> {
+  try{
+    await axios.put(`/room/update-current-question/${room_id}/${question_id}`, {
+      start_answer,
+      is_started,
+      current_question
+    });
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}
+
+export async function uploadToStorage(
+  video: Blob,
+  room_id: string,
+  question_id: string
+): Promise<string> {
+  try {
+    const storageRef = ref(storage, `interview-video/answer-${room_id}-${question_id}`);
+    const snapshot = await uploadBytes(storageRef, video);
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+    return downloadUrl;
+  } catch (e) {
+    console.log(e)
     if (isAxiosError(e)) {
       throw new ApiError(e.response?.data.message ? 
         e.response?.data.message : "Something Went Wrong");
@@ -146,16 +209,12 @@ export async function answerQuestion(
   axios: AxiosInstance,
   room_id: string,
   question_id: string,
-  answer: Blob,
+  link: string,
   language: string
 ): Promise<void> {
   try {
-    const storageRef = ref(storage, `interview-video/answer-${room_id}-${question_id}`);
-    const snapshot = await uploadBytes(storageRef, answer);
-    const downloadUrl = await getDownloadURL(snapshot.ref);
-    
     await axios.post(`/room/${room_id}/${question_id}`, {
-      answer_url: downloadUrl,
+      answer_url: link,
       language
     });
   } catch (e) {

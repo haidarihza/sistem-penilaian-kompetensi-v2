@@ -57,7 +57,7 @@ func Answer(
 			url := ""
 			if language == "ENGLISH" {
 				url = cfg.SpeechToTextHostEN
-			} else if language == "INDONESIA" {
+			} else {
 				url = cfg.SpeechToTextHostID
 			}
 			url += "/predict"
@@ -66,7 +66,6 @@ func Answer(
 			resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 			defer resp.Body.Close()
 			bodySpeech, _ := io.ReadAll(resp.Body)
-			// fmt.Println(string(bodySpeech))
 
 			rRepo.InsertTranscript(ctx, roomId, questionId, fileLoc, string(bodySpeech))
 			if isAnswered, _ := rRepo.IsAnswered(ctx, roomId); isAnswered {
@@ -101,7 +100,7 @@ func Answer(
 				url := ""
 				if language == "ENGLISH" {
 					url = cfg.SummarizationHostEN
-				} else if language == "INDONESIA" {
+				} else {
 					url = cfg.SummarizationHostID
 				}
 				url += "/predict"

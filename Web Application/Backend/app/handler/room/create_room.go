@@ -27,6 +27,8 @@ type Room struct {
 	Description      string                  `json:"description,omitempty"`
 	Start            string                  `json:"start,omitempty"`
 	End              string                  `json:"end,omitempty"`
+	IsStarted				 bool										 `json:"is_started"`
+	CurrQuestion		 int										 `json:"current_question"`
 	Submission       string                  `json:"submission,omitempty"`
 	Status           string                  `json:"status,omitempty"`
 	Note             string                  `json:"note,omitempty"`
@@ -35,7 +37,7 @@ type Room struct {
 	IntervieweePhone string                  `json:"interviewee_phone,omitempty"`
 	InterviewerEmail string                  `json:"interviewer_email,omitempty"`
 	InterviewerName  string                  `json:"interviewer_name,omitempty"`
-	Language				 string									 `json:"language",omitempty`
+	Language				 string									 `json:"language,omitempty"`
 	QuestionsID      []string                `json:"questions_id,omitempty"`
 	CompetenciesID   []string                `json:"competencies_id,omitempty"`
 	Questions        []question.Question     `json:"questions,omitempty"`
