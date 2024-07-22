@@ -94,7 +94,7 @@ const RoomGroupDetail = () => {
         </TabList>
         <TabPanels>
           {data ? data.room.map((room, idx) => (
-            <TabPanel p="0" pt="1">
+            <TabPanel p="0" pt="1" key={idx}>
               <Detail
                 roomGroup={data}
                 room_id={room.id}

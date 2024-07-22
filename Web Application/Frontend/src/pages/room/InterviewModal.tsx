@@ -11,9 +11,11 @@ import {
   Box,
   useToast,
   OrderedList,
-  ListItem
+  ListItem,
+  Spinner
 } from "@chakra-ui/react";
 import Webcam from "react-webcam";
+import { motion } from "framer-motion";
 import { Question } from "../../interface/question";
 import { answerQuestion, finishInterview, getQuestionDetail, updateRoomQuestion, uploadToStorage } from "../../api/room";
 import { ApiError } from "../../interface/api";
@@ -42,6 +44,7 @@ const InterviewModal = ({
 }: Props) => {
   const apiContext = useContext(ApiContext);
   const toast = useToast();
+  const MotionText = motion(Text);
 
   const [timer, setTimer] = useState<number>(0);
   const [prepTimer, setPrepTimer] = useState<number>(15);
@@ -88,9 +91,17 @@ const InterviewModal = ({
     }
   }, [mediaRecorderRef, setCapturing]);
 
+  const checkWebcamReady = useCallback(() => {
+    const intervalId = setInterval(() => {
+      if (webcamRef.current && webcamRef.current.stream) {
+        handleStartCapture();
+        clearInterval(intervalId);
+      }
+    }, 100);
+  }, [handleStartCapture]);
+
   const tick = () => {
-    console.log(condition);
-    if (condition === "PREPARING") {
+    if (condition === "PREPARATION") {
       if (prepTimer === 0) {
         setCondition("ANSWERING");
         handleStartCapture();
@@ -119,12 +130,15 @@ const InterviewModal = ({
 
   const answer = async (blob: Blob) => {
     try {
-      setIsUploading(true);
-      const link = await uploadToStorage(blob, room.id, room.questions[questionIdx.current].id);
-      setIsUploading(false);
-      questionIdx.current += 1;
-      await answerQuestion(apiContext.axios, room.id, room.questions[questionIdx.current-1].id, link, room.language);
+      if (questionIdx.current < questions.length){
+        setIsUploading(true);
+        const link = await uploadToStorage(blob, room.id, room.questions[questionIdx.current].id);
+        setIsUploading(false);
+        questionIdx.current += 1;
+        await answerQuestion(apiContext.axios, room.id, room.questions[questionIdx.current-1].id, link, room.language);
+      }
     } catch(e) {
+      console.log(e);
       if (e instanceof ApiError) {
         ToastModal(toast, "Error!", e.message, "error");
       } else {
@@ -160,10 +174,10 @@ const InterviewModal = ({
         const startDate = new Date(question.start_answer);
         const differenceInMilliseconds = currDate.getTime() - startDate.getTime();
         const currTime = Math.floor(differenceInMilliseconds / 1000);
-        if (currTime < question.duration_limit * 60) {
+        if (currTime < question.duration_limit * 60 + 15) {
           setPrepTimer(0);
           setTimer(question.duration_limit * 60 - currTime);
-          handleStartCapture();
+          checkWebcamReady();
         } else {
           questionIdx.current += 1;
         }
@@ -178,7 +192,6 @@ const InterviewModal = ({
 
   useEffect(() => {
     if (isOpen && room.is_started){
-      console.log("called");
       newQuestion();  
     }
   }, [isOpen, room, questionIdx.current])
@@ -260,44 +273,71 @@ const InterviewModal = ({
 
   const interviewProcess = (
     <ModalContent w="100%">
-      <ModalHeader>Interview</ModalHeader>
+      <ModalHeader fontSize="2xl" alignItems="center" textAlign="center">Interview</ModalHeader>
       <ModalBody pb={6}>
         <Box display="flex" flexDir="row" mb="2">
           <Webcam
-            height={540}
-            width={720}
+            width="70%"
             audio={true}
             muted={true}
             mirrored={true}
             ref={webcamRef}
             videoConstraints={videoConstraints}
           />
-          <Text as="h1">{isUploading ? "UPLOAD" : ""}</Text>
           <Box display="flex" flexDir="column" w="40%" ml="4">
-            <Text fontWeight="bold">Pertanyaan ke-{questionIdx.current+1}</Text>
+            <Box display="flex" flexDir="row" alignItems="baseline">
+              <Box display="flex" flexDir="row" rounded="md" bg="main_blue" color="white" w="fit-content" px="4" mb="6" mr="2">
+                <Text fontSize="lg" p="1">
+                  {condition === "PREPARATION"
+                    ? `${Math.floor(prepTimer / 60).toString().padStart(2, '0')} : ${(prepTimer % 60).toString().padStart(2, '0')}`
+                    : `${Math.floor(timer / 60).toString().padStart(2, '0')} : ${(timer % 60).toString().padStart(2, '0')}`}
+                </Text>
+              </Box>
+              <MotionText
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                color="main_blue"
+                fontWeight="bold"
+                transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+              >
+                {condition === "PREPARATION" ? "Persiapan" : (condition === "ANSWERING" ? "Merekam" : "")}
+              </MotionText>
+            </Box>
+            <Text fontWeight="bold">Pertanyaan ke-{questionIdx.current+1} ({current.duration_limit} menit)</Text>
             <Text>{current.question}</Text>
           </Box>
         </Box>
-        <Text>{condition === "PREPARING" ? "Persiapan" : "Mulai"}</Text>
-        <Text fontSize="sm">Durasi Jawaban: (maksimal) {current.duration_limit} menit</Text>
-        <Box display="flex" flexDir="row" rounded="md" bg="main_blue" color="white" w="fit-content" px="4">
-          <Text fontSize="lg" p="1">{Math.floor(timer / 60).toString().padStart(2, '0')}:{(timer % 60).toString().padStart(2, '0')}</Text>
-        </Box>
-        <Text fontWeight="bold" fontSize="sm">Note</Text>
-        <Text w="50%" fontSize="xs">Menekan tombol mulai akan memulai perekaman video dan waktu akan mulai berjalan mundur. Setelah waktu habis, maka akan otomatis ke pertanyaan selanjutnya</Text>
-
+      </ModalBody>
+      <ModalFooter>
         {capturing ? (
           <Box display="flex" flexDir="row" alignItems="flex-end" justifyContent="flex-end">
             <Button bg="red" color="white" onClick={handleStopCaptureClick}>Stop</Button>
           </Box>
-        ) : (
+        ) : null }
+        {isUploading ? (
           <Box display="flex" flexDir="row" alignItems="flex-end" justifyContent="flex-end">
-            <Button bg="main_blue" color="white" onClick={() => {
-              handleStartCapture();
-            }}>Mulai</Button>
+            <Spinner
+              thickness='4px'
+              speed='0.65s'
+              emptyColor='gray.200'
+              color='blue.500'
+              size='md'
+              mr="2"
+            />
+            <MotionText
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              color="main_blue"
+              fontWeight="bold"
+              transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+            >
+              Mengunggah
+            </MotionText>
           </Box>
-        )}
-      </ModalBody>
+        ) : null }
+      </ModalFooter>
     </ModalContent>
   )
 
