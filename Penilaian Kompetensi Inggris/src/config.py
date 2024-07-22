@@ -15,10 +15,11 @@ class Settings(BaseSettings):
     cm_state_dict_filename: str
 
     # param_config.json
-    param_cfg_attr: ClassVar[list[str]] = ["al_batch_size", "al_bayesian_samples", "train_batch_size", "train_max_epochs", "train_split_size"]
+    param_cfg_attr: ClassVar[list[str]] = ["al_batch_size", "al_bayesian_samples", "train_batch_size", "train_early_stop", "train_max_epochs", "train_split_size"]
     al_batch_size: int
     al_bayesian_samples: int
     train_batch_size: int
+    train_early_stop: bool
     train_max_epochs: int
     train_split_size: float
     

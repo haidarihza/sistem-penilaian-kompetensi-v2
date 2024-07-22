@@ -2,16 +2,13 @@ from batchbald_redux import batchbald
 import torch
 
 
-def get_random_batch(log_probs_N_K_C: torch.Tensor, batch_size: int) -> batchbald.CandidateBatch:
-    N, K, C = log_probs_N_K_C.shape
+def get_random_batch(N: int, batch_size: int) -> batchbald.CandidateBatch:
     batch_size = min(batch_size, N)
-
     candidate_indices = torch.randperm(N)[:batch_size]
-
     return batchbald.CandidateBatch(None, candidate_indices.tolist())
 
 def get_powerbald_batch(log_probs_N_K_C: torch.Tensor, batch_size: int, alpha: float=5.0) -> batchbald.CandidateBatch:
-    N, K, C = log_probs_N_K_C.shape
+    N = log_probs_N_K_C.size(0)
     batch_size = min(batch_size, N)
 
     with torch.no_grad():

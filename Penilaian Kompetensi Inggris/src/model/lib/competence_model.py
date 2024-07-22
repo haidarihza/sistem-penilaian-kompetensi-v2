@@ -120,7 +120,7 @@ class CompetenceModel(torch.nn.Module):
         return prob
 
     def fit(self, train_dataset: TCDataset, eval_dataset: Optional[TCDataset], epochs: int, batch_size: int, 
-            optimizer_cls: type[torch.optim.Optimizer]=torch.optim.Adam, optimizer_params: dict={'lr': 2e-5},
+            optimizer_cls: type[torch.optim.Optimizer]=torch.optim.Adam, optimizer_params: dict={'lr': 1e-5},
             early_stop: bool=True) -> None:
         '''
         Fit the model with the given arguments.

@@ -8,7 +8,6 @@ from src.database import base, models
 from src.model import BayesianCompetenceModel, CompetenceModel, get_powerbald_batch, schemas, TCDataset
 from src.globals import g
 
-import copy
 import time
 import torch
 import os
@@ -77,7 +76,6 @@ async def predict_model(predict_data: schemas.PredictData):
 
 @router.post("/train")
 async def train_model(settings: Annotated[Settings, Depends(get_settings)], db: Session = Depends(get_db)):
-    # TODO: Test this
     feedback_results = db.query(models.FeedbackResult).filter(models.FeedbackResult.status == "LABELED").all()
     competency_levels = db.query(models.CompetencyLevel).all()
 
@@ -93,7 +91,7 @@ async def train_model(settings: Annotated[Settings, Depends(get_settings)], db: 
     
     new_model = CompetenceModel.load(settings.get_model_path(), settings.cm_model_type, state_dict_path=None, device=g.device)
 
-    new_model.fit(train_dataset, eval_dataset, epochs=settings.train_max_epochs, batch_size=settings.train_batch_size)
+    new_model.fit(train_dataset, eval_dataset, epochs=settings.train_max_epochs, batch_size=settings.train_batch_size, early_stop=settings.train_early_stop)
 
     filename = f"{int(time.time())}.pt"
     state_dict_path = os.path.join(settings.get_state_dict_dir(), filename)

@@ -1,5 +1,5 @@
 {
-    "cm_model_name": "all-distilroberta-v1",
+    "cm_model_name": "all-mpnet-base-v2",
     "cm_model_dir": "./models",
     "cm_model_type": "biencoder",
     "cm_state_dict_dir": "./states",
