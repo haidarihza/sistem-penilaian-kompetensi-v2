@@ -15,7 +15,7 @@ import {
   Box,
   Button
 } from "@chakra-ui/react";
-import Detail from './Detail';
+import Detail from './RoomDetail';
 import { useNavigate } from 'react-router-dom';
 import { getOneRoomGroup } from '../../api/room';
 import { ApiError } from "../../interface/api";
@@ -40,32 +40,34 @@ const RoomGroupDetail = () => {
   
     return latest;
   }
-
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const res = await getOneRoomGroup(apiContext.axios, params.id!);
-        // sort room by end date
-        res.room.sort((a, b) => new Date(a.end).getTime() - new Date(b.end).getTime());
-        setData(res);
-        setActiveTabIndex(res.room.length - 1);
-      } catch(e) {
-        if (e instanceof ApiError) {
-          ToastModal(toast, "Error!", e.message, "error");
-        } else {
-          ToastModal(toast, "Error!", "Something Went Wrong", "error");
-        }
+  const fetch = async () => {
+    try {
+      const res = await getOneRoomGroup(apiContext.axios, params.id!);
+      // sort room by start date
+      res.room.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+      setData(res);
+      setActiveTabIndex(res.room.length - 1);
+      if (res.room.length === 0) {
+        navigate("/");
+      }
+    } catch(e) {
+      if (e instanceof ApiError) {
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Something Went Wrong", "error");
       }
     }
+  }
 
+  useEffect(() => {
     fetch();
-  }, [apiContext.axios, params.id, toast]);
+  }, []);
 
   return (
     <Layout>
       <Box display="flex" flexDir="row" alignItems="center" justifyContent="space-between">
         <Text as="h1" fontSize="2xl" fontWeight="semibold">{data?.title}</Text>
-        {role === "INTERVIEWEE" && getLatestRoom(data!).status === "ACCEPTED" && (
+        {role === "INTERVIEWER" && getLatestRoom(data!).status === "ACCEPTED" && (
           <Button
           bg="main_blue"
           color="white"
@@ -92,10 +94,11 @@ const RoomGroupDetail = () => {
         </TabList>
         <TabPanels>
           {data ? data.room.map((room, idx) => (
-            <TabPanel p="0" pt="1">
+            <TabPanel p="0" pt="1" key={idx}>
               <Detail
                 roomGroup={data}
                 room_id={room.id}
+                updateRoomGroup={fetch}
                 />
             </TabPanel>
           )) : <Spinner />}

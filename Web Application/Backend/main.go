@@ -113,7 +113,9 @@ func main() {
 		r.Get("/group", roomhandler.GetAllRoomGroup(roomRepository))
 		r.Get("/group/{id}", roomhandler.GetOneRoomGroup(roomRepository))
 		r.Get("/{id}", roomhandler.GetOneRoom(roomRepository, questionRepository, competencyRepository))
-		r.Post("/{roomId}/{questionId}", roomhandler.Answer(roomRepository, competencyRepository, questionRepository, feedbackRepository, cfg.APIHost, cfg.SpeechToTextHost, cfg.SummarizationHost))
+		r.Post("/{roomId}/{questionId}", roomhandler.Answer(roomRepository, competencyRepository, questionRepository, feedbackRepository, cfg))
+		r.Get("/get-question/{roomId}/{questionId}", roomhandler.GetOneQuestionRoom(roomRepository))
+		r.Put("/update-current-question/{roomId}/{questionId}", roomhandler.UpdateQuestionCond(roomRepository))
 		r.Post("/{roomId}/finish-answer", roomhandler.FinishAnswer(roomRepository))
 		r.With(roleInterviewerMiddleware).Post("/", roomhandler.CreateRoom(roomRepository, userRepository, cfg))
 		r.With(roleInterviewerMiddleware).Post("/group", roomhandler.CreateRoomGroup(roomRepository, userRepository, cfg))
@@ -122,8 +124,8 @@ func main() {
 	})
 
 	r.With(corsMiddleware, authMiddleware, roleInterviewerMiddleware).Route("/feedback", func(r chi.Router) {
-		r.Get("/", feedbackhandler.GetAllNeedFeedback(feedbackRepository, cfg.SummarizationHost))
-		r.Put("/{id}", feedbackhandler.UpdateFeedback(feedbackRepository, cfg.SummarizationHost))
+		r.Get("/", feedbackhandler.GetAllNeedFeedback(feedbackRepository, cfg.SummarizationHostEN))
+		r.Put("/{id}", feedbackhandler.UpdateFeedback(feedbackRepository, cfg.SummarizationHostEN))
 	})
 
 	log.Printf("Server is listening on port %s", cfg.APIPort)

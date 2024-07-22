@@ -8,9 +8,11 @@ import (
 	"interview/summarization/app/response"
 	"interview/summarization/repository"
 	"io"
+	"interview/summarization/config"
+
 
 	"net/http"
-	"net/url"
+	// "net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -18,6 +20,7 @@ import (
 
 type AnswerReq struct {
 	AnswerURL string `json:"answer_url,omitempty"`
+	Language	string `json:"language,omitempty"`
 }
 
 type PredictResponse struct {
@@ -29,7 +32,7 @@ func Answer(
 	competencyRepository repository.CompetencyRepository,
 	questionRepository repository.QuestionRepository,
 	feedbackRepository repository.FeedbackRepository,
-	apiHost, speechToTextHost, summarizationHost string,
+	cfg config.Config,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		roomId := chi.URLParam(r, "roomId")
@@ -42,17 +45,27 @@ func Answer(
 			return
 		}
 
-		fileLoc := req.AnswerURL
-
-		go func(ctx context.Context, rRepo repository.RoomRepository, cRepo repository.CompetencyRepository, qRepo repository.QuestionRepository, fRepo repository.FeedbackRepository, fileLoc, roomId, questionId string) {
+		go func(ctx context.Context, rRepo repository.RoomRepository, cRepo repository.CompetencyRepository, qRepo repository.QuestionRepository, fRepo repository.FeedbackRepository, roomId, questionId, fileLoc, language string) {
 			fmt.Println("running in the background")
-			form := url.Values{}
-			form.Add("link", fileLoc)
-
-			resp, _ := http.PostForm(speechToTextHost, form)
+			payload := map[string]string{"link": fileLoc}
+			jsonData, err := json.Marshal(payload)
+			if err != nil {
+				panic(err)
+			}
+		
+			// Set the URL for the POST request
+			url := ""
+			if language == "ENGLISH" {
+				url = cfg.SpeechToTextHostEN
+			} else {
+				url = cfg.SpeechToTextHostID
+			}
+			url += "/predict"
+		
+			// Create the POST request with JSON payload
+			resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 			defer resp.Body.Close()
 			bodySpeech, _ := io.ReadAll(resp.Body)
-			// fmt.Println(string(bodySpeech))
 
 			rRepo.InsertTranscript(ctx, roomId, questionId, fileLoc, string(bodySpeech))
 			if isAnswered, _ := rRepo.IsAnswered(ctx, roomId); isAnswered {
@@ -84,7 +97,14 @@ func Answer(
 					"competence_sets":  mapKamus,
 				})
 
-				url := summarizationHost + "/predict"
+				url := ""
+				if language == "ENGLISH" {
+					url = cfg.SummarizationHostEN
+				} else {
+					url = cfg.SummarizationHostID
+				}
+				url += "/predict"
+	
 				resp, _ := http.Post(url, "application/json", bytes.NewBuffer(body))
 				bodySummary, _ := io.ReadAll(resp.Body)
 
@@ -125,7 +145,7 @@ func Answer(
 				rRepo.InsertResult(ctx, roomId, competencyRes, levelRes, resultRes)
 				fRepo.Insert(ctx, feedbackID, transcriptFeedback, competencyFeedback, resultFeedback)
 			}
-		}(context.Background(), roomRepository, competencyRepository, questionRepository, feedbackRepository, fileLoc, roomId, questionId)
+		}(context.Background(), roomRepository, competencyRepository, questionRepository, feedbackRepository, roomId, questionId, req.AnswerURL, req.Language)
 		response.RespondOK(w)
 	}
 }

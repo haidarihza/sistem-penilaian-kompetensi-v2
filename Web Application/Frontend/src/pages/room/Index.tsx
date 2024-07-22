@@ -2,7 +2,7 @@ import Layout from "../../components/Layout";
 import { useContext, useEffect, useState, useRef } from "react";
 import { ApiContext } from "../../utils/context/api";
 import { ApiError } from "../../interface/api";
-import { getAllRoomGroup, deleteRoom } from "../../api/room";
+import { getAllRoomGroup } from "../../api/room";
 import { RoomGroup } from "../../interface/room";
 import {
   Box,
@@ -110,11 +110,9 @@ const Index = () => {
     const fetch = async () => {
       try {
         const room_groups = await getAllRoomGroup(apiContext.axios);
-        console.log(room_groups);
         setData(room_groups);
         setFilteredData(room_groups);
       } catch(e) {
-        console.log(e);
         if (e instanceof ApiError) {
           ToastModal(toast, "Error!", e.message, "error");
         } else {
@@ -139,17 +137,6 @@ const Index = () => {
   useEffect(() => {
     filterAndSearchData();
   }, [searchTerm, data]);
-
-  const formatDateTime = (dateTimeString?: string) => {
-    if (!dateTimeString) return "-";
-    const date = new Date(dateTimeString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
   
   const handleDeleteConfirm = (id: string) => {
     setDeleteId(id);
@@ -157,19 +144,8 @@ const Index = () => {
   }
 
   const handleDeleteRoom = async (id: string) => {
-    try {
-      await deleteRoom(apiContext.axios, id);
-      ToastModal(toast, "Success!", "Room Deleted", "success");
-      setData(data.filter((val) => val.id !== id));
-    } catch(e) {
-      if (e instanceof ApiError) {
-        ToastModal(toast, "Error!", e.message, "error");
-      } else {
-        ToastModal(toast, "Error!", "Something Went Wrong", "error");
-      }
-    } finally {
-      onCloseDelete();
-    }
+    // delete room
+    console.log("hapus grup ruangan");
   }
 
 
@@ -243,6 +219,7 @@ const Index = () => {
                 {view === "LIST" && (
                   <ListView
                     filteredData={tab.data}
+                    role={role ? role : "INTERVIEWEE"}
                     handleDeleteConfirm={handleDeleteConfirm}
                   />
                 )}

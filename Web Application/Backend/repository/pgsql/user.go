@@ -72,6 +72,7 @@ func (r *userRepository) Insert(ctx context.Context, user *repository.User) erro
 const userSelectAll = "userSelectAll"
 const userSelectAllQuery = `SELECT id, name, phone, email, role
 	FROM "users"
+	WHERE status = 'VERIFIED'
 `
 
 func (r *userRepository) SelectAll(ctx context.Context) ([]*repository.User, error) {

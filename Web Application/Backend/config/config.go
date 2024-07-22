@@ -11,12 +11,14 @@ type Config struct {
 	DBPassword string `mapstructure:"DB_PASSWORD"`
 	DBName     string `mapstructure:"DB_NAME"`
 
-	APIHost           string `mapstructure:"API_HOST"`
-	APIPort           string `mapstructure:"API_PORT"`
-	SpeechToTextHost  string `mapstructure:"SPEECH_TO_TEXT_HOST"`
-	SummarizationHost string `mapstructure:"SUMMARIZATION_HOST"`
-	FEHost						string `mapstructure:"FE_HOST"`
-	FEPort						string `mapstructure:"FE_PORT"`
+	APIHost           	string `mapstructure:"API_HOST"`
+	APIPort           	string `mapstructure:"API_PORT"`
+	SpeechToTextHostEN 	string `mapstructure:"SPEECH_TO_TEXT_HOST_EN"`
+	SummarizationHostEN string `mapstructure:"SUMMARIZATION_HOST_EN"`
+	SpeechToTextHostID 	string `mapstructure:"SPEECH_TO_TEXT_HOST_ID"`
+	SummarizationHostID string `mapstructure:"SUMMARIZATION_HOST_ID"`
+	FEHost							string `mapstructure:"FE_HOST"`
+	FEPort							string `mapstructure:"FE_PORT"`
 
 	TokenSecret        string `mapstructure:"TOKEN_SECRET"`
 	AccessTokenExpire  int    `mapstructure:"ACCESS_TOKEN_EXPIRE"`

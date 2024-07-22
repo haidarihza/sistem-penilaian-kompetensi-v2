@@ -20,6 +20,7 @@ type Question struct {
 	DurationLimit int    `json:"duration_limit,omitempty"`
 	OrgPosition	 	string `json:"org_position,omitempty"`
 	Transcript    string `json:"transcript,omitempty"`
+	StartAnswer		string `json:"start_answer,omitempty"`
 	Labels				[]QuestionLabel `json:"labels,omitempty"`
 }
 

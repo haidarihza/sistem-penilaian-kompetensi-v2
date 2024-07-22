@@ -14,7 +14,7 @@ const Dashboard = lazy(() => import('./pages/room/Index'));
 const RoomGroupDetail = lazy(() => import('./pages/room/RoomGroupDetail'));
 const Question = lazy(() => import('./pages/question/Index'));
 const Competency = lazy(() => import('./pages/competency/Index'));
-const RoomCreate = lazy(() => import('./pages/room/Create'));
+const RoomCreate = lazy(() => import('./pages/room/CreateRoom'));
 const Feedback = lazy(() => import('./pages/feedback/Index'));
 
 const App = () => (

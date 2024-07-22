@@ -42,10 +42,14 @@ var roomQueries = map[string]string{
 	roomGetAnswers:				              roomGetAnswersQuery,
 	roomInsertResult:				            roomInsertResultQuery,
 	roomUpdateStatus:				            roomUpdateStatusQuery,
+	roomUpdateQuestionRoom:							roomUpdateQuestionRoomQuery,
+	roomUpdateQuestionCond:							roomUpdateQuestionCondQuery,
 	roomGetResultCompetencies:				  roomGetResultCompetenciesQuery,
 	roomGetResultQuestions:				      roomGetResultQuestionsQuery,
+	roomGetQuestionDetail:							roomGetQuestionDetailQuery,
 	roomReview:				                  roomReviewQuery,
 	roomDeleteByID:											roomDeleteByIDQuery,
+	roomGroupDeleteByID:								roomGroupDeleteByIDQuery,
 	roomCompetenciesDelete:							roomCompetenciesDeleteQuery,
 	roomQuestionsDelete:								roomQuestionsDeleteQuery,
 	roomResultCompetenciesDelete:				roomResultCompetenciesDeleteQuery,
@@ -54,9 +58,9 @@ var roomQueries = map[string]string{
 const roomInsert = "roomInsert"
 const roomInsertQuery = `INSERT INTO
 	rooms(
-		id, title, description, "start", "end", status, interviewer_id, room_group_id
+		id, title, description, "start", "end", status, language, interviewer_id, room_group_id
 	) values(
-		$1, $2, $3, $4, $5, $6, $7, $8
+		$1, $2, $3, $4, $5, $6, $7, $8, $9
 	)
 	RETURNING id
 `
@@ -90,7 +94,7 @@ func (r *roomRepository) Insert(
 	var id string
 	row := tx.StmtContext(ctx, r.ps[roomInsert]).QueryRowContext(ctx,
 		room.ID, room.Title, room.Description, room.Start, room.End,
-		room.Status, room.InterviewerID, room.RoomGroupID,
+		room.Status, room.Language, room.InterviewerID, room.RoomGroupID,
 	)
 	err = row.Scan(&id)
 	if err != nil {
@@ -224,7 +228,7 @@ func (r *roomRepository) SelectAllRoomGroupByIntervieweeID(ctx context.Context, 
 
 const roomSelectAllByRoomGroupID = "roomSelectAllByRoomGroupID"
 const roomSelectAllByRoomGroupIDQuery = `SELECT
-	r.id, r.title, r.description, r."start", r."end", r.submission, r.status, r.note, u.name
+	r.id, r.title, r.description, r."start", r."end", r.submission, r.status, r.note, r.language, u.name
 	FROM rooms r
 	INNER JOIN users u ON r.interviewer_id = u.id
 	WHERE r.room_group_id = $1 AND r.deleted = false
@@ -242,7 +246,7 @@ func (r *roomRepository) SelectAllRoomByGroupID(ctx context.Context, id string) 
 		room := &repository.Room{}
 		interviewer := &repository.User{}
 		err := rows.Scan(&room.ID, &room.Title, &room.Description,
-			&room.Start, &room.End, &room.Submission, &room.Status, &room.Note,
+			&room.Start, &room.End, &room.Submission, &room.Status, &room.Note, &room.Language,
 			&interviewer.Name,
 		)
 
@@ -283,7 +287,7 @@ func (r *roomRepository) SelectRoomGroupByID(ctx context.Context, id string) (*r
 
 const roomSelectOneByIDUserID = "roomSelectOneByIDUserID"
 const roomSelectOneByIDUserIDQuery = `SELECT 
-	r.id, r.title, r.description, r."start", r."end", r.submission, r.status, r.note,
+	r.id, r.title, r.description, r."start", r."end", r.is_started, r.current_question, r.submission, r.status, r.note, r.language, r.room_group_id,
 	u.name, u.email
 	FROM rooms r
 	INNER JOIN "users" u ON r.interviewer_id = u.id
@@ -296,8 +300,8 @@ func (r *roomRepository) SelectOneRoomByID(ctx context.Context, id string) (*rep
 	}
 
 	row := r.ps[roomSelectOneByIDUserID].QueryRowContext(ctx, id)
-	err := row.Scan(&room.ID, &room.Title, &room.Description,
-		&room.Start, &room.End, &room.Submission, &room.Status, &room.Note,
+	err := row.Scan(&room.ID, &room.Title, &room.Description, &room.Start, &room.End,
+		&room.IsStarted, &room.CurrQuestion, &room.Submission, &room.Status, &room.Note, &room.Language, &room.RoomGroupID,
 		&room.Interviewer.Name, &room.Interviewer.Email,
 	)
 	if err != nil {
@@ -456,6 +460,60 @@ func (r *roomRepository) UpdateStatusAndSubmission(ctx context.Context, room *re
 	return nil
 }
 
+const roomUpdateQuestionRoom = "roomUpdateQuetionRoom"
+const roomUpdateQuestionRoomQuery = `UPDATE rooms_has_questions
+SET start_answer = $3
+WHERE room_id = $1 AND question_id = $2
+`
+
+func (r *roomRepository) UpdateQuestionByRoomID(ctx context.Context, roomId, questionId, startAnswer string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.StmtContext(ctx, r.ps[roomUpdateQuestionRoom]).ExecContext(ctx,
+		roomId, questionId, startAnswer,
+	)
+	if err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+const roomUpdateQuestionCond = "roomUpdateQuetionCond"
+const roomUpdateQuestionCondQuery = `UPDATE rooms
+	SET current_question = $2,
+	is_started = $3
+	WHERE id = $1
+`
+func (r *roomRepository) UpdateRoomQuestionCond(ctx context.Context, roomId string, currQuestion int, isStarted bool) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.StmtContext(ctx, r.ps[roomUpdateQuestionCond]).ExecContext(ctx,
+		roomId, currQuestion, isStarted,
+	)
+	if err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 const roomGetResultCompetencies = "roomGetResultCompetencies"
 const roomGetResultCompetenciesQuery = `SELECT
 	competency, level, result
@@ -527,6 +585,28 @@ func (r *roomRepository) GetResultQuestions(ctx context.Context, roomId string) 
 	return results, nil
 }
 
+
+const roomGetQuestionDetail = "roomGetQuestionDetail"
+const roomGetQuestionDetailQuery = `SELECT
+	rq.question_id, q.question, q.duration_limit, rq.start_answer
+	FROM rooms_has_questions rq
+	INNER JOIN questions q ON rq.question_id = q.id
+	WHERE rq.room_id = $1 AND rq.question_id = $2
+`
+
+func (r *roomRepository) GetOneQuestionByRoomID(ctx context.Context, roomId, questionId string) (*repository.QuestionInRoom, error) {
+	question := &repository.QuestionInRoom{}
+
+	row := r.ps[roomGetQuestionDetail].QueryRowContext(ctx, roomId, questionId)
+	err := row.Scan(&question.ID, &question.Question, &question.DurationLimit, &question.StartAnswer)
+	if err != nil {
+		return nil, err
+	}
+
+	return question, nil
+}
+
+
 const roomReview = "roomReview"
 const roomReviewQuery = `UPDATE rooms SET
 	status = $2,
@@ -585,28 +665,54 @@ const roomDeleteByIDQuery = `UPDATE rooms SET
 	WHERE id = $1
 `
 
-func (r *roomRepository) DeleteByID(ctx context.Context, id string) error {
+const roomGroupDeleteByID = "roomGroupDeleteByID"
+const roomGroupDeleteByIDQuery = `UPDATE room_groups SET
+	deleted = true,
+	deleted_at = $2
+	WHERE id = $1
+`
+
+func (r *roomRepository) DeleteByID(ctx context.Context, roomId string, roomGroupId string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	_, err = tx.StmtContext(ctx, r.ps[roomDeleteByID]).ExecContext(ctx, id, time.Now().UTC())
+	_, err = tx.StmtContext(ctx, r.ps[roomDeleteByID]).ExecContext(ctx, roomId, time.Now().UTC())
 	if err != nil {
 		return err
 	}
-	_, err = tx.StmtContext(ctx, r.ps[roomQuestionsDelete]).ExecContext(ctx, id)
+	_, err = tx.StmtContext(ctx, r.ps[roomQuestionsDelete]).ExecContext(ctx, roomId)
 	if err != nil {
 		return err
 	}
-	_, err = tx.StmtContext(ctx, r.ps[roomCompetenciesDelete]).ExecContext(ctx, id)
+	_, err = tx.StmtContext(ctx, r.ps[roomCompetenciesDelete]).ExecContext(ctx, roomId)
 	if err != nil {
 		return err
 	}
-	_, err = tx.StmtContext(ctx, r.ps[roomResultCompetenciesDelete]).ExecContext(ctx, id)
+	_, err = tx.StmtContext(ctx, r.ps[roomResultCompetenciesDelete]).ExecContext(ctx, roomId)
 	if err != nil {
 		return err
 	}
+	//check if room group has no more rooms
+	rows, err := tx.StmtContext(ctx, r.ps[roomSelectAllByRoomGroupID]).QueryContext(ctx, roomGroupId)
+	if err != nil {
+		return err
+	}
+
+	var count int
+
+	for rows.Next() {
+		count++
+	}
+
+	if count == 0 {
+		_, err = tx.StmtContext(ctx, r.ps[roomGroupDeleteByID]).ExecContext(ctx, roomGroupId, time.Now().UTC())
+		if err != nil {
+			return err
+		}
+	}
+
 	if err = tx.Commit(); err != nil {
 		return err
 	}

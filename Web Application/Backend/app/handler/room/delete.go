@@ -12,7 +12,18 @@ import (
 func Delete(roomRepository repository.RoomRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		roomId := chi.URLParam(r, "id")
-		if err := roomRepository.DeleteByID(r.Context(), roomId); err != nil {
+		room, err := roomRepository.SelectOneRoomByID(r.Context(), roomId)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				response.RespondError(w, response.NotFoundError("Room not found"))
+				return
+			}
+
+			response.RespondError(w, response.InternalServerError())
+			return
+		}
+		roomGroupId := room.RoomGroupID
+		if err := roomRepository.DeleteByID(r.Context(), roomId, roomGroupId); err != nil {
 			if err == sql.ErrNoRows {
 				response.RespondError(w, response.NotFoundError("Room not found"))
 				return

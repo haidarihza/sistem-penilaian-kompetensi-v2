@@ -21,26 +21,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { DeleteIcon, CalendarIcon, EmailIcon } from "@chakra-ui/icons";
 import { BsFillFilePersonFill } from "react-icons/bs";
+import { statusColors } from "../../utils/utils";
+import { formatDateTime } from "../../utils/utils";
 
 interface Props {
   roomGroup: RoomGroup;
   handleDeleteConfirm: (id: string) => void;
   role: string;
 }
-
-const colors = [{
-  status: "WAITING ANSWER",
-  color: "main_beige"
-}, {
-  status: "WAITING REVIEW",
-  color: "#E6F4F1"
-}, {
-  status: "REJECTED",
-  color: "#8CBCFF"
-}, {
-  status: "ACCEPTED",
-  color: "#8CBCFF"
-}];
 
 const RoomCard = ({
   roomGroup,
@@ -52,17 +40,6 @@ const RoomCard = ({
   const lastRoom = roomGroup.room?.reduce((prev, current) => {
     return (new Date(prev.end) > new Date(current.end)) ? prev : current;
   });
-
-  const formatDateTime = (dateTimeString?: string) => {
-    if (!dateTimeString) return "-";
-    const date = new Date(dateTimeString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
 
   const interviewerCard = (
       <Card key={roomGroup.id} width="30%" mr="4" mb="4" variant="outline">
@@ -98,9 +75,17 @@ const RoomCard = ({
           <Box display="flex" flexDir="column">
             <Box display="flex" flexDir="row" alignItems="center" mb="4">
               <Icon color="main_blue" mr="4" boxSize="25px" as={CalendarIcon} />
-              <Box display="flex" flexDir="column">
-                <Text fontSize="sm" fontWeight="normal">Start: {formatDateTime(lastRoom?.start)}</Text>
-                <Text fontSize="sm" fontWeight="normal">End: {formatDateTime(lastRoom?.end)}</Text>
+              <Box display="flex" flexDirection="column">
+                <Box display="flex" alignItems="center">
+                  <Text fontSize="sm" fontWeight="normal" width="40px">Start</Text>
+                  <Text fontSize="sm" fontWeight="normal" width="10px">:</Text>
+                  <Text fontSize="sm" fontWeight="normal">{formatDateTime(lastRoom?.start)}</Text>
+                </Box>
+                <Box display="flex" alignItems="center">
+                  <Text fontSize="sm" fontWeight="normal" width="40px">End</Text>
+                  <Text fontSize="sm" fontWeight="normal" width="10px">:</Text>
+                  <Text fontSize="sm" fontWeight="normal">{formatDateTime(lastRoom?.end)}</Text>
+                </Box>
               </Box>
             </Box>
             <Box display="flex" flexDir="row" alignItems="center" mb="4">
@@ -115,7 +100,7 @@ const RoomCard = ({
           <Box>
             <Box display="flex" flexDir="row" alignItems="center" mb="2" justifyContent="space-between">
               <Box
-                bg={colors.find((color) => color.status === lastRoom?.status)?.color}
+                bg={statusColors.find((color) => color.status === lastRoom?.status)?.color}
                 rounded="lg"
                 p="1">
                 <Text fontSize="sm" fontWeight="bold" color="main_blue">{lastRoom?.status}</Text>
@@ -145,25 +130,35 @@ const RoomCard = ({
         <Box display="flex" flexDir="column">
           <Box display="flex" flexDir="row" alignItems="center" mb="4">
             <Icon color="main_blue" mr="4" boxSize="25px" as={CalendarIcon} />
-            <Box display="flex" flexDir="column">
-              <Text fontSize="sm" fontWeight="normal">Start: {formatDateTime(lastRoom.start)}</Text>
-              <Text fontSize="sm" fontWeight="normal">End: {formatDateTime(lastRoom.end)}</Text>
+            <Box display="flex" flexDirection="column">
+              <Box display="flex" alignItems="center">
+                <Text fontSize="sm" fontWeight="normal" width="40px">Start</Text>
+                <Text fontSize="sm" fontWeight="normal" width="10px">:</Text>
+                <Text fontSize="sm" fontWeight="normal">{formatDateTime(lastRoom?.start)}</Text>
+              </Box>
+              <Box display="flex" alignItems="center">
+                <Text fontSize="sm" fontWeight="normal" width="40px">End</Text>
+                <Text fontSize="sm" fontWeight="normal" width="10px">:</Text>
+                <Text fontSize="sm" fontWeight="normal">{formatDateTime(lastRoom?.end)}</Text>
+              </Box>
             </Box>
+          </Box>
+        </Box>
+        <Box>
+          <Box display="flex" flexDir="row" alignItems="center" mb="2" justifyContent="space-between">
+            <Box
+              bg={statusColors.find((color) => color.status === lastRoom?.status)?.color}
+              rounded="lg"
+              p="1">
+              <Text fontSize="sm" fontWeight="bold" color="main_blue">{lastRoom?.status}</Text>
+            </Box>
+            <Text fontSize="sm" fontWeight="bold">{lastRoom?.submission === "-" ? "No Submission" : formatDateTime(lastRoom?.submission)}</Text>
           </Box>
         </Box>
       </Stack>
     </CardBody>
     <Divider w="90%" mx="auto" borderWidth="1px"/>
     <CardFooter pt="2" pb="2" justifyContent="flex-end">
-      <Box display="flex" flexDir="row" alignItems="center" mb="2">
-        <Box
-          bg={colors.find((color) => color.status === lastRoom.status)?.color}
-          rounded="lg"
-          p="1"
-        >
-          <Text fontSize="sm" fontWeight="bold" color="main_blue">{lastRoom.status}</Text>
-        </Box>
-      </Box>
     </CardFooter>
   </Card>
   )

@@ -46,9 +46,12 @@ type Room struct {
 	Description   string
 	Start         string
 	End           string
+	IsStarted			bool
+	CurrQuestion	sql.NullInt32
 	Submission    sql.NullString
 	Status        RoomStatus
 	Note          sql.NullString
+	Language			string
 	Deleted       bool
 	CreatedAt     time.Time
 	UpdatedAt     sql.NullTime
@@ -59,6 +62,13 @@ type Room struct {
 type ResultCompetency map[string]map[string]float64
 
 type ResultQuestion map[string]string
+
+type QuestionInRoom struct {
+	ID							string
+	Question				string
+	DurationLimit		int
+	StartAnswer			sql.NullString
+}
 
 type RoomRepository interface {
 	InsertRoomGroup(context.Context, *RoomGroup) error
@@ -74,7 +84,10 @@ type RoomRepository interface {
 	InsertResult(context.Context, string, []string, []string, []float64) error
 	GetResultCompetencies(context.Context, string) (ResultCompetency, error)
 	GetResultQuestions(context.Context, string) (ResultQuestion, error)
+	GetOneQuestionByRoomID(context.Context, string, string) (*QuestionInRoom, error)
 	UpdateStatusAndSubmission(context.Context, *Room) error
+	UpdateQuestionByRoomID(context.Context, string, string, string) error
+	UpdateRoomQuestionCond(context.Context, string, int, bool) error
 	Review(context.Context, *Room) error
-	DeleteByID(context.Context, string) error
+	DeleteByID(context.Context, string, string) error
 }

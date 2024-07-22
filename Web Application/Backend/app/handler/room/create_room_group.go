@@ -80,6 +80,7 @@ func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository re
 				Start:         req.Room.Start,
 				End:           req.Room.End,
 				Status:        status,
+				Language:			 req.Room.Language,
 			}
 
 			go func(ctx context.Context, room repository.Room, interviewee repository.User) {

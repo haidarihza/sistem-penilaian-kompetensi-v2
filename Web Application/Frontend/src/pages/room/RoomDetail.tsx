@@ -1,7 +1,6 @@
-import { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useContext, useEffect, useState, useRef } from "react";
 import { ApiContext } from "../../utils/context/api";
-import { getOneRoom, reviewRoom } from "../../api/room";
+import { deleteRoom, getOneRoom, reviewRoom } from "../../api/room";
 import { RoomDetail, RoomGroup } from "../../interface/room";
 import { ApiError } from "../../interface/api";
 import { 
@@ -25,44 +24,43 @@ import {
   Icon,
   Divider,
   useToast,
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  HStack,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react";
 import { Question } from "../../interface/question";
 import { AuthContext } from "../../utils/context/auth";
-import { CalendarIcon } from "@chakra-ui/icons";
-import { MdAccessTimeFilled } from "react-icons/md";
+import { DeleteIcon, TriangleDownIcon } from "@chakra-ui/icons";
 import InterviewModal from "./InterviewModal";
 import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
 import DetailQuestionModal from "./DetailQuestionModal";
 import { Competency, CompetencyLevel } from "../../interface/competency";
 import ToastModal from "../../components/ToastModal";
+import { languageOptions, statusColors, formatDateTime } from "../../utils/utils";
 
 interface Props {
   roomGroup: RoomGroup;
   room_id: string;
+  updateRoomGroup: () => void;
 }
 
 const Detail = ({
   roomGroup,
-  room_id
+  room_id,
+  updateRoomGroup
 } : Props ) => {
-  const params = useParams();
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
   const toast = useToast();
-  const colors = [{
-    status: "WAITING ANSWER",
-    color: "main_beige"
-  }, {
-    status: "WAITING REVIEW",
-    color: "#E6F4F1"
-  }, {
-    status: "REJECTED",
-    color: "#8CBCFF"
-  }, {
-    status: "ACCEPTED",
-    color: "#8CBCFF"
-  }];
-
   const [data, setData] = useState<RoomDetail>({} as RoomDetail);
   const [note, setNote] = useState<string>("");
 
@@ -75,6 +73,8 @@ const Detail = ({
   const { isOpen:isOpenDetailCompetency, onOpen:onOpenDetailCompetency, onClose:onCloseDetailCompetency } = useDisclosure();
   const [selectedCompetency, setSelectedCompetency] = useState<Competency>({} as Competency);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isOpenDelete, onOpen: onOpenDelete, onClose: onCloseDelete } = useDisclosure();
+  const cancelRef = useRef(null);
 
   const fetch = async () => {
     try {
@@ -112,7 +112,7 @@ const Detail = ({
 
   const submitReview = async (status: string) => {
     try {
-      await reviewRoom(apiContext.axios, params.id!, status, note);
+      await reviewRoom(apiContext.axios, room_id, status, note);
       fetch();
     } catch(e) {
       if (e instanceof ApiError) {
@@ -122,16 +122,6 @@ const Detail = ({
       }
     }
   }
-
-  const formatDateTime = (dateTimeString: string) => {
-    const date = new Date(dateTimeString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
 
   const checkValidDateRange = (start: string, end: string) => {
     const startDate = new Date(start);
@@ -160,6 +150,26 @@ const Detail = ({
     return best;
   }
 
+  const handleDeleteConfirm = (id: string) => {
+    onOpenDelete();
+  }
+
+  const handleDeleteRoom = async () => {
+    try {
+      await deleteRoom(apiContext.axios, room_id);
+      ToastModal(toast, "Success!", "Room Deleted", "success");
+      updateRoomGroup();
+    } catch(e) {
+      if (e instanceof ApiError) {
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Something Went Wrong", "error");
+      }
+    } finally {
+      onCloseDelete();
+    }
+  }
+
   return (
     <Box>
       <DetailQuestionModal
@@ -176,34 +186,111 @@ const Detail = ({
       />
       {role === "INTERVIEWER" ? (
         <Box bg="white" rounded="md" p="3">
-          <Heading mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
-            <Text fontWeight="bold" fontSize="2xl">{data.title}</Text>
+          <Box mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
+            <Menu placement="bottom-start">
+              <MenuButton 
+                as={Button} 
+                colorScheme="whiteAlpha"
+                color="main_blue"
+                _hover={{ bg: "gray.100", color: "main_blue" }}
+                rightIcon={<TriangleDownIcon w="3" />}
+                pl="0"
+              >
+                <HStack>
+                  <Text fontWeight="bold" fontSize="xl">{data.title}</Text>
+                </HStack>
+              </MenuButton>
+              <MenuList>
+                <MenuItem onClick={() => handleDeleteConfirm(room_id)} color="main_blue">
+                  <IconButton
+                    aria-label="Delete"
+                    icon={<DeleteIcon />}
+                    colorScheme='white.400'
+                    color="main_blue"
+                    size="sm"/>
+                  Delete
+                </MenuItem>
+              </MenuList>
+            </Menu>
             <Box
-              bg={colors.find((val) => val.status === data.status)?.color}
+              bg={statusColors.find((val) => val.status === data.status)?.color}
               color="main_blue"
               rounded="md">
               <Text fontSize="lg" p="2" fontWeight="extrabold">{data.status}</Text>
             </Box>
-          </Heading>
+          </Box>
           <Text as="h3" fontSize="md" mb="6">{data.description}</Text>
           <Box display="flex" flexDir="row" mb="4" flexWrap="wrap" alignItems="flex-start">
             <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
               <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
                 <Text fontWeight="bold">Informasi Umum</Text>
               </Box>
-              <Text mb="2"><b>Tanggal Wawancara :</b> {formatDateTime(data.start)} - {formatDateTime(data.end)}</Text>
-              <Text mb="2"><b>Submission :</b> {data.submission === "-" ? "-" : formatDateTime(data.submission)}</Text>
-              <Text mb="2"><b>Waktu Total :</b> ~ {countTotalTime(data.questions)} menit</Text>
-              <Text mb="2"><b>Posisi Organisasi :</b> {roomGroup.org_position}</Text>
-              <Text mb="2"><b>Interviewer :</b> {data.interviewer_name}</Text>
+              <TableContainer bg="white" rounded="md" w="100%">
+                <Table variant="simple" size="md" w="50%" colorScheme="blackAlpha">
+                  <Tbody>
+                      <Tr key={1}>
+                        <Td border="none" p="0" pr="4" py="1"><b>Waktu Interview</b></Td>
+                        <Td border="none" p="0" pr="4" py="1">:</Td>
+                      </Tr>
+                      <Tr key={2}>
+                        <Td border="none" pl="4" pr="4" py="1"><b>Mulai</b></Td>
+                        <Td border="none" p="0" pr="4" py="1">:</Td>
+                        <Td border="none" p="0" py="1">{formatDateTime(data.start)}</Td>
+                      </Tr>
+                      <Tr key={3}>
+                        <Td border="none" pl="4" pr="4" py="1"><b>Selesai</b></Td>
+                        <Td border="none" p="0" pr="4" py="1">:</Td>
+                        <Td border="none" p="0" py="1">{formatDateTime(data.end)}</Td>
+                      </Tr>
+                      <Tr key={4}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Submission</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{data.submission === "-" ? "-" : formatDateTime(data.submission)}</Td>
+                      </Tr>
+                      <Tr key={5}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Posisi Organisasi</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{roomGroup.org_position}</Td>
+                      </Tr>
+                      <Tr key={6}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Interviewer</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{data.interviewer_name}</Td>
+                      </Tr>
+                      <Tr key={7}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Bahasa</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{languageOptions.find((val) => val.value === data.language)?.label}</Td>
+                      </Tr>
+                  </Tbody>
+                </Table>
+              </TableContainer>
             </Box>
             <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
               <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
                 <Text fontWeight="bold">Informasi Kandidat</Text>
               </Box>
-              <Text mb="2"><b>Nama :</b> {roomGroup.interviewee_name}</Text>
-              <Text mb="2"><b>Email :</b> {roomGroup.interviewee_email}</Text>
-              <Text mb="2"><b>Phone :</b> {roomGroup.interviewee_phone}</Text>
+              <TableContainer bg="white" rounded="md" w="100%">
+                <Table variant="simple" size="md" w="50%" colorScheme="blackAlpha">
+                  <Tbody>
+                      <Tr key={1}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Nama</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{roomGroup.interviewee_name}</Td>
+                      </Tr>
+                      <Tr key={2}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Email</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{roomGroup.interviewee_email}</Td>
+                      </Tr>
+                      <Tr key={3}>
+                        <Td border="none" p="0" pr="4" py="2"><b>Phone</b></Td>
+                        <Td border="none" p="0" pr="4" py="2">:</Td>
+                        <Td border="none" p="0" py="2">{roomGroup.interviewee_phone}</Td>
+                      </Tr>
+                  </Tbody>
+                </Table>
+              </TableContainer>
             </Box>
             <Box display="flex" flexDir="column" w="50%" mb="10" p="2">
               <Box bg="main_blue" color="white" p="1" rounded="md" w="fit-content" mb="4">
@@ -290,7 +377,7 @@ const Detail = ({
           <Heading mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
             <Text fontWeight="bold" fontSize="2xl">{data.title}</Text>
             <Box 
-              bg={colors.find((val) => val.status === data.status)?.color}
+              bg={statusColors.find((val) => val.status === data.status)?.color}
               color="main_blue"
               rounded="md">
               <Text fontSize="lg" p="2" fontWeight="extrabold">{data.status}</Text>
@@ -299,19 +386,36 @@ const Detail = ({
           <Text as="h3" fontSize="md" mb="6">{data.description}</Text>
           <Divider mb="6"/>
           <Stack spacing="2">
-              <Box display="flex" flexDir="row" alignItems="center" mb="4">
-                <Icon color="main_blue" mr="4" boxSize="25px" as={CalendarIcon} />
-                <Box display="flex" flexDir="column">
-                  <Text fontSize="sm" fontWeight="normal">Start: {formatDateTime(data.start)}</Text>
-                  <Text fontSize="sm" fontWeight="normal">End: {formatDateTime(data.end)}</Text>
-                </Box>
-              </Box>
-              <Box display="flex" flexDir="row" alignItems="center" mb="4">
-                <Icon color="main_blue" mr="4" boxSize="25px" as={MdAccessTimeFilled} />
-                <Box display="flex" flexDir="column">
-                  <Text fontSize="sm" fontWeight="normal">~ {countTotalTime(data.questions)} menit</Text>
-                </Box>
-              </Box>
+            <TableContainer bg="white" rounded="md" w="100%">
+              <Table variant="simple" size="md" w="50%" colorScheme="blackAlpha">
+                <Tbody>
+                  <Tr key={1}>
+                    <Td border="none" p="0" pr="4" py="1"><b>Waktu Interview</b></Td>
+                    <Td border="none" p="0" pr="4" py="1">:</Td>
+                  </Tr>
+                  <Tr key={2}>
+                    <Td border="none" pl="4" pr="4" py="1"><b>Mulai</b></Td>
+                    <Td border="none" p="0" pr="4" py="1">:</Td>
+                    <Td border="none" p="0" py="1">{formatDateTime(data.start)}</Td>
+                  </Tr>
+                  <Tr key={3}>
+                    <Td border="none" pl="4" pr="4" py="1"><b>Selesai</b></Td>
+                    <Td border="none" p="0" pr="4" py="1">:</Td>
+                    <Td border="none" p="0" py="1">{formatDateTime(data.end)}</Td>
+                  </Tr>
+                  <Tr key={4}>
+                    <Td border="none" p="0" pr="4" py="2"><b>Submission</b></Td>
+                    <Td border="none" p="0" pr="4" py="2">:</Td>
+                    <Td border="none" p="0" py="2">{data.submission === "-" ? "-" : formatDateTime(data.submission)}</Td>
+                  </Tr>
+                  <Tr key={5}>
+                    <Td border="none" p="0" pr="4" py="2"><b>Total Waktu</b></Td>
+                    <Td border="none" p="0" pr="4" py="2">:</Td>
+                    <Td border="none" p="0" py="2">~{countTotalTime(data.questions)} menit</Td>
+                  </Tr>
+                </Tbody>
+              </Table>
+            </TableContainer>
           </Stack>
           {data.status === "WAITING REVIEW" && (
             <Box display="flex" alignItems="center" flexDir="column">
@@ -333,7 +437,7 @@ const Detail = ({
                 mt="5"
                 onClick={onOpen}
                 isDisabled={!checkValidDateRange(data.start, data.end)}
-                >Mulai Wawancara</Button>
+                >Mulai Interview</Button>
             </Box>
           )}
         </Box>
@@ -343,8 +447,36 @@ const Detail = ({
         onClose={onClose} 
         questions={data.questions} 
         room={data}
+        setRoom={setData}
         updateRoom={fetch}
       />
+      <AlertDialog
+        isOpen={isOpenDelete}
+        leastDestructiveRef={cancelRef}
+        onClose={onCloseDelete}
+        isCentered={true}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Hapus Ruangan
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Apakah Anda yakin ingin menghapus ruangan ini?
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onCloseDelete}>
+                Batal
+              </Button>
+              <Button colorScheme='red' onClick={() => handleDeleteRoom()} ml={3}>
+                Hapus
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   )
 }
