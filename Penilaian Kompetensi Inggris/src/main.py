@@ -14,9 +14,14 @@ import os
 def get_settings():
     return Settings()
 
+@lru_cache
+def get_globals():
+    return g
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
+    g = get_globals()
 
     g.set_default("device", torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
@@ -30,7 +35,7 @@ async def lifespan(app: FastAPI):
     g.set_default("model", model)
     
     yield
-    del model
+    del g
 
 app = FastAPI(
     title="FastAPI",

@@ -79,6 +79,11 @@ async def train_model(settings: Annotated[Settings, Depends(get_settings)], db: 
     feedback_results = db.query(models.FeedbackResult).filter(models.FeedbackResult.status == "LABELED").all()
     competency_levels = db.query(models.CompetencyLevel).all()
 
+    if len(feedback_results) == 0:
+        return {
+            "message": "No labeled data available."
+        }
+
     transcripts = [fr.transcript for fr in feedback_results]
     competence_sets = [[cl.description for cl in competency_levels if cl.competency_id == fr.competency_id] for fr in feedback_results]
     
@@ -97,7 +102,6 @@ async def train_model(settings: Annotated[Settings, Depends(get_settings)], db: 
     state_dict_path = os.path.join(settings.get_state_dict_dir(), filename)
     new_model.save_state_dict(state_dict_path)
 
-    del g.model
     g.model = new_model
 
     settings.cm_state_dict_filename = filename
