@@ -76,7 +76,7 @@ async def predict_model(predict_data: schemas.PredictData):
 
 @router.post("/train")
 async def train_model(settings: Annotated[Settings, Depends(get_settings)], db: Session = Depends(get_db)):
-    feedback_results = db.query(models.FeedbackResult).filter(models.FeedbackResult.status == "LABELED").all()
+    feedback_results = db.query(models.FeedbackResult).filter(models.FeedbackResult.status == "LABELED", models.FeedbackResult.language == "ENGLISH").all()
     competency_levels = db.query(models.CompetencyLevel).all()
 
     if len(feedback_results) == 0:
@@ -114,7 +114,7 @@ async def train_model(settings: Annotated[Settings, Depends(get_settings)], db: 
 
 @router.get("/to-label")
 async def get_to_label_data(settings: Annotated[Settings, Depends(get_settings)], db: Session = Depends(get_db)):
-    feedback_results = db.query(models.FeedbackResult).filter(models.FeedbackResult.status == "UNLABELED").all()
+    feedback_results = db.query(models.FeedbackResult).filter(models.FeedbackResult.status == "UNLABELED", models.FeedbackResult.language == "ENGLISH").all()
     competency_levels = db.query(models.CompetencyLevel).all()
 
     transcripts = [fr.transcript for fr in feedback_results]
@@ -123,6 +123,14 @@ async def get_to_label_data(settings: Annotated[Settings, Depends(get_settings)]
     bayesian_model = BayesianCompetenceModel(g.model)
     
     with torch.no_grad():
+        # # Split to minimize GPU RAM usage
+        # scores = []
+        # n, s = len(feedback_results), 5
+        # for i in range(0, n, s):
+        #     score = bayesian_model(transcripts[i:min(i+s, n)], competence_sets[i:min(i+s, n)], k=settings.al_bayesian_samples)
+        #     scores.append(score)
+        # scores = torch.cat(scores)
+
         scores = bayesian_model(transcripts, competence_sets, k=settings.al_bayesian_samples)
         log_scores = torch.log(scores)
         batch = get_powerbald_batch(log_scores, batch_size=settings.al_batch_size)

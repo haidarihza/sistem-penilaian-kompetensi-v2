@@ -28,3 +28,4 @@ class FeedbackResult(Base):
     competency_id = Column(UUID, ForeignKey("competencies.id"))
     status = Column(String, index=True)
     label_feedback = Column(UUID, ForeignKey("competency_levels.id"))
+    language = Column(String)
