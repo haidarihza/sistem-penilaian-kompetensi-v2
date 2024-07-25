@@ -143,7 +143,7 @@ func Answer(
 				}
 
 				rRepo.InsertResult(ctx, roomId, competencyRes, levelRes, resultRes)
-				fRepo.Insert(ctx, feedbackID, transcriptFeedback, competencyFeedback, resultFeedback)
+				fRepo.Insert(ctx, feedbackID, transcriptFeedback, competencyFeedback, resultFeedback, language)
 			}
 		}(context.Background(), roomRepository, competencyRepository, questionRepository, feedbackRepository, roomId, questionId, req.AnswerURL, req.Language)
 		response.RespondOK(w)

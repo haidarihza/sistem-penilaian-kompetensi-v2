@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS feedback_results(
   transcript TEXT,
   competency_id UUID,
   status TEXT,
+  language TEXT,
   label_result UUID,
   label_feedback UUID,
   FOREIGN KEY(competency_id) REFERENCES competencies(id),
