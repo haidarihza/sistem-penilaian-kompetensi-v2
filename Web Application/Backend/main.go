@@ -60,6 +60,7 @@ func main() {
 
 	authMiddleware := middleware.Auth(jwtImpl)
 	roleInterviewerMiddleware := middleware.RBAC(repository.Interviewer)
+	logMiddleware := middleware.LogMiddleware
 	corsMiddleware := cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -69,6 +70,7 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(logMiddleware)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hiremif backend"))
 	})

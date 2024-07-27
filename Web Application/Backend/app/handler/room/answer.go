@@ -99,14 +99,14 @@ func Answer(
 
 				url := ""
 				if language == "ENGLISH" {
-					url = cfg.SummarizationHostEN
+					url = cfg.SummarizationHostEN + "/predict"
 				} else {
-					url = cfg.SummarizationHostID
+					url = cfg.SummarizationHostID + "/predict/laddernetwork"
 				}
-				url += "/predict"
-	
+				
 				resp, _ := http.Post(url, "application/json", bytes.NewBuffer(body))
 				bodySummary, _ := io.ReadAll(resp.Body)
+				fmt.Println(string(bodySummary))
 
 				res := PredictResponse{}
 				err := json.Unmarshal(bodySummary, &res)
