@@ -31,6 +31,8 @@ var feedbackQueries = map[string]string{
 	feedbackSelectByStatus: feedbackSelectByStatusQuery,
 	feedbackUpdate: 				feedbackUpdateQuery,
 	feedbackUpdateBulk: 		feedbackUpdateBulkQuery,
+	feedbackIsNoDataToLabel: feedbackIsNoDataToLabelQuery,
+	feedbackIsDataAvailable: feedbackIsDataAvailableQuery,
 }
 
 const feedbackInsert = "feedbackInsert"
@@ -133,7 +135,7 @@ func (r *feedbackRepository) UpdateBulkFeedback(ctx context.Context, ids []strin
 const feedbackIsNoDataToLabel = "feedbackIsNoDataToLabel"
 const feedbackIsNoDataToLabelQuery = `SELECT COUNT(*) = 0
 	FROM "feedback_results"
-	WHERE status = 'TO_LABEL'
+	WHERE status = 'TO_LABEL' AND language = 'ENGLISH'
 `
 
 func (r *feedbackRepository) IsNoDataToLabel(ctx context.Context) (bool, error) {
@@ -144,4 +146,20 @@ func (r *feedbackRepository) IsNoDataToLabel(ctx context.Context) (bool, error) 
 	}
 
 	return isNoData, nil
+}
+
+const feedbackIsDataAvailable = "feedbackIsDataAvailable"
+const feedbackIsDataAvailableQuery = `SELECT COUNT(*) > 0
+	FROM "feedback_results"
+	WHERE status = 'UNLABELED' AND language = 'INDONESIAN'
+`
+
+func (r *feedbackRepository) IsDataAvailable(ctx context.Context) (bool, error) {
+	var isData bool
+	err := r.db.QueryRowContext(ctx, feedbackIsDataAvailableQuery).Scan(&isData)
+	if err != nil {
+		return false, err
+	}
+
+	return isData, nil
 }

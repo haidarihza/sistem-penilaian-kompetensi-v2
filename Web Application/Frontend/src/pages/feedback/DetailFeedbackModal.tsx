@@ -63,7 +63,7 @@ const DetailFeedbackModal = ({
     <ModalTemplate
       isOpen={isOpen}
       onClose={onClose}
-      handleSubmit={handleSubmit}
+      handleSubmit={async () => {}}
       title={title}
       isForm={false}
       size="4xl"
@@ -115,7 +115,7 @@ const DetailFeedbackModal = ({
             </Table>
           </TableContainer>
         </Box>
-        <Text fontSize="sm" mt="2">Result: <b>Level {getCompetencyLevel(feedback.label_result)?.level}</b></Text>
+        <Text fontSize="sm" mt="2">Result: <b>{getCompetencyLevel(feedback.label_result)?.level}</b></Text>
         <Box bg="main_beige" p="1" w="fit-content" rounded="md" mt="4">
           <Text>Feedback</Text>
         </Box>

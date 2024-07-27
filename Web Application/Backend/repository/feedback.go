@@ -40,4 +40,5 @@ type FeedbackRepository interface {
 	UpdateFeedback(context.Context, *Feedback) error
 	UpdateBulkFeedback(context.Context, []string) error
 	IsNoDataToLabel(context.Context) (bool, error)
+	IsDataAvailable(context.Context) (bool, error)
 }

@@ -67,7 +67,7 @@ const Index = () => {
   
   useEffect(() => {
     fetch();
-  }, []);
+  }, [isOpenModal]);
 
   const handleOpenDetail = (feedback_id: string, competency_id: string) => () => {
     const feedback = data.find((val) => val.id === feedback_id);
@@ -81,7 +81,6 @@ const Index = () => {
     try {
       await updateFeedback(apiContext.axios, currentFeedback);
       ToastModal(toast, "Success!", "Feedback berhasil diperbarui", "success");
-      fetch();
       onCloseModal();
     } catch(e) {
       if (e instanceof ApiError) {

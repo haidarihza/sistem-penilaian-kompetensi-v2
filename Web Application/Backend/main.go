@@ -1,5 +1,6 @@
 package main
 
+
 import (
 	"fmt"
 	authhandler "interview/summarization/app/handler/auth"
@@ -13,12 +14,16 @@ import (
 	"interview/summarization/repository"
 	"interview/summarization/repository/pgsql"
 	"interview/summarization/token/jwt"
+	"interview/summarization/cron_job"
 	"log"
 	"net/http"
+	// "time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/robfig/cron/v3"
 )
+
 
 func main() {
 	cfg, err := config.LoadConfig(".")
@@ -58,8 +63,25 @@ func main() {
 		log.Fatalln("feedback repository:", err)
 	}
 
+	c := cron.New()
+
+	// Schedule the cron job to run every two week
+	_, err = c.AddFunc("0 2 1 * *", func() {
+		err := cron_job.TrainModel(feedbackRepository, cfg.SummarizationHostID)
+		if err != nil {
+			log.Println("failed to run training_model.go:", err)
+		}
+	})
+	if err != nil {
+		log.Fatalln("failed to schedule cron job:", err)
+	}
+
+	c.Start()
+
 	authMiddleware := middleware.Auth(jwtImpl)
+
 	roleInterviewerMiddleware := middleware.RBAC(repository.Interviewer)
+
 	logMiddleware := middleware.LogMiddleware
 	corsMiddleware := cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -69,15 +91,13 @@ func main() {
 	})
 
 	r := chi.NewRouter()
-
 	r.Use(logMiddleware)
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hiremif backend"))
 	})
-
 	fs := http.FileServer(http.Dir("data"))
 	r.Handle("/files/*", http.StripPrefix("/files/", fs))
-
 	r.With(corsMiddleware).Route("/auth", func(r chi.Router) {
 		r.Get("/verify", authhandler.Verify(userRepository, jwtImpl))
 		r.With(authMiddleware, roleInterviewerMiddleware).Get("/all-emails", authhandler.GetAllEmails(userRepository))
