@@ -82,12 +82,12 @@ const QuestionModal = ({
       size="2xl"
     >
       <FormControl isRequired mb="4">
-        <FormLabel>Pertanyaan</FormLabel>
+        <FormLabel htmlFor="question">Pertanyaan</FormLabel>
         <Textarea value={question.question} onChange={handleQuestionChange} placeholder="Pertanyaan" mt="-2"/>
       </FormControl>
       <FormControl isRequired mb="4">
-        <FormLabel>Durasi (menit)</FormLabel>
-        <NumberInput value={question.duration_limit} onChange={handleDurationChange} min={1}>
+        <FormLabel htmlFor="duration">Durasi (menit)</FormLabel>
+        <NumberInput id="duration" value={question.duration_limit} onChange={handleDurationChange} min={1}>
           <NumberInputField />
           <NumberInputStepper>
             <NumberIncrementStepper />
@@ -96,15 +96,15 @@ const QuestionModal = ({
         </NumberInput>
       </FormControl>
       <FormControl mb="4">
-        <FormLabel>Posisi Organisasi</FormLabel>
-        <Select placeholder="Pilih Posisi Organisasi" value={question.org_position} onChange={(e) => setQuestion({ ...question, org_position: e.target.value })}>
+        <FormLabel htmlFor="org_position">Posisi Organisasi</FormLabel>
+        <Select id="org_position" placeholder="Pilih Posisi Organisasi" value={question.org_position} onChange={(e) => setQuestion({ ...question, org_position: e.target.value })}>
           {orgPosition.map((val, i) => (
             <option key={i} value={val}>{val}</option>
           ))}
         </Select>
       </FormControl>
       <FormControl mb="4">
-        <FormLabel>Kategori Kompetensi</FormLabel>
+        <FormLabel >Kategori Kompetensi</FormLabel>
         <Box display="flex" flexDir="row" p="0" flexWrap="wrap">
         {question.labels.map((val, idx) => (
         <Box key={idx} display="flex" alignItems="center" w="fit-content" rounded="md" bg="second_blue" mr="2" mb="2">

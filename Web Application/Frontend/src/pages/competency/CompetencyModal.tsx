@@ -96,7 +96,7 @@ const CompetencyModal = ({
             })})} placeholder="Tingkat" mt="-2"/>
           </FormControl>
           <FormControl mt="2">
-            <FormLabel>Deskripsi</FormLabel>
+            <FormLabel>Deskripsi Level</FormLabel>
             <Textarea value={level.description} onChange={e => setCompetency({...competency, levels: competency.levels.map((val, index) => {
               if (index === idx) {
                 return { ...val, description: e.target.value }

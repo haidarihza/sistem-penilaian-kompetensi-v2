@@ -160,7 +160,7 @@ const Index = () => {
         </TabList>
         <TabPanels>
           {tabList.map((tab, idx) => (
-            <TabPanel>
+            <TabPanel key={idx}>
               <Box bg="white" rounded="md">
                 <Flex justifyContent="space-between" p="5" pr="10">
                 <Box display="flex" flexDir="row" w="80%">
@@ -209,6 +209,7 @@ const Index = () => {
                 <Box display="flex" p="5" flexWrap="wrap" justifyContent="flex-start">
                   {tab.data ? tab.data.map((val, idx) => (
                     <RoomCard
+                      key={idx}
                       roomGroup={val}
                       handleDeleteConfirm={handleDeleteConfirm}
                       role={role ? role : "INTERVIEWEE"}
@@ -218,6 +219,7 @@ const Index = () => {
                 )}
                 {view === "LIST" && (
                   <ListView
+                    key={idx}
                     filteredData={tab.data}
                     role={role ? role : "INTERVIEWEE"}
                     handleDeleteConfirm={handleDeleteConfirm}
