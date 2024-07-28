@@ -228,8 +228,6 @@ class CompetenceModel(torch.nn.Module):
             if early_stop and early_stopping.early_stop:
                 print(f"Early stopped at epoch {epoch + 1}")
                 break
-            
-        self.eval()
 
 
 class BiEncoder(CompetenceModel):
@@ -282,6 +280,6 @@ class CrossEncoder(CompetenceModel):
         features = self.tokenizer(transcripts, competences, padding=tokenizer_padding)
         logits = self.model(**features).logits
         prob = torch.nn.functional.softmax(logits, dim=1)
+        prob = prob[:, 1]
 
-        return prob[:, 1]
-
+        return prob

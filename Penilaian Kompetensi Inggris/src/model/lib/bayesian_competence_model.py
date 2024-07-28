@@ -57,6 +57,9 @@ class BayesianCompetenceModel(BayesianModule):
         for name, layer in model.named_modules():
             if not name.endswith('dropout'):
                 continue
+                
+            if name.endswith('pos_dropout'):    # Skip positional dropout in deberta
+                continue
 
             if type(layer).__name__.endswith('ConsistentMCDropout'):
                 continue

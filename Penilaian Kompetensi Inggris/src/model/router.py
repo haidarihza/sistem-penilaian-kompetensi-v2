@@ -66,6 +66,7 @@ async def reload_model(settings: Annotated[Settings, Depends(get_settings)]):
 
 @router.post("/predict")
 async def predict_model(predict_data: schemas.PredictData):
+    g.model.eval()
     with torch.no_grad():
         scores = g.model(predict_data.transcripts, predict_data.competence_sets)
     
@@ -95,7 +96,7 @@ async def train_model(settings: Annotated[Settings, Depends(get_settings)], db: 
     train_dataset, eval_dataset = torch.utils.data.random_split(dataset, [settings.train_split_size, 1 - settings.train_split_size])
     
     new_model = CompetenceModel.load(settings.get_model_path(), settings.cm_model_type, state_dict_path=None, device=g.device)
-
+    new_model.train()
     new_model.fit(train_dataset, eval_dataset, epochs=settings.train_max_epochs, batch_size=settings.train_batch_size, early_stop=settings.train_early_stop)
 
     filename = f"{int(time.time())}.pt"
@@ -121,15 +122,16 @@ async def get_to_label_data(settings: Annotated[Settings, Depends(get_settings)]
     competence_sets = [[cl.description for cl in competency_levels if cl.competency_id == fr.competency_id] for fr in feedback_results]
 
     bayesian_model = BayesianCompetenceModel(g.model)
-    
+    bayesian_model.eval()
+
     with torch.no_grad():
-        # # Split to minimize GPU RAM usage
+        # Split to minimize GPU RAM usage
         # scores = []
-        # n, s = len(feedback_results), 5
+        # n, s = len(feedback_results), 4
         # for i in range(0, n, s):
-        #     score = bayesian_model(transcripts[i:min(i+s, n)], competence_sets[i:min(i+s, n)], k=settings.al_bayesian_samples)
+        #     score = bayesian_model(transcripts[i:min(i+s, n)], competence_sets[i:min(i+s, n)], k=settings.al_bayesian_samples, tokenizer_padding="max_length")
         #     scores.append(score)
-        # scores = torch.cat(scores)
+        # scores = torch.cat(scores)  # Concatenate the scores, consider for scores of different sizes (of competence numebr in set)
 
         scores = bayesian_model(transcripts, competence_sets, k=settings.al_bayesian_samples)
         log_scores = torch.log(scores)
