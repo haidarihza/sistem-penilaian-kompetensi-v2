@@ -38,6 +38,7 @@ type Room struct {
 	InterviewerEmail string                  `json:"interviewer_email,omitempty"`
 	InterviewerName  string                  `json:"interviewer_name,omitempty"`
 	Language				 string									 `json:"language,omitempty"`
+	PrepationTime		 int                     `json:"preparation_time,omitempty"`
 	QuestionsID      []string                `json:"questions_id,omitempty"`
 	CompetenciesID   []string                `json:"competencies_id,omitempty"`
 	Questions        []question.Question     `json:"questions,omitempty"`
@@ -57,6 +58,7 @@ type RoomCreate struct {
 	InterviewerEmail string                  `json:"interviewer_email,omitempty"`
 	IntervieweeEmail string		 	             `json:"interviewee_email,omitempty"`
 	Language				 string									 `json:"language,omitempty"`
+	PrepationTime		 int                     `json:"preparation_time,omitempty"`
 	QuestionsID      []string                `json:"questions_id,omitempty"`
 	CompetenciesID   []string                `json:"competencies_id,omitempty"`
 	Questions        []question.Question     `json:"questions,omitempty"`
@@ -109,6 +111,7 @@ func CreateRoom(roomRepository repository.RoomRepository, userRepository reposit
 			Description:   req.Description,
 			Status:        status,
 			Language:			 req.Language,
+			PrepationTime: req.PrepationTime,
 		}
 
 		go func(ctx context.Context, room repository.Room, interviewee repository.User) {
@@ -129,7 +132,7 @@ func CreateRoom(roomRepository repository.RoomRepository, userRepository reposit
 
 			layout := "2006-01-02T15:04:05.000Z"
 
-			timeStart, err := time.Parse(layout, room.End)
+			timeStart, err := time.Parse(layout, room.Start)
 			if err != nil {
 				fmt.Println("Error parsing time:", err)
 				return

@@ -45,7 +45,6 @@ const InterviewModal = ({
   const apiContext = useContext(ApiContext);
   const toast = useToast();
   const MotionText = motion(Text);
-
   const [timer, setTimer] = useState<number>(0);
   const [prepTimer, setPrepTimer] = useState<number>(15);
   const [condition, setCondition] = useState<string>("PREPARING");
@@ -165,7 +164,7 @@ const InterviewModal = ({
       if (question.start_answer === "-") {
         const date = new Date()
         setTimer(question.duration_limit * 60);
-        setPrepTimer(15);
+        setPrepTimer(room.preparation_time);
         setCondition("PREPARATION");
         await updateRoomQuestion(apiContext.axios, room.id, questions[questionIdx.current].id, date, true, questionIdx.current);
       } else {
@@ -229,7 +228,7 @@ const InterviewModal = ({
             Akan ada beberapa pertanyaan yang harus Anda jawab sesuai dengan waktu yang diberikan (waktu setiap pertanyaan memungkinkan berbeda)
           </ListItem>
           <ListItem mb="1">
-            Anda akan diberi waktu 15 detik untuk mempersiapkan diri sebelum menjawab setiap pertanyaan.
+            Anda akan diberi waktu {room.preparation_time} detik untuk mempersiapkan diri sebelum menjawab setiap pertanyaan.
           </ListItem>
           <ListItem mb="1">
             Waktu akan otomatis berjalan sesuai dengan batasan yang telah ditentukan. Anda dapat menjawab pertanyaan selama waktu itu atau dapat menghentikan ketika merasa sudah cukup.

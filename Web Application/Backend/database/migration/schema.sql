@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS rooms(
   status TEXT,
   note TEXT,
   language TEXT,
+  preparation_time INT,
   interviewer_id UUID,
   room_group_id UUID,
   deleted BOOLEAN DEFAULT false NOT NULL,

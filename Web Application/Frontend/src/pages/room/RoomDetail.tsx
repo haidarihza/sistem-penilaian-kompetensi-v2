@@ -80,6 +80,7 @@ const Detail = ({
     try {
       const rooms = await getOneRoom(apiContext.axios, room_id!);
       setData(rooms);
+      console.log(rooms);
     } catch(e) {
       if (e instanceof ApiError) {
         ToastModal(toast, "Error!", e.message, "error");
@@ -148,7 +149,7 @@ const Detail = ({
         best = val.level;
       }
     });
-    return best;
+    return {best, max: (max*100).toFixed(2) };
   }
 
   const handleDeleteConfirm = (id: string) => {
@@ -331,6 +332,7 @@ const Detail = ({
                       <Th textTransform="capitalize" w="30%">Kompetensi</Th>
                       <Th textTransform="capitalize" textAlign="center" w="10%">Aksi</Th>
                       <Th textTransform="capitalize" textAlign="center" w="10%">Hasil Penilaian</Th>
+                      <Th textTransform="capitalize" textAlign="center" w="10%">Persentase Hasil</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -341,7 +343,10 @@ const Detail = ({
                           <Button size="sm" bg="main_blue" color="white" onClick={e => handleDetailCompetency(val.id)}>Detail</Button>
                         </Td>
                         <Td w="10%" textAlign="center">
-                          {getBestLevel(val.levels) === "" ? "Belum Ada Hasil" : getBestLevel(val.levels)}
+                          {getBestLevel(val.levels).best === "" ? "Belum Ada Hasil" : getBestLevel(val.levels).best}
+                        </Td>
+                        <Td w="10%" textAlign="center">
+                          {getBestLevel(val.levels).best === "" ? "-" : getBestLevel(val.levels).max + "%"}
                         </Td>
                       </Tr>
                     )) : <Spinner />}

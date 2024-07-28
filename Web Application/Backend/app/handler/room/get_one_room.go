@@ -55,7 +55,7 @@ func GetOneRoom(
 		if room.CurrQuestion.Valid {
 			currQuestion = int(room.CurrQuestion.Int32)
 		}
-	
+
 		resp := GetOneRoomResponse{
 			Data: Room{
 				ID:          			room.ID,
@@ -71,6 +71,7 @@ func GetOneRoom(
 				Status:      			string(room.Status),
 				Note:        			note,
 				Language:					room.Language,
+				PrepationTime:		room.PrepationTime,
 			},
 		}
 

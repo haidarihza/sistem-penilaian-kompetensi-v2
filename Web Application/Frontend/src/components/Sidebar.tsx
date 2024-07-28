@@ -26,7 +26,7 @@ const NavItem = ({ icon, children, link, location, name, onClick, ...rest }: Nav
         mx="4"
         borderRadius="lg"
         role="group"
-        fontSize="lg"
+        fontSize="sm"
         fontWeight="bold"
         textColor={name === "Log Out" ? "main_bg" : "main_blue"}
         cursor="pointer"
@@ -67,7 +67,7 @@ const Sidebar = ({ role, logout } : Props) => {
     icon: FiHome
   },
   {
-    name: "Pertanyaan",
+    name: "Bank Pertanyaan",
     url: "/question",
     icon: LuFileQuestion
   },

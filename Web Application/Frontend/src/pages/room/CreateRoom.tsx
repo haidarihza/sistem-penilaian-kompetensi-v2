@@ -22,6 +22,11 @@ import { Box,
   useDisclosure,
   useToast,
   Select,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper
  } from "@chakra-ui/react";
  import {
   AutoComplete,
@@ -65,6 +70,7 @@ const CreateRoom = () => {
     end: "",
     interviewer_email: "",
     language: "",
+    preparation_time: 0,
     questions_id: [] as string[],
     competencies_id: [] as string[],
     questions: [] as Question[],
@@ -73,7 +79,6 @@ const CreateRoom = () => {
 
   const [roomGroup, setRoomGroup] = useState<RoomGroupCreate>({
     id: dataRoomGroup?.id || "",
-    title: dataRoomGroup?.title || "",
     org_position: dataRoomGroup?.org_position || "",
     interviewee_email: dataRoomGroup?.interviewee_email || [],
     room: room
@@ -182,7 +187,7 @@ const CreateRoom = () => {
   }
 
   const roomCheck = (room: RoomCreate) => {
-    if (room.title === "" || room.description === "" || room.start === "" || room.end === "" ||
+    if (room.title === "" || room.description === "" || room.start === "" || room.end === "" || room.language === "" || room.preparation_time === 0 ||
         room.interviewer_email === "" || room.questions.length === 0 || room.competencies.length === 0) {
       return false;
     }
@@ -190,7 +195,7 @@ const CreateRoom = () => {
   }
 
   const roomGroupCheck = (roomGroup: RoomGroupCreate) => {
-    if (roomGroup.title === "" || roomGroup.org_position === "" || roomGroup.interviewee_email.length === 0) {
+    if (roomGroup.org_position === "" || roomGroup.interviewee_email.length === 0) {
       return false;
     }
     return roomCheck(roomGroup.room);
@@ -216,7 +221,7 @@ const CreateRoom = () => {
         return;
       }
 
-      await createRoomGroup(apiContext.axios, roomGroup.title, roomGroup.org_position, roomGroup.interviewee_email, roomGroup.room);
+      await createRoomGroup(apiContext.axios, roomGroup.org_position, roomGroup.interviewee_email, roomGroup.room);
       ToastModal(toast, "Success!", "Ruangan interview berhasil dibuat", "success");
       navigate("/")
     } catch(e) {
@@ -263,11 +268,6 @@ const CreateRoom = () => {
       }}>
         <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Informasi Ruangan</Text>
         <Box bg="white" rounded="md" p="3">
-          <FormControl isInvalid={isSubmit && roomGroup.title === ""} mb="4">
-            <FormLabel>Judul Ruangan</FormLabel>
-            <Input value={roomGroup.title} onChange={e => setRoomGroup({...roomGroup, title: e.target.value})} placeholder="Judul Ruangan" isDisabled={roomGroup.id !== ""}/>
-            <FormErrorMessage>Judul ruangan harus diisi</FormErrorMessage>
-          </FormControl>
           <FormControl isInvalid={isSubmit && roomGroup.interviewee_email.length === 0} mb="4">
             <FormLabel>Email Kandidat</FormLabel>
             <AutoComplete
@@ -307,20 +307,20 @@ const CreateRoom = () => {
             <FormErrorMessage>Email Kandidat harus diisi</FormErrorMessage>
           </FormControl>
           <FormControl isInvalid={isSubmit && roomGroup.org_position === ""} mb="4">
-            <FormLabel>Posisi Organisasi</FormLabel>
-              <Select placeholder="Pilih Posisi Organisasi" value={roomGroup.org_position} onChange={(e) => setRoomGroup({ ...roomGroup, org_position: e.target.value })} isDisabled={roomGroup.id !== ""}>
+            <FormLabel>Lowongan Jabatan</FormLabel>
+              <Select placeholder="Lowongan Jabatan" value={roomGroup.org_position} onChange={(e) => setRoomGroup({ ...roomGroup, org_position: e.target.value })} isDisabled={roomGroup.id !== ""}>
                 {orgPosition.map((val, i) => (
                 <option key={i} value={val}>{val}</option>
                 ))}
               </Select>
-            <FormErrorMessage>Posisi Organisasi harus diisi</FormErrorMessage>
+            <FormErrorMessage>Lowongan Jabatan harus diisi</FormErrorMessage>
           </FormControl>
         </Box>
         {/* ************************************* */}
         <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Informasi Interview</Text>
         <Box bg="white" rounded="md" p="3">
           <FormControl isInvalid={isSubmit && roomGroup.room.title === ""} mb="4">
-            <FormLabel>Judul Interview</FormLabel>
+            <FormLabel>Nama Interview</FormLabel>
             <Input value={roomGroup.room.title} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, title: e.target.value}})} placeholder="Nama Interview" />
             <FormErrorMessage>Judul ruangan harus diisi</FormErrorMessage>
           </FormControl>
@@ -359,6 +359,17 @@ const CreateRoom = () => {
             </Select>
             <FormErrorMessage>Bahasa harus diisi</FormErrorMessage>
           </FormControl>
+          <FormControl isInvalid={isSubmit && roomGroup.room.preparation_time === 0} mb="4">
+            <FormLabel>Waktu Persiapan (detik)</FormLabel>
+              <NumberInput value={roomGroup.room.preparation_time} onChange={(valueAsString: string, valueAsNumber: number) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, preparation_time: valueAsNumber } })} min={1}>
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            <FormErrorMessage>Waktu Persiapan harus diisi</FormErrorMessage>
+          </FormControl>
         </Box>
         {/* ************************************* */}
         <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Kompetensi yang dinilai</Text>
@@ -395,7 +406,7 @@ const CreateRoom = () => {
                 <Th w="5%"></Th>
                 <Th textTransform="capitalize" w="40%">Pertanyaan</Th>
                 <Th textTransform="capitalize" textAlign="center">Durasi</Th>
-                <Th textTransform="capitalize" textAlign="center">Posisi Organisasi</Th>
+                <Th textTransform="capitalize" textAlign="center">Lowongan Jabatan</Th>
                 <Th textTransform="capitalize" w="30%" textAlign="center">Kategori Kompetensi</Th>
                 <Th textTransform="capitalize" textAlign="center">Aksi</Th>
               </Tr>

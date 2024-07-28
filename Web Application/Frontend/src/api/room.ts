@@ -7,7 +7,6 @@ import { Question } from "../interface/question";
 
 export async function createRoomGroup(
   axios: AxiosInstance,
-  title: string,
   org_position: string,
   interviewee_email: Array<string>,
   room: RoomCreate
@@ -16,7 +15,6 @@ export async function createRoomGroup(
     room.competencies_id = room.competencies.map((competency) => competency.id);
     room.questions_id = room.questions.map((question) => question.id);
     const res = await axios.post("/room/group", {
-      title,
       org_position,
       interviewee_email,
       room: {
@@ -26,6 +24,7 @@ export async function createRoomGroup(
         end: new Date(room.end),
         interviewer_email: room.interviewer_email,
         language: room.language,
+        preparation_time: room.preparation_time,
         questions_id: room.questions_id,
         competencies_id: room.competencies_id,
       }
@@ -60,6 +59,7 @@ export async function createRoom(
       interviewer_email: room.interviewer_email,
       interviewee_email,
       language: room.language,
+      preparation_time: room.preparation_time,
       questions_id: room.questions_id,
       competencies_id: room.competencies_id,
     });

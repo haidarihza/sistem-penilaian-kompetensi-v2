@@ -46,7 +46,7 @@ const RoomCard = ({
       <CardHeader pt="2" pb="2" height="16">
         <Flex alignItems="center" gap="8" justifyContent="space-between">
           <Text
-            fontSize="lg"
+            fontSize="md"
             fontWeight="bold"
             noOfLines={2}
             textOverflow="ellipsis"

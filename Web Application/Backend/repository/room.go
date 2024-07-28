@@ -52,6 +52,7 @@ type Room struct {
 	Status        RoomStatus
 	Note          sql.NullString
 	Language			string
+	PrepationTime int
 	Deleted       bool
 	CreatedAt     time.Time
 	UpdatedAt     sql.NullTime

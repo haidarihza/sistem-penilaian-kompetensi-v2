@@ -17,14 +17,29 @@ import (
 	"fmt"
 	"time"
 	"github.com/google/uuid"
+	"strings"
+	"strconv"
 )
 
 type RoomGroupsCreate struct {
 	ID               	string                 `json:"id,omitempty"`
-	Title            	string                 `json:"title,omitempty"`
 	OrgPosition				string                 `json:"org_position,omitempty"`
 	IntervieweeEmail 	[]string       	       `json:"interviewee_email,omitempty"`
 	Room	           	RoomCreate       	     `json:"room,omitempty"`
+}
+
+func getInitials(name string) string {
+	if name == "" {
+			return "UNKNOWN"
+	}
+	words := strings.Fields(name)
+	initials := make([]rune, len(words))
+	for i, word := range words {
+			if len(word) > 0 {
+					initials[i] = []rune(word)[0]
+			}
+	}
+	return string(initials)
 }
 
 func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository repository.UserRepository, cfg config.Config) http.HandlerFunc {
@@ -52,7 +67,7 @@ func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository re
 			return
 		}
 
-		for _, email := range req.IntervieweeEmail {
+		for i, email := range req.IntervieweeEmail {
 			interviewee, err := userRepository.SelectIDByEmail(r.Context(), email)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) {
@@ -63,10 +78,12 @@ func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository re
 				response.RespondError(w, response.InternalServerError())
 				return
 			}
-
+			// get inisial from interviewee name
+			initials := getInitials(interviewee.Name)
+			title := "[" + strconv.Itoa(i+1) + "]_" + initials + "_" + req.OrgPosition + "_" + interviewee.Name
 			newRoomGroup := &repository.RoomGroup{
 				ID:            uuid.NewString(),
-				Title:         req.Title,
+				Title:         title,
 				OrgPosition:   req.OrgPosition,
 				IntervieweeID: interviewee.ID,
 			}
@@ -81,6 +98,7 @@ func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository re
 				End:           req.Room.End,
 				Status:        status,
 				Language:			 req.Room.Language,
+				PrepationTime: req.Room.PrepationTime,
 			}
 
 			go func(ctx context.Context, room repository.Room, interviewee repository.User) {
@@ -101,7 +119,7 @@ func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository re
 
 				layout := "2006-01-02T15:04:05.000Z"
 
-				timeStart, err := time.Parse(layout, room.End)
+				timeStart, err := time.Parse(layout, room.Start)
 				if err != nil {
 					fmt.Println("Error parsing time:", err)
 					return

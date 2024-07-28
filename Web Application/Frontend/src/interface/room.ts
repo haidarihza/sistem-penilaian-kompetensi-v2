@@ -27,6 +27,7 @@ export interface RoomDetail {
   interviewer_name: string,
   interviewer_email: string,
   language: string,
+  preparation_time: number,
   start: string,
   end: string,
   is_started: boolean,
@@ -40,7 +41,6 @@ export interface RoomDetail {
 
 export interface RoomGroupCreate {
   id: string,
-  title: string,
   org_position: string,
   interviewee_email: Array<string>,
   room: RoomCreate
@@ -54,6 +54,7 @@ export interface RoomCreate {
   end: string,
   interviewer_email: string,
   language: string,
+  preparation_time: number,
   questions_id: Array<string>,
   competencies_id: Array<string>,
   questions: Array<Question>,
