@@ -56,11 +56,10 @@ func Answer(
 			// Set the URL for the POST request
 			url := ""
 			if language == "ENGLISH" {
-				url = cfg.SpeechToTextHostEN
+				url = cfg.SpeechToTextHostEN + "/predict/english"
 			} else {
-				url = cfg.SpeechToTextHostID
+				url = cfg.SpeechToTextHostID + "/predict/indonesian"
 			}
-			url += "/predict"
 		
 			// Create the POST request with JSON payload
 			resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
@@ -106,7 +105,6 @@ func Answer(
 				
 				resp, _ := http.Post(url, "application/json", bytes.NewBuffer(body))
 				bodySummary, _ := io.ReadAll(resp.Body)
-				fmt.Println(string(bodySummary))
 
 				res := PredictResponse{}
 				err := json.Unmarshal(bodySummary, &res)

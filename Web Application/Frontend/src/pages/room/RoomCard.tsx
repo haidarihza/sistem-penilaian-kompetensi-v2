@@ -57,12 +57,7 @@ const RoomCard = ({
             </MenuButton>
             <MenuList>
               <MenuItem onClick={() => handleDeleteConfirm(roomGroup.id)} color="main_blue">
-                <IconButton
-                  aria-label="Delete"
-                  icon={<DeleteIcon />}
-                  colorScheme='white.400'
-                  color="main_blue"
-                  size="sm"/>
+                <DeleteIcon mr="1"/>
                 Delete
               </MenuItem>
             </MenuList>

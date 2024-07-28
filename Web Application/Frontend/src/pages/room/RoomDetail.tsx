@@ -114,6 +114,7 @@ const Detail = ({
     try {
       await reviewRoom(apiContext.axios, room_id, status, note);
       fetch();
+      updateRoomGroup();
     } catch(e) {
       if (e instanceof ApiError) {
         ToastModal(toast, "Error!", e.message, "error");

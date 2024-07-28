@@ -6,6 +6,8 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import Detail from '../pages/room/RoomDetail';
 import InterviewModal from '../pages/room/InterviewModal';
+import RoomCard from '../pages/room/RoomCard';
+import ListView from '../pages/room/ListView';
 import theme from '../Theme';
 
 const mockQuestion = {
@@ -108,5 +110,33 @@ describe('InterviewModal', () => {
     await waitFor(() => {
       expect(true).toBeTruthy()
     });
+  });
+});
+
+describe('RoomCard', () => {
+  test('renders the card', () => {
+    renderWithProviders(
+      <RoomCard
+        roomGroup={mockRoomGroup}
+        handleDeleteConfirm={jest.fn()}
+        role={'INTERVIEWER'}
+      />
+    );
+
+    expect(true).toBeTruthy()
+  });
+});
+
+describe('ListView', () => {
+  test('renders the list view', () => {
+    renderWithProviders(
+      <ListView
+      filteredData={[mockRoomGroup]}
+        role={'INTERVIEWER'}
+        handleDeleteConfirm={jest.fn()}
+      />
+    );
+
+    expect(true).toBeTruthy()
   });
 });
