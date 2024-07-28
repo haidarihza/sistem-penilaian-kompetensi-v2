@@ -28,15 +28,17 @@ type Feedback struct {
 	ID            	string
 	CompetencyID		string
 	Transcript 			string
+	Language 				string
 	Status 					FeedbackStatus
 	LabelResult 		string
 	LabelFeedback		sql.NullString
 }	
 
 type FeedbackRepository interface {
-	Insert(context.Context, []string, []string, []string, []string) error
+	Insert(context.Context, []string, []string, []string, []string, string) error
 	SelectByStatus(context.Context, string) ([]*Feedback, error)
 	UpdateFeedback(context.Context, *Feedback) error
 	UpdateBulkFeedback(context.Context, []string) error
 	IsNoDataToLabel(context.Context) (bool, error)
+	IsDataAvailable(context.Context) (bool, error)
 }

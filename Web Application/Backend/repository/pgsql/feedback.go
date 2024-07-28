@@ -31,18 +31,20 @@ var feedbackQueries = map[string]string{
 	feedbackSelectByStatus: feedbackSelectByStatusQuery,
 	feedbackUpdate: 				feedbackUpdateQuery,
 	feedbackUpdateBulk: 		feedbackUpdateBulkQuery,
+	feedbackIsNoDataToLabel: feedbackIsNoDataToLabelQuery,
+	feedbackIsDataAvailable: feedbackIsDataAvailableQuery,
 }
 
 const feedbackInsert = "feedbackInsert"
 const feedbackInsertQuery = `INSERT INTO
 	"feedback_results"(
-		id, transcript, competency_id, status, label_result
+		id, transcript, competency_id, status, label_result, language
 	) values(
-		UNNEST($1::uuid[]), UNNEST($2::text[]), UNNEST($3::uuid[]), $4, UNNEST($5::uuid[])
+		UNNEST($1::uuid[]), UNNEST($2::text[]), UNNEST($3::uuid[]), $4, UNNEST($5::uuid[]), $6
 	)
 `
 
-func (r *feedbackRepository) Insert(ctx context.Context, feedbackID []string, transcript []string, cID []string, resID []string) error {
+func (r *feedbackRepository) Insert(ctx context.Context, feedbackID []string, transcript []string, cID []string, resID []string, language string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -51,7 +53,7 @@ func (r *feedbackRepository) Insert(ctx context.Context, feedbackID []string, tr
 
 	status := "UNLABELED"
 	_, err = tx.StmtContext(ctx, r.ps[feedbackInsert]).ExecContext(ctx,
-		feedbackID, transcript, cID, status, resID,
+		feedbackID, transcript, cID, status, resID, language,
 	)
 	if err != nil {
 		return err
@@ -133,7 +135,7 @@ func (r *feedbackRepository) UpdateBulkFeedback(ctx context.Context, ids []strin
 const feedbackIsNoDataToLabel = "feedbackIsNoDataToLabel"
 const feedbackIsNoDataToLabelQuery = `SELECT COUNT(*) = 0
 	FROM "feedback_results"
-	WHERE status = 'TO_LABEL'
+	WHERE status = 'TO_LABEL' AND language = 'ENGLISH'
 `
 
 func (r *feedbackRepository) IsNoDataToLabel(ctx context.Context) (bool, error) {
@@ -144,4 +146,20 @@ func (r *feedbackRepository) IsNoDataToLabel(ctx context.Context) (bool, error) 
 	}
 
 	return isNoData, nil
+}
+
+const feedbackIsDataAvailable = "feedbackIsDataAvailable"
+const feedbackIsDataAvailableQuery = `SELECT COUNT(*) > 0
+	FROM "feedback_results"
+	WHERE status = 'UNLABELED' AND language = 'INDONESIAN'
+`
+
+func (r *feedbackRepository) IsDataAvailable(ctx context.Context) (bool, error) {
+	var isData bool
+	err := r.db.QueryRowContext(ctx, feedbackIsDataAvailableQuery).Scan(&isData)
+	if err != nil {
+		return false, err
+	}
+
+	return isData, nil
 }

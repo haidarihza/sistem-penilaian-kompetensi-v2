@@ -107,7 +107,7 @@ const Profile = () => {
         <Box mt="3" display="flex" flexDir="row-reverse">
           <Button bg="main_blue" color="white" _hover={{ bg: "second_blue" }} onClick={onOpenProfile}>
             Ubah Profil
-            <IconButton aria-label="Edit Profile" ml="2" size="xs" icon={<EditIcon/> }/>
+            <EditIcon ml="2"/>
           </Button>
         </Box>
       </Container>
@@ -121,9 +121,9 @@ const Profile = () => {
         <Box mt="3" display="flex" flexDir="row-reverse">
           <Button bg="main_blue" color="white" _hover={{ bg: "second_blue" }} onClick={onOpenPassword}>
             Ubah Password
-            <IconButton aria-label="Edit Password" ml="2" size="xs" icon={<EditIcon/> }/>
+            <EditIcon ml="2"/>
           </Button>
-        </Box>
+          </Box>
       </Container>
     </Layout>
   )
