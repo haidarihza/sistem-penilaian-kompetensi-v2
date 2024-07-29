@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            text-align: center;
+            color: #333333;
+        }
+        .body {
+            margin-top: 20px;
+            color: #333333;
+        }
+        .button {
+            display: block;
+            width: 100px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #40a2d8;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #777777;
+        }
+        a {
+            text-decoration: none;
+        }
+        .link {
+            color: #0b60b0;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="header">Interview {{.Judul}}</h2>
+        <div class="body">
+            <p>Halo {{.NamaInterviewer}},</p>
+            <p>Sehubungan dengan dibuatnya interview untuk kandidat berikut:</p>
+            <p><strong>Nama: </strong>{{.NamaKandidat}}</p>
+            <p><strong>Email: </strong>{{.EmailKandidat}}</p>
+            <p>Dengan detail interview sebagai berikut:</p>
+            <p><strong>Judul: </strong>{{.Judul}}</p>
+            <p><strong>Waktu Mulai: </strong>{{.WaktuMulai}}</p>
+            <p><strong>Waktu Selesai: </strong>{{.WaktuSelesai}}</p>
+            <p>Maka harap untuk segera menambahkan pertanyaan dan kompetensi yang akan digunakan dalam interview tersebut.</p>
+            <a href="{{.URL}}" class="button">Klik disini</a>
+        </div>
+        <div class="footer">
+            <p>Terima kasih,<br/>Tim HireMIF</p>
+        </div>
+    </div>
+</body>
+</html>

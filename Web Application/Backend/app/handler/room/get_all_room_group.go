@@ -43,7 +43,50 @@ func GetAllRoomGroup(roomRepository repository.RoomRepository) http.HandlerFunc 
 			Data: []RoomGroupResponse{},
 		}
 
-		if userCred.Role == repository.Interviewer {
+		if userCred.Role == repository.Hrd {
+			roomGroups, err := roomRepository.SelectAllRoomGroup(r.Context())
+			if err != nil {
+				fmt.Println(err)
+				response.RespondError(w, response.InternalServerError())
+				return
+			}
+
+			for _, roomGroup := range roomGroups {
+				rooms, err := roomRepository.SelectAllRoomByGroupID(r.Context(), roomGroup.ID)
+				if err != nil {
+					fmt.Println(err)
+					response.RespondError(w, response.InternalServerError())
+					return
+				}
+
+				roomResponse := []RoomResponse{}
+				for _, room := range rooms {
+					submission := "-"
+					if room.Submission.Valid {
+						submission = room.Submission.String
+					}
+
+					roomResponse = append(roomResponse, RoomResponse{
+						ID:              room.ID,
+						Title:           room.Title,
+						InterviewerName: room.Interviewer.Name,
+						Start:           room.Start,
+						End:             room.End,
+						Submission:      submission,
+						Status:          string(room.Status),
+					})
+				}
+
+				resp.Data = append(resp.Data, RoomGroupResponse{
+					ID:               roomGroup.ID,
+					Title:            roomGroup.Title,
+					OrgPosition:      roomGroup.OrgPosition,
+					IntervieweeName:  roomGroup.Interviewee.Name,
+					IntervieweeEmail: roomGroup.Interviewee.Email,
+					Room:             roomResponse,
+				})
+			}
+		} else if userCred.Role == repository.Interviewer {
 			roomGroups, err := roomRepository.SelectAllRoomGroupByInterviewerID(r.Context(), userCred.ID)
 			if err != nil {
 				fmt.Println(err)

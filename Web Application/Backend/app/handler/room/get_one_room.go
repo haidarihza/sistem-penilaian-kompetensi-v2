@@ -63,6 +63,7 @@ func GetOneRoom(
 				Description: 			room.Description,
 				Start:       			room.Start,
 				End:         			room.End,
+				RoomGroupID: 			room.RoomGroupID,
 				IsStarted:				room.IsStarted,
 				CurrQuestion:			currQuestion,
 				InterviewerName: 	room.Interviewer.Name,
@@ -81,6 +82,7 @@ func GetOneRoom(
 			return
 		}
 
+		resp.Data.Questions = []question.Question{}
 		for _, qt := range questions {
 			resp.Data.Questions = append(resp.Data.Questions, question.Question{
 				ID:            qt.ID,
@@ -89,7 +91,7 @@ func GetOneRoom(
 				OrgPosition:   qt.OrgPosition,
 			})
 		}
-		if userCred.Role == repository.Interviewer {
+		if userCred.Role == repository.Interviewer || userCred.Role == repository.Hrd {
 			var resultCompetency repository.ResultCompetency
 			var resultQuestion repository.ResultQuestion
 			if resp.Data.Status != "WAITING ANSWER" {
@@ -115,6 +117,7 @@ func GetOneRoom(
 				return
 			}
 
+			resp.Data.Competencies = []competency.Competency{}
 			for _, cp := range competencies {
 				compe := competency.Competency{
 					ID:         	cp.ID,

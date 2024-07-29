@@ -30,6 +30,7 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/room-group/:id" element={<RoomGroupDetail />} />
               <Route path="/room/create" element={<RoomCreate />} />
+              <Route path="/room/edit/:id" element={<RoomCreate />} />
               <Route path="/question" element={<Question />} />
               <Route path="/competency" element={<Competency />} />
               <Route path="/feedback" element={<Feedback />} />

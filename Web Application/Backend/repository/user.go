@@ -11,6 +11,7 @@ type UserRole string
 const (
 	Interviewer = UserRole("INTERVIEWER")
 	Interviewee = UserRole("INTERVIEWEE")
+	Hrd = UserRole("HRD")
 )
 
 func UserRoleMapper(role string) (UserRole, bool) {

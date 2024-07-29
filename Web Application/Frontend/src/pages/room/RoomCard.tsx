@@ -158,7 +158,7 @@ const RoomCard = ({
   </Card>
   )
 
-  return role === "INTERVIEWER" ? interviewerCard : intervieweeCard;
+  return ["INTERVIEWER", "HRD"].includes(role) ? interviewerCard : intervieweeCard;
 }
 
 export default RoomCard;

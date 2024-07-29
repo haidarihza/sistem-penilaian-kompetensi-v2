@@ -32,6 +32,7 @@ var roomQueries = map[string]string{
 	roomInsertRoomGroup:          			roomInsertRoomGroupQuery,
 	roomQuestionsInsert:          			roomQuestionsInsertQuery,
 	roomCompetenciesInsert:       			roomCompetenciesInsertQuery,
+	roomGroupSelectAll:          				roomGroupSelectAllQuery,
 	roomGroupSelectAllByInterviewerID:	roomGroupSelectAllByInterviewerIDQuery,
 	roomGroupSelectAllByIntervieweeID:	roomGroupSelectAllByIntervieweeIDQuery,
 	roomSelectAllByRoomGroupID:				  roomSelectAllByRoomGroupIDQuery,
@@ -122,6 +123,50 @@ func (r *roomRepository) Insert(
 	return nil
 }
 
+
+func (r *roomRepository) UpdateQuestionsAndCompetenciesRoom(
+	ctx context.Context,
+	roomId string,
+	questions []string,
+	competencies []string,
+	status repository.RoomStatus) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// update status
+	var submission *string
+	_, err = tx.StmtContext(ctx, r.ps[roomUpdateStatus]).ExecContext(ctx,
+		roomId, status, submission,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.StmtContext(ctx, r.ps[roomQuestionsInsert]).ExecContext(ctx,
+		roomId, questions,
+	)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.StmtContext(ctx, r.ps[roomCompetenciesInsert]).ExecContext(ctx,
+		roomId, competencies,
+	)
+	if err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 const roomInsertRoomGroup = "roomInsertRoomGroup"
 const roomInsertRoomGroupQuery = `INSERT INTO
 	room_groups(
@@ -153,6 +198,39 @@ func (r *roomRepository) InsertRoomGroup(
 	}
 
 	return nil
+}
+
+const roomGroupSelectAll = "roomGroupSelectAll"
+const roomGroupSelectAllQuery = `SELECT
+	rg.id, rg.title, rg.org_position, u.email, u.name
+	FROM room_groups rg
+	INNER JOIN "users" u ON rg.interviewee_id = u.id
+`
+
+func (r *roomRepository) SelectAllRoomGroup(ctx context.Context) ([]*repository.RoomGroup, error) {
+	rows, err := r.ps[roomGroupSelectAll].QueryContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	roomGroups := []*repository.RoomGroup{}
+	for rows.Next() {
+		roomGroup := &repository.RoomGroup{}
+		interviewee := &repository.User{}
+		err := rows.Scan(&roomGroup.ID, &roomGroup.Title, &roomGroup.OrgPosition,
+			&interviewee.Email, &interviewee.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		roomGroup.Interviewee = interviewee
+
+		roomGroups = append(roomGroups, roomGroup)
+	}
+
+	return roomGroups, nil
 }
 
 const roomGroupSelectAllByInterviewerID = "roomGroupSelectAllByInterviewerID"

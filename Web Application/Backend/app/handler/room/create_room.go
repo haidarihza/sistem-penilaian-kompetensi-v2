@@ -32,6 +32,7 @@ type Room struct {
 	Submission       string                  `json:"submission,omitempty"`
 	Status           string                  `json:"status,omitempty"`
 	Note             string                  `json:"note,omitempty"`
+	RoomGroupID			 string									 `json:"room_group_id,omitempty"`
 	IntervieweeEmail string         	       `json:"interviewee_email,omitempty"`
 	IntervieweeName  string                  `json:"interviewee_name,omitempty"`
 	IntervieweePhone string                  `json:"interviewee_phone,omitempty"`
@@ -41,8 +42,8 @@ type Room struct {
 	PrepationTime		 int                     `json:"preparation_time,omitempty"`
 	QuestionsID      []string                `json:"questions_id,omitempty"`
 	CompetenciesID   []string                `json:"competencies_id,omitempty"`
-	Questions        []question.Question     `json:"questions,omitempty"`
-	Competencies     []competency.Competency `json:"competencies,omitempty"`
+	Questions        []question.Question     `json:"questions"`
+	Competencies     []competency.Competency `json:"competencies"`
 }
 
 type RoomCreate struct {
@@ -114,7 +115,7 @@ func CreateRoom(roomRepository repository.RoomRepository, userRepository reposit
 			PrepationTime: req.PrepationTime,
 		}
 
-		go func(ctx context.Context, room repository.Room, interviewee repository.User) {
+		go func(ctx context.Context, room repository.Room, interviewer, interviewee repository.User) {
 			auth := smtp.PlainAuth(cfg.SenderIdentity, cfg.SenderEmail, cfg.SenderPassword, cfg.AddressHost)
 
 			cwd, err := os.Getwd()
@@ -122,7 +123,7 @@ func CreateRoom(roomRepository repository.RoomRepository, userRepository reposit
 					fmt.Println("Error getting current working directory:", err)
 					return
 			}
-			tmplPath := filepath.Join(cwd, "/email_templates/create_room_template.html")
+			tmplPath := filepath.Join(cwd, "/email_templates/create_room_hrd_notif_to_interviewer.html")
 
 			tmpl, err := template.ParseFiles(tmplPath)
 			if err != nil {
@@ -148,17 +149,21 @@ func CreateRoom(roomRepository repository.RoomRepository, userRepository reposit
 			localTimeEnd := timeEnd.Local()
 			formattedTimeEnd := localTimeEnd.Format("02 January 2006 15:04:05 MST")
 	
-			url := fmt.Sprintf("http://%s:%s/room/%s", cfg.FEHost, cfg.FEPort, room.ID)
+			url := fmt.Sprintf("http://%s:%s/room/edit/%s", cfg.FEHost, cfg.FEPort, room.ID)
 
 			data := struct {
 				Judul template.HTML
-				Nama template.HTML
+				NamaInterviewer template.HTML
+				NamaKandidat template.HTML
+				EmailKandidat template.HTML
 				WaktuMulai template.HTML
 				WaktuSelesai template.HTML
 				URL template.HTML
 			}{
 				Judul: template.HTML(room.Title),
-				Nama: template.HTML(interviewee.Name),
+				NamaInterviewer: template.HTML(interviewer.Name),
+				NamaKandidat: template.HTML(interviewee.Name),
+				EmailKandidat: template.HTML(interviewee.Email),
 				WaktuMulai: template.HTML(formattedTimeStart),
 				WaktuSelesai: template.HTML(formattedTimeEnd),
 				URL: template.HTML(url),
@@ -171,13 +176,13 @@ func CreateRoom(roomRepository repository.RoomRepository, userRepository reposit
 					return
 			}
 
-			content := "Subject: Interview Invitation\nMIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n" + renderedContent.String()
-			err = smtp.SendMail(fmt.Sprintf("%s:%d", cfg.AddressHost, cfg.AddressPort), auth, cfg.SenderEmail, []string{interviewee.Email}, []byte(content))
+			content := "Subject: Interview Notification\nMIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n" + renderedContent.String()
+			err = smtp.SendMail(fmt.Sprintf("%s:%d", cfg.AddressHost, cfg.AddressPort), auth, cfg.SenderEmail, []string{interviewer.Email}, []byte(content))
 			if err != nil {
 					fmt.Println("Error sending email:", err)
 					return
 			}
-		}(context.Background(), *newRoom, *interviewee)
+		}(context.Background(), *newRoom, *interviewer, *interviewee)
 
 		if err := roomRepository.Insert(r.Context(), newRoom, req.QuestionsID, req.CompetenciesID); err != nil {
 			fmt.Println(err)

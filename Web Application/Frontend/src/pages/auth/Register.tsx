@@ -33,7 +33,7 @@ const Register = () => {
     }
   }, []);
 
-  const roleList: Array<string> = ["INTERVIEWEE", "INTERVIEWER"];
+  const roleList: Array<string> = ["INTERVIEWEE", "INTERVIEWER", "HRD"];
 
   const [name, setName] = useState<string>("");
   const [phone, setPhone] = useState<string>("");

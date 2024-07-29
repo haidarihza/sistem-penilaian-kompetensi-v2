@@ -3,7 +3,7 @@ import Layout from "../../components/Layout";
 import { ApiContext } from "../../utils/context/api";
 import { AuthContext } from "../../utils/context/auth";
 import { arrayMove } from 'react-sortable-hoc';
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Box,
   Button,
   Flex,
@@ -35,7 +35,7 @@ import { Box,
   AutoCompleteList,
   AutoCompleteTag,
 } from "@choc-ui/chakra-autocomplete";
-import { createRoom, createRoomGroup } from "../../api/room";
+import { createRoom, createRoomGroup, getOneRoom, getOneRoomGroup, updateQuestionsCompetencies } from "../../api/room";
 import { ApiError } from "../../interface/api";
 import { Question } from "../../interface/question";
 import { Competency } from "../../interface/competency";
@@ -53,9 +53,20 @@ import SortableTableQuestion from "./SortableTableQuestion";
 import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
 import { orgPosition, languageOptions } from "../../utils/utils";
 
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 const CreateRoom = () => {
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
+  const params = useParams();
   const navigate = useNavigate();
   const toast = useToast();
   const location = useLocation();
@@ -78,6 +89,7 @@ const CreateRoom = () => {
   });
 
   const [roomGroup, setRoomGroup] = useState<RoomGroupCreate>({
+    title: dataRoomGroup?.title || "",
     id: dataRoomGroup?.id || "",
     org_position: dataRoomGroup?.org_position || "",
     interviewee_email: dataRoomGroup?.interviewee_email || [],
@@ -99,10 +111,46 @@ const CreateRoom = () => {
   const role = authContext.auth?.role!;
   
   useEffect(() => {
-    if (role !== "INTERVIEWER") {
+    if (!["INTERVIEWER", "HRD"].includes(role)) {
       navigate("/");
     }
   }, [role, navigate]);
+
+  const fetchRoomAndRoomGroup = async () => {
+    try {
+      if (params.id) {
+        const roomData = await getOneRoom(apiContext.axios, params.id);
+        const roomGroupData = await getOneRoomGroup(apiContext.axios, roomData.room_group_id);
+        const intervieweeEmail = roomGroupData.interviewee_email ? [roomGroupData.interviewee_email] : [];
+        setRoomGroup({
+          id: roomGroupData.id,
+          title: roomGroupData.title,
+          org_position: roomGroupData.org_position,
+          interviewee_email: intervieweeEmail,
+          room: {
+            id: roomData.id,
+            title: roomData.title,
+            description: roomData.description,
+            start: formatDateTime(roomData.start),
+            end: formatDateTime(roomData.end),
+            interviewer_email: roomData.interviewer_email,
+            language: roomData.language,
+            preparation_time: roomData.preparation_time,
+            questions_id: [],
+            competencies_id: [],
+            questions: roomData.questions,
+            competencies: roomData.competencies,          
+          }
+        });
+      }
+    } catch(e) {
+      if (e instanceof ApiError) {
+        ToastModal(toast, "Error!", e.message, "error");
+      } else {
+        ToastModal(toast, "Error!", "Terjadi kesalahan pada sistem", "error");
+      }
+    }
+  }
 
   useEffect(() => {
     const fetchQ = async () => {
@@ -149,7 +197,10 @@ const CreateRoom = () => {
     fetchQ();
     fetchC();
     fetchEmails();
-  }, [apiContext.axios, toast]);
+    if (params.id) {
+      fetchRoomAndRoomGroup();
+    }
+  }, [apiContext.axios, toast, params.id]);
 
   useEffect(() => {
     const handleFilterEmail = () => {
@@ -188,7 +239,7 @@ const CreateRoom = () => {
 
   const roomCheck = (room: RoomCreate) => {
     if (room.title === "" || room.description === "" || room.start === "" || room.end === "" || room.language === "" || room.preparation_time === 0 ||
-        room.interviewer_email === "" || room.questions.length === 0 || room.competencies.length === 0) {
+        room.interviewer_email === "") {
       return false;
     }
     return true;
@@ -214,6 +265,12 @@ const CreateRoom = () => {
         return;
       }
 
+      if (params.id !== "") {
+        await updateQuestionsCompetencies(apiContext.axios, roomGroup);
+        ToastModal(toast, "Success!", "Ruangan interview berhasil diupdate", "success");
+        navigate("/");
+        return;
+      }
       if (roomGroup.id !== "") {
         await createRoom(apiContext.axios, roomGroup.room, roomGroup.id, roomGroup.interviewee_email[0]);
         ToastModal(toast, "Success!", "Ruangan interview berhasil dibuat", "success");
@@ -268,12 +325,16 @@ const CreateRoom = () => {
       }}>
         <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Informasi Ruangan</Text>
         <Box bg="white" rounded="md" p="3">
+        <FormControl mb="4">
+            <FormLabel>Nama Ruangan</FormLabel>
+            <Input value={roomGroup.title} placeholder="Nama Ruangan Otomatis Dibuat oleh Sistem" isDisabled={true}/>
+          </FormControl>
           <FormControl isInvalid={isSubmit && roomGroup.interviewee_email.length === 0} mb="4">
             <FormLabel>Email Kandidat</FormLabel>
             <AutoComplete
               multiple
               openOnFocus
-              defaultValues={roomGroup.interviewee_email}
+              values={roomGroup.interviewee_email}
               onChange={vals => setRoomGroup({...roomGroup, interviewee_email: vals})}
             >
               <AutoCompleteInput
@@ -321,29 +382,29 @@ const CreateRoom = () => {
         <Box bg="white" rounded="md" p="3">
           <FormControl isInvalid={isSubmit && roomGroup.room.title === ""} mb="4">
             <FormLabel>Nama Interview</FormLabel>
-            <Input value={roomGroup.room.title} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, title: e.target.value}})} placeholder="Nama Interview" />
+            <Input value={roomGroup.room.title} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, title: e.target.value}})} placeholder="Nama Interview" isDisabled={params.id !== ""}/>
             <FormErrorMessage>Judul ruangan harus diisi</FormErrorMessage>
           </FormControl>
           <FormControl isInvalid={isSubmit && roomGroup.room.description === ""} mb="4">
             <FormLabel>Deskripsi</FormLabel>
-            <Textarea value={roomGroup.room.description} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, description: e.target.value}})} placeholder="Deskripsi Interview" />
+            <Textarea value={roomGroup.room.description} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, description: e.target.value}})} placeholder="Deskripsi Interview" isDisabled={params.id !== ""}/>
             <FormErrorMessage>Deskripsi harus diisi</FormErrorMessage>
           </FormControl>
           <Box display="flex" flexDir="row" justifyContent="space-between">
             <FormControl isInvalid={isSubmit && roomGroup.room.start === ""} mb="4" pr="10">
               <FormLabel>Waktu Mulai</FormLabel>
-              <Input type="datetime-local" value={roomGroup.room.start} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, start: e.target.value}})} placeholder="Waktu Mulai" />
+              <Input type="datetime-local" value={roomGroup.room.start} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, start: e.target.value}})} placeholder="Waktu Mulai" isDisabled={params.id !== ""}/>
               <FormErrorMessage>Waktu Mulai harus diisi</FormErrorMessage>
             </FormControl>
             <FormControl isInvalid={isSubmit && roomGroup.room.end === ""} mb="4" pl="10">
               <FormLabel>Waktu Selesai</FormLabel>
-              <Input type="datetime-local" value={roomGroup.room.end} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, end: e.target.value}})} placeholder="Waktu Selesai" />
+              <Input type="datetime-local" value={roomGroup.room.end} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, end: e.target.value}})} placeholder="Waktu Selesai" isDisabled={params.id !== ""}/>
               <FormErrorMessage>Waktu Selesai harus diisi</FormErrorMessage>
             </FormControl>
           </Box>
           <FormControl isInvalid={isSubmit && roomGroup.room.interviewer_email === ""} mb="4">
             <FormLabel>Interviewer</FormLabel>
-            <Select placeholder="Pilih Interviewer" value={roomGroup.room.interviewer_email} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, interviewer_email: e.target.value } })}>
+            <Select placeholder="Pilih Interviewer" value={roomGroup.room.interviewer_email} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, interviewer_email: e.target.value } })} isDisabled={params.id !== ""}>
               {interviewerEmails.map((val, i) => (
                 <option key={i} value={val.email}>{val.name}</option>
               ))}
@@ -352,7 +413,7 @@ const CreateRoom = () => {
           </FormControl>
           <FormControl isInvalid={isSubmit && roomGroup.room.language === ""} mb="4">
             <FormLabel>Bahasa</FormLabel>
-            <Select placeholder="Pilih Bahasa" value={roomGroup.room.language} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, language: e.target.value } })}>
+            <Select placeholder="Pilih Bahasa" value={roomGroup.room.language} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, language: e.target.value } })} isDisabled={params.id !== ""}>
               {languageOptions.map((val, i) => (
                 <option key={i} value={val.value}>{val.label}</option>
               ))}
@@ -361,7 +422,7 @@ const CreateRoom = () => {
           </FormControl>
           <FormControl isInvalid={isSubmit && roomGroup.room.preparation_time === 0} mb="4">
             <FormLabel>Waktu Persiapan (detik)</FormLabel>
-              <NumberInput value={roomGroup.room.preparation_time} onChange={(valueAsString: string, valueAsNumber: number) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, preparation_time: valueAsNumber } })} min={1}>
+              <NumberInput value={roomGroup.room.preparation_time} onChange={(valueAsString: string, valueAsNumber: number) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, preparation_time: valueAsNumber } })} min={1} isDisabled={params.id !== ""}>
                 <NumberInputField />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
@@ -372,55 +433,59 @@ const CreateRoom = () => {
           </FormControl>
         </Box>
         {/* ************************************* */}
-        <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Kompetensi yang dinilai</Text>
-        <TableContainer bg="white" rounded="md">
-          <Flex justifyContent="space-between" p="5">
-            <IconButton size="sm" aria-label="Add" bg="main_blue" color="white" icon={<AddIcon />} onClick={handleClickAddCompetency} />
-          </Flex>
-          <Table variant="simple" colorScheme="blue">
-          <Thead>
-            <Tr>
-              <Th textTransform="capitalize" w="5%"></Th>
-              <Th textTransform="capitalize" w="20%">Kompetensi</Th>
-              <Th textTransform="capitalize" textAlign="center" w="50%">Deskripsi</Th>
-              <Th textTransform="capitalize" textAlign="center">Aksi</Th>
-            </Tr>
-          </Thead>
-            <SortableTableCompetency
-              items={roomGroup.room.competencies}
-              onSortEnd={onSortEndCompetency}
-              handleDeleteCompetency={handleDeleteCompetency}
-              handleSelectedCompetency={handledSeletectedCompetency}
-            />
-          </Table>
-        </TableContainer>
-        {/* ****************************************** */}
-        <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Pertanyaan</Text>
-        <TableContainer bg="white" rounded="md">
-          <Flex justifyContent="space-between" p="5">
-            <IconButton size="sm" aria-label="Add" bg="main_blue" color="white" icon={<AddIcon />} onClick={handleClickAddQuestion} />
-          </Flex>
-          <Table variant="simple" colorScheme="blue">
+        {role === "INTERVIEWER" ? (
+          <>
+          <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Kompetensi yang dinilai</Text>
+          <TableContainer bg="white" rounded="md">
+            <Flex justifyContent="space-between" p="5">
+              <IconButton size="sm" aria-label="Add" bg="main_blue" color="white" icon={<AddIcon />} onClick={handleClickAddCompetency} />
+            </Flex>
+            <Table variant="simple" colorScheme="blue">
             <Thead>
               <Tr>
-                <Th w="5%"></Th>
-                <Th textTransform="capitalize" w="40%">Pertanyaan</Th>
-                <Th textTransform="capitalize" textAlign="center">Durasi</Th>
-                <Th textTransform="capitalize" textAlign="center">Lowongan Jabatan</Th>
-                <Th textTransform="capitalize" w="30%" textAlign="center">Kategori Kompetensi</Th>
+                <Th textTransform="capitalize" w="5%"></Th>
+                <Th textTransform="capitalize" w="20%">Kompetensi</Th>
+                <Th textTransform="capitalize" textAlign="center" w="50%">Deskripsi</Th>
                 <Th textTransform="capitalize" textAlign="center">Aksi</Th>
               </Tr>
             </Thead>
-              <SortableTableQuestion
-                items={roomGroup.room.questions}
-                competencies={roomGroup.room.competencies}
-                onSortEnd={onSortEndQuestion}
-                handleDeleteQuestion={handleDeleteQuestion}
-                competencyCollections={competencyCollections}
+              <SortableTableCompetency
+                items={roomGroup.room.competencies}
+                onSortEnd={onSortEndCompetency}
+                handleDeleteCompetency={handleDeleteCompetency}
+                handleSelectedCompetency={handledSeletectedCompetency}
               />
-          </Table>
-        </TableContainer>
-        <Button bg="main_blue" color="white" type="submit" mt="4">Buat Ruangan</Button>
+            </Table>
+          </TableContainer>
+          {/* ****************************************** */}
+          <Text mt="3" as="h2" fontSize="lg" fontWeight="semibold">Pertanyaan</Text>
+          <TableContainer bg="white" rounded="md">
+            <Flex justifyContent="space-between" p="5">
+              <IconButton size="sm" aria-label="Add" bg="main_blue" color="white" icon={<AddIcon />} onClick={handleClickAddQuestion} />
+            </Flex>
+            <Table variant="simple" colorScheme="blue">
+              <Thead>
+                <Tr>
+                  <Th w="5%"></Th>
+                  <Th textTransform="capitalize" w="40%">Pertanyaan</Th>
+                  <Th textTransform="capitalize" textAlign="center">Durasi</Th>
+                  <Th textTransform="capitalize" textAlign="center">Lowongan Jabatan</Th>
+                  <Th textTransform="capitalize" w="30%" textAlign="center">Kategori Kompetensi</Th>
+                  <Th textTransform="capitalize" textAlign="center">Aksi</Th>
+                </Tr>
+              </Thead>
+                <SortableTableQuestion
+                  items={roomGroup.room.questions}
+                  competencies={roomGroup.room.competencies}
+                  onSortEnd={onSortEndQuestion}
+                  handleDeleteQuestion={handleDeleteQuestion}
+                  competencyCollections={competencyCollections}
+                />
+            </Table>
+          </TableContainer>
+          </>
+        ) : ( <></> )}
+        <Button bg="main_blue" color="white" type="submit" mt="4">{params.id !== "" ? "Update Ruangan" : "Buat Ruangan"}</Button>
       </Box>
     </Layout>
   )

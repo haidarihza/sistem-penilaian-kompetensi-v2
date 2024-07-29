@@ -1,6 +1,8 @@
 import Layout from "../../components/Layout";
 import { useContext, useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { ApiContext } from "../../utils/context/api";
+import { AuthContext } from "../../utils/context/auth";
 import { createQuestion, deleteQuestion, getAllQuestion, updateQuestion, getQuestionLabelOptions } from "../../api/question";
 import { Question, QuestionLabel, QuestionLabelOptions } from "../../interface/question";
 import { ApiError } from "../../interface/api";
@@ -34,8 +36,12 @@ import ToastModal from "../../components/ToastModal";
 
 const Index = () => {
   const apiContext = useContext(ApiContext);
+  const authContext = useContext(AuthContext);
   const toast = useToast();
   const cancelRef = useRef(null);
+  const navigate = useNavigate();
+
+  const role = authContext.auth?.role!;
 
   const [data, setData] = useState<Array<Question>>([] as Array<Question>);
   const [filteredData, setFilteredData] = useState<Array<Question>>([] as Array<Question>);
@@ -53,6 +59,12 @@ const Index = () => {
   const { isOpen:isOpenModal, onOpen:onOpenModal, onClose:onCloseModal } = useDisclosure();
   const { isOpen: isOpenDelete, onOpen: onOpenDelete, onClose: onCloseDelete } = useDisclosure();
 
+  useEffect(() => {
+    if (!["INTERVIEWER", "HRD"].includes(role)) {
+      navigate("/");
+    }
+  }, [role, navigate]);
+    
   const fetch = async () => {
     try {
       const questions = await getAllQuestion(apiContext.axios);

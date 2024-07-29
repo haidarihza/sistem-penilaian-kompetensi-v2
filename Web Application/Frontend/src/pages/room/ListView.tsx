@@ -42,14 +42,14 @@ const Row = ({
   }
   return (
   <Tr key={roomGroup.id} _hover={{ bg: "gray.100" }} onDoubleClick={handleClicked}>
-    <Td textAlign="center" w={role === "INTERVIEWER" ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">{roomGroup.title}</Td>
-    {role === "INTERVIEWER" &&
+    <Td textAlign="center" w={["INTERVIEWER", "HRD"].includes(role) ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">{roomGroup.title}</Td>
+    {["INTERVIEWER", "HRD"].includes(role) &&
       <Td textAlign="center" w="15%" pt="1" pb="1" fontSize="sm">{roomGroup.interviewee_name}</Td>
     }
-    <Td textAlign="center" w={role === "INTERVIEWER" ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">{formatDateTime(latest_room.start)}</Td>
-    <Td textAlign="center" w={role === "INTERVIEWER" ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">{formatDateTime(latest_room.end)}</Td>
-    <Td textAlign="center" w={role === "INTERVIEWER" ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">{latest_room.submission === "-" ? "-" : formatDateTime(latest_room.submission)}</Td>
-    <Td textAlign="center" w={role === "INTERVIEWER" ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">
+    <Td textAlign="center" w={["INTERVIEWER", "HRD"].includes(role) ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">{formatDateTime(latest_room.start)}</Td>
+    <Td textAlign="center" w={["INTERVIEWER", "HRD"].includes(role) ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">{formatDateTime(latest_room.end)}</Td>
+    <Td textAlign="center" w={["INTERVIEWER", "HRD"].includes(role) ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">{latest_room.submission === "-" ? "-" : formatDateTime(latest_room.submission)}</Td>
+    <Td textAlign="center" w={["INTERVIEWER", "HRD"].includes(role) ? "15%" : "20%"} pt="1" pb="1" fontSize="sm">
       <Box
         display="flex"
         alignItems="center"
@@ -62,7 +62,7 @@ const Row = ({
         <Text fontSize="sm" fontWeight="semibold" color="main_blue" pl="1" pr="1">{latest_room.status}</Text>
       </Box>
     </Td>
-    {role === "INTERVIEWER" &&
+    {role === "HRD" &&
       <Td textAlign="center" pt="1" pb="1" fontSize="sm">
         <Menu placement="left-start">
           <MenuButton as={IconButton} colorScheme="white.400" color="main_blue" icon={<BsThreeDotsVertical />}>
@@ -149,7 +149,7 @@ const ListView = ({
     </TableContainer>
   )
 
-  return role === "INTERVIEWER" ? interviewerList : intervieweeList;
+  return ["INTERVIEWER", "HRD"].includes(role) ? interviewerList : intervieweeList;
 }
 
 export default ListView;

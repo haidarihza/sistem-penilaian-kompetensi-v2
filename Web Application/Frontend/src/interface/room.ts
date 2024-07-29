@@ -24,6 +24,7 @@ export interface RoomDetail {
   id: string,
   title: string,
   description: string,
+  room_group_id: string,
   interviewer_name: string,
   interviewer_email: string,
   language: string,
@@ -41,6 +42,7 @@ export interface RoomDetail {
 
 export interface RoomGroupCreate {
   id: string,
+  title: string,
   org_position: string,
   interviewee_email: Array<string>,
   room: RoomCreate

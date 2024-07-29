@@ -21,7 +21,6 @@ import {
   Textarea, 
   Heading,
   Stack,
-  Icon,
   Divider,
   useToast,
   IconButton,
@@ -46,6 +45,7 @@ import DetailQuestionModal from "./DetailQuestionModal";
 import { Competency, CompetencyLevel } from "../../interface/competency";
 import ToastModal from "../../components/ToastModal";
 import { languageOptions, statusColors, formatDateTime } from "../../utils/utils";
+import { useParams } from "react-router-dom";
 
 interface Props {
   roomGroup: RoomGroup;
@@ -186,7 +186,7 @@ const Detail = ({
         competency={selectedCompetency}
         handleSubmit={async () => {}}
       />
-      {role === "INTERVIEWER" ? (
+      {["INTERVIEWER", "HRD"].includes(role) ? (
         <Box bg="white" rounded="md" p="3">
           <Box mb="6" mt="2" display="flex" alignItems="center" justifyContent="space-between">
             <Menu placement="bottom-start">

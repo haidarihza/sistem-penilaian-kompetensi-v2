@@ -1,6 +1,8 @@
 import Layout from "../../components/Layout";
 import { useContext, useEffect, useState } from "react";
 import { ApiContext } from "../../utils/context/api";
+import { AuthContext } from "../../utils/context/auth";
+import { useNavigate } from "react-router-dom";
 import { getAllFeedback, updateFeedback } from "../../api/feedback";
 import { getAllCompetency } from "../../api/competency";
 import { Feedback } from "../../interface/feedback";
@@ -26,7 +28,11 @@ import DetailFeedbackModal from "./DetailFeedbackModal";
 
 const Index = () => {
   const apiContext = useContext(ApiContext);
+  const authContext = useContext(AuthContext);
   const toast = useToast();
+  const navigate = useNavigate();
+
+  const role = authContext.auth?.role!;
 
   const [data, setData] = useState<Array<Feedback>>([] as Array<Feedback>);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -47,6 +53,11 @@ const Index = () => {
   } as Competency);
   const { isOpen:isOpenModal, onOpen:onOpenModal, onClose:onCloseModal } = useDisclosure();
 
+  useEffect(() => {
+    if (role !== "HRD") {
+      navigate("/");
+    }
+  }, [role, navigate]);
 
   const fetch = async () => {
     try {

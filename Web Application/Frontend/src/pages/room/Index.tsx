@@ -171,7 +171,7 @@ const Index = () => {
                       value={searchTerm} 
                       onChange={(e) => setSearchTerm(e.target.value)} 
                     />
-                    {role === "INTERVIEWER" && (
+                    {["INTERVIEWER", "HRD"].includes(role!) && (
                       <Button bg="main_blue" color="white" mr="4" onClick={() => navigate("/room/create")}>Buat Ruangan</Button>   
                     )}
                   </Box>

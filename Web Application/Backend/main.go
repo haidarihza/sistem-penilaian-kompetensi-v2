@@ -80,7 +80,7 @@ func main() {
 
 	authMiddleware := middleware.Auth(jwtImpl)
 
-	roleInterviewerMiddleware := middleware.RBAC(repository.Interviewer)
+	roleInterviewerMiddleware := middleware.RBAC(repository.Interviewer, repository.Hrd)
 
 	logMiddleware := middleware.LogMiddleware
 	corsMiddleware := cors.Handler(cors.Options{
@@ -142,6 +142,7 @@ func main() {
 		r.With(roleInterviewerMiddleware).Post("/", roomhandler.CreateRoom(roomRepository, userRepository, cfg))
 		r.With(roleInterviewerMiddleware).Post("/group", roomhandler.CreateRoomGroup(roomRepository, userRepository, cfg))
 		r.With(roleInterviewerMiddleware).Post("/{id}/review", roomhandler.Review(roomRepository))
+		r.With(roleInterviewerMiddleware).Post("/update-questions-competencies", roomhandler.UpdateQuestionsAndCompetenciesRoom(roomRepository, userRepository, cfg))
 		r.With(roleInterviewerMiddleware).Delete("/{id}", roomhandler.Delete(roomRepository))
 	})
 

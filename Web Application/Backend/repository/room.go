@@ -74,6 +74,8 @@ type QuestionInRoom struct {
 type RoomRepository interface {
 	InsertRoomGroup(context.Context, *RoomGroup) error
 	Insert(context.Context, *Room, []string, []string) error
+	UpdateQuestionsAndCompetenciesRoom(context.Context, string, []string, []string, RoomStatus) error
+	SelectAllRoomGroup(context.Context) ([]*RoomGroup, error)
 	SelectAllRoomGroupByInterviewerID(context.Context, string) ([]*RoomGroup, error)
 	SelectAllRoomGroupByIntervieweeID(context.Context, string) ([]*RoomGroup, error)
 	SelectAllRoomByGroupID(context.Context, string) ([]*Room, error)

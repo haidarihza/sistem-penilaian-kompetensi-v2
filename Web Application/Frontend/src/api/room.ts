@@ -1,5 +1,5 @@
 import { AxiosInstance, isAxiosError } from "axios";
-import { RoomGroup, RoomAll, RoomDetail, RoomCreate } from "../interface/room";
+import { RoomGroup, RoomAll, RoomDetail, RoomCreate, RoomGroupCreate } from "../interface/room";
 import { ApiError } from "../interface/api";
 import { storage } from "./firebaseStorage";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -270,6 +270,32 @@ export async function deleteRoom(
 ): Promise<void> {
   try {
     await axios.delete(`/room/${id}`);
+  } catch (e) {
+    if (isAxiosError(e)) {
+      throw new ApiError(e.response?.data.message ? 
+        e.response?.data.message : "Something Went Wrong");
+    }
+
+    throw new ApiError("Something Went Wrong");
+  }
+}
+
+export async function updateQuestionsCompetencies(
+  axios: AxiosInstance,
+  roomGroup: RoomGroupCreate
+) : Promise<void> {
+  try {
+    await axios.post(`/room/update-questions-competencies`, {
+      id: roomGroup.room.id,
+      title: roomGroup.room.title,
+      description: roomGroup.room.description,
+      start: new Date(roomGroup.room.start),
+      end: new Date(roomGroup.room.end),
+      interviewer_email: roomGroup.room.interviewer_email,
+      interviewee_email: roomGroup.interviewee_email[0],
+      questions_id: roomGroup.room.questions.map((question) => question.id),
+      competencies_id: roomGroup.room.competencies.map((competency) => competency.id),
+    });
   } catch (e) {
     if (isAxiosError(e)) {
       throw new ApiError(e.response?.data.message ? 

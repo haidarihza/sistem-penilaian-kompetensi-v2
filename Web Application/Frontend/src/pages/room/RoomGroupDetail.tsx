@@ -67,7 +67,7 @@ const RoomGroupDetail = () => {
     <Layout>
       <Box display="flex" flexDir="row" alignItems="center" justifyContent="space-between">
         <Text as="h1" fontSize="2xl" fontWeight="semibold">{data?.title}</Text>
-        {role === "INTERVIEWER" && getLatestRoom(data!).status === "ACCEPTED" && (
+        {role === "HRD" && getLatestRoom(data!).status === "ACCEPTED" && (
           <Button
           bg="main_blue"
           color="white"

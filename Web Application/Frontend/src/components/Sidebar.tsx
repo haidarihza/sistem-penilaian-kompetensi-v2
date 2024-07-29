@@ -61,30 +61,35 @@ interface Props {
 const Sidebar = ({ role, logout } : Props) => {
   const location = useLocation();
 
-  const sideList = role === "INTERVIEWER" ? [{
-    name: "Dashboard",
-    url: "/",
-    icon: FiHome
-  },
-  {
-    name: "Bank Pertanyaan",
-    url: "/question",
-    icon: LuFileQuestion
-  },
-  {
-    name: "Kompetensi",
-    url: "/competency",
-    icon: GiProgression
-  },
-  {
-    name: "Umpan Balik",
-    url: "/feedback",
-    icon: VscFeedback
-  }] : [{
-    name: "Dashboard",
-    url: "/",
-    icon: FiHome
-  },];
+  const sideList = ["INTERVIEWER", "HRD"].includes(role) ? [
+    {
+      name: "Dashboard",
+      url: "/",
+      icon: FiHome
+    },
+    {
+      name: "Bank Pertanyaan",
+      url: "/question",
+      icon: LuFileQuestion
+    },
+    {
+      name: "Kompetensi",
+      url: "/competency",
+      icon: GiProgression
+    },
+    ...(role === "HRD" ? [{
+      name: "Umpan Balik",
+      url: "/feedback",
+      icon: VscFeedback
+    }] : [])
+  ] : 
+  [
+    {
+      name: "Dashboard",
+      url: "/",
+      icon: FiHome
+    }
+  ];
 
   const secondList = [{
     name: "Profil",
