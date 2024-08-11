@@ -133,7 +133,7 @@ async def get_to_label_data(settings: Annotated[Settings, Depends(get_settings)]
         #     scores.append(score)
         # scores = torch.cat(scores)  # Concatenate the scores, consider for scores of different sizes (of competence numebr in set)
 
-        scores = bayesian_model(transcripts, competence_sets, k=settings.al_bayesian_samples)
+        scores = bayesian_model(transcripts, competence_sets, k=settings.al_bayesian_samples, tokenizer_padding="max_length")
         log_scores = torch.log(scores)
         batch = get_powerbald_batch(log_scores, batch_size=settings.al_batch_size)
 
