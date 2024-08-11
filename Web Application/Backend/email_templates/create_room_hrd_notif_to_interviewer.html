@@ -48,7 +48,7 @@
 </head>
 <body>
     <div class="container">
-        <h2 class="header">Interview {{.Judul}}</h2>
+        <h2 class="header">{{.Judul}}</h2>
         <div class="body">
             <p>Halo {{.NamaInterviewer}},</p>
             <p>Sehubungan dengan dibuatnya interview untuk kandidat berikut:</p>
@@ -59,7 +59,7 @@
             <p><strong>Waktu Mulai: </strong>{{.WaktuMulai}}</p>
             <p><strong>Waktu Selesai: </strong>{{.WaktuSelesai}}</p>
             <p>Maka harap untuk segera menambahkan pertanyaan dan kompetensi yang akan digunakan dalam interview tersebut.</p>
-            <a href="{{.URL}}" class="button">Klik disini</a>
+            <div class="button"><a style="color:#ffffff;text-decoration:underline;" href="{{.URL}}">Klik disini</a></div>
         </div>
         <div class="footer">
             <p>Terima kasih,<br/>Tim HireMIF</p>

@@ -144,7 +144,7 @@ const Index = () => {
                 </Tr>
               </Thead>
               <Tbody>
-              {data.map((val) => (
+              {data?.map((val) => (
                   <Tr key={val.id}>
                     <Td w="20%">{competencies.find((competency) => competency.id === val.competency_id)?.competency}</Td>
                     <Td w="50%" whiteSpace="normal" overflow="hidden" textOverflow="ellipsis">

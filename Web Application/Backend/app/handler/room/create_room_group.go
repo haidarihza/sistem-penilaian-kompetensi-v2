@@ -50,7 +50,7 @@ func CreateRoomGroup(roomRepository repository.RoomRepository, userRepository re
 			return
 		}
 
-		status, ok := repository.RoomStatusMapper("WAITING ANSWER")
+		status, ok := repository.RoomStatusMapper("ON INTERVIEWER")
 		if !ok {
 			response.RespondError(w, response.InternalServerError())
 			return

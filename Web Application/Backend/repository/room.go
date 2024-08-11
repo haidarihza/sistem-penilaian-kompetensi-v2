@@ -9,6 +9,7 @@ import (
 type RoomStatus string
 
 const (
+	OnInterviewer = RoomStatus("ON INTERVIEWER")
 	WaitingAnswer = RoomStatus("WAITING ANSWER")
 	WaitingReview = RoomStatus("WAITING REVIEW")
 	Accepted = RoomStatus("ACCEPTED")
@@ -18,6 +19,7 @@ const (
 
 func RoomStatusMapper(status string) (RoomStatus, bool) {
 	mapper := map[string]RoomStatus{
+		"ON INTERVIEWER":   OnInterviewer,
 		"WAITING ANSWER":   WaitingAnswer,
 		"WAITING REVIEW":   WaitingReview,
 		"COMPLETED": 				Completed,

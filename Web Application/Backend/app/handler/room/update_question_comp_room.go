@@ -78,7 +78,7 @@ func UpdateQuestionsAndCompetenciesRoom(roomRepository repository.RoomRepository
       localTimeEnd := timeEnd.Local()
       formattedTimeEnd := localTimeEnd.Format("02 January 2006 15:04:05 MST")
   
-      url := fmt.Sprintf("http://%s:%s/room-group/%s", cfg.FEHost, cfg.FEPort, req.ID)
+      url := fmt.Sprintf("http://%s:%s/room-group/%s", cfg.FEHost, cfg.FEPort, req.RoomGroupID)
 
       data := struct {
         Judul template.HTML

@@ -21,19 +21,24 @@ export const languageOptions: Array<FormOptions> = [
   }
 ]
 
-export const statusColors = [{
+export const statusColors = [
+  {
+  status: "ON INTERVIEWER",
+  color: "#F9F871"
+  }, {
   status: "WAITING ANSWER",
   color: "main_beige"
-}, {
+  }, {
   status: "WAITING REVIEW",
   color: "#E6F4F1"
-}, {
+  }, {
   status: "REJECTED",
-  color: "#8CBCFF"
-}, {
+  color: "#89E883"
+  }, {
   status: "ACCEPTED",
-  color: "#8CBCFF"
-}];
+  color: "#89E883"
+  }
+];
 
 export const formatDateTime = (dateTimeString?: string) => {
   if (!dateTimeString) return "-";

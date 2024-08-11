@@ -118,7 +118,7 @@ const CreateRoom = () => {
 
   const fetchRoomAndRoomGroup = async () => {
     try {
-      if (params.id) {
+      if (params.id && params.id !== "") {
         const roomData = await getOneRoom(apiContext.axios, params.id);
         const roomGroupData = await getOneRoomGroup(apiContext.axios, roomData.room_group_id);
         const intervieweeEmail = roomGroupData.interviewee_email ? [roomGroupData.interviewee_email] : [];
@@ -197,7 +197,7 @@ const CreateRoom = () => {
     fetchQ();
     fetchC();
     fetchEmails();
-    if (params.id) {
+    if (params.id && params.id !== "") {
       fetchRoomAndRoomGroup();
     }
   }, [apiContext.axios, toast, params.id]);
@@ -265,7 +265,7 @@ const CreateRoom = () => {
         return;
       }
 
-      if (params.id !== "") {
+      if (params.id && params.id !== "") {
         await updateQuestionsCompetencies(apiContext.axios, roomGroup);
         ToastModal(toast, "Success!", "Ruangan interview berhasil diupdate", "success");
         navigate("/");
@@ -382,29 +382,29 @@ const CreateRoom = () => {
         <Box bg="white" rounded="md" p="3">
           <FormControl isInvalid={isSubmit && roomGroup.room.title === ""} mb="4">
             <FormLabel>Nama Interview</FormLabel>
-            <Input value={roomGroup.room.title} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, title: e.target.value}})} placeholder="Nama Interview" isDisabled={params.id !== ""}/>
+            <Input value={roomGroup.room.title} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, title: e.target.value}})} placeholder="Nama Interview" isDisabled={params.id !== undefined && params.id !== ""}/>
             <FormErrorMessage>Judul ruangan harus diisi</FormErrorMessage>
           </FormControl>
           <FormControl isInvalid={isSubmit && roomGroup.room.description === ""} mb="4">
             <FormLabel>Deskripsi</FormLabel>
-            <Textarea value={roomGroup.room.description} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, description: e.target.value}})} placeholder="Deskripsi Interview" isDisabled={params.id !== ""}/>
+            <Textarea value={roomGroup.room.description} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, description: e.target.value}})} placeholder="Deskripsi Interview" isDisabled={params.id !== undefined && params.id !== ""}/>
             <FormErrorMessage>Deskripsi harus diisi</FormErrorMessage>
           </FormControl>
           <Box display="flex" flexDir="row" justifyContent="space-between">
             <FormControl isInvalid={isSubmit && roomGroup.room.start === ""} mb="4" pr="10">
               <FormLabel>Waktu Mulai</FormLabel>
-              <Input type="datetime-local" value={roomGroup.room.start} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, start: e.target.value}})} placeholder="Waktu Mulai" isDisabled={params.id !== ""}/>
+              <Input type="datetime-local" value={roomGroup.room.start} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, start: e.target.value}})} placeholder="Waktu Mulai" isDisabled={params.id !== undefined && params.id !== ""}/>
               <FormErrorMessage>Waktu Mulai harus diisi</FormErrorMessage>
             </FormControl>
             <FormControl isInvalid={isSubmit && roomGroup.room.end === ""} mb="4" pl="10">
               <FormLabel>Waktu Selesai</FormLabel>
-              <Input type="datetime-local" value={roomGroup.room.end} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, end: e.target.value}})} placeholder="Waktu Selesai" isDisabled={params.id !== ""}/>
+              <Input type="datetime-local" value={roomGroup.room.end} onChange={e => setRoomGroup({...roomGroup, room: {...roomGroup.room, end: e.target.value}})} placeholder="Waktu Selesai" isDisabled={params.id !== undefined && params.id !== ""}/>
               <FormErrorMessage>Waktu Selesai harus diisi</FormErrorMessage>
             </FormControl>
           </Box>
           <FormControl isInvalid={isSubmit && roomGroup.room.interviewer_email === ""} mb="4">
             <FormLabel>Interviewer</FormLabel>
-            <Select placeholder="Pilih Interviewer" value={roomGroup.room.interviewer_email} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, interviewer_email: e.target.value } })} isDisabled={params.id !== ""}>
+            <Select placeholder="Pilih Interviewer" value={roomGroup.room.interviewer_email} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, interviewer_email: e.target.value } })} isDisabled={params.id !== undefined && params.id !== ""}>
               {interviewerEmails.map((val, i) => (
                 <option key={i} value={val.email}>{val.name}</option>
               ))}
@@ -413,7 +413,7 @@ const CreateRoom = () => {
           </FormControl>
           <FormControl isInvalid={isSubmit && roomGroup.room.language === ""} mb="4">
             <FormLabel>Bahasa</FormLabel>
-            <Select placeholder="Pilih Bahasa" value={roomGroup.room.language} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, language: e.target.value } })} isDisabled={params.id !== ""}>
+            <Select placeholder="Pilih Bahasa" value={roomGroup.room.language} onChange={(e) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, language: e.target.value } })} isDisabled={params.id !== undefined && params.id !== ""}>
               {languageOptions.map((val, i) => (
                 <option key={i} value={val.value}>{val.label}</option>
               ))}
@@ -422,7 +422,7 @@ const CreateRoom = () => {
           </FormControl>
           <FormControl isInvalid={isSubmit && roomGroup.room.preparation_time === 0} mb="4">
             <FormLabel>Waktu Persiapan (detik)</FormLabel>
-              <NumberInput value={roomGroup.room.preparation_time} onChange={(valueAsString: string, valueAsNumber: number) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, preparation_time: valueAsNumber } })} min={1} isDisabled={params.id !== ""}>
+              <NumberInput value={roomGroup.room.preparation_time} onChange={(valueAsString: string, valueAsNumber: number) => setRoomGroup({ ...roomGroup, room: { ...roomGroup.room, preparation_time: valueAsNumber } })} min={1} isDisabled={params.id !== undefined && params.id !== ""}>
                 <NumberInputField />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
@@ -485,7 +485,7 @@ const CreateRoom = () => {
           </TableContainer>
           </>
         ) : ( <></> )}
-        <Button bg="main_blue" color="white" type="submit" mt="4">{params.id !== "" ? "Update Ruangan" : "Buat Ruangan"}</Button>
+        <Button bg="main_blue" color="white" type="submit" mt="4">{params.id !== undefined && params.id !== "" ? "Update Ruangan" : "Buat Ruangan"}</Button>
       </Box>
     </Layout>
   )

@@ -289,6 +289,7 @@ export async function updateQuestionsCompetencies(
       id: roomGroup.room.id,
       title: roomGroup.room.title,
       description: roomGroup.room.description,
+      room_group_id: roomGroup.id,
       start: new Date(roomGroup.room.start),
       end: new Date(roomGroup.room.end),
       interviewer_email: roomGroup.room.interviewer_email,

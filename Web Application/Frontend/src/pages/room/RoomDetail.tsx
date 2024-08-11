@@ -36,16 +36,16 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
 } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 import { Question } from "../../interface/question";
 import { AuthContext } from "../../utils/context/auth";
-import { DeleteIcon, TriangleDownIcon } from "@chakra-ui/icons";
+import { DeleteIcon, TriangleDownIcon, EditIcon } from "@chakra-ui/icons";
 import InterviewModal from "./InterviewModal";
 import DetailsCompetencyModal from "../competency/DetailsCompetencyModal";
 import DetailQuestionModal from "./DetailQuestionModal";
 import { Competency, CompetencyLevel } from "../../interface/competency";
 import ToastModal from "../../components/ToastModal";
 import { languageOptions, statusColors, formatDateTime } from "../../utils/utils";
-import { useParams } from "react-router-dom";
 
 interface Props {
   roomGroup: RoomGroup;
@@ -61,6 +61,7 @@ const Detail = ({
   const apiContext = useContext(ApiContext);
   const authContext = useContext(AuthContext);
   const toast = useToast();
+  const navigate = useNavigate();
   const [data, setData] = useState<RoomDetail>({} as RoomDetail);
   const [note, setNote] = useState<string>("");
 
@@ -156,6 +157,10 @@ const Detail = ({
     onOpenDelete();
   }
 
+  const handleEdit = () => {
+    navigate(`/room/edit/${room_id}`);
+  }
+
   const handleDeleteRoom = async () => {
     try {
       await deleteRoom(apiContext.axios, room_id);
@@ -203,6 +208,17 @@ const Detail = ({
                 </HStack>
               </MenuButton>
               <MenuList>
+                {role === "INTERVIEWER" && (
+                  <MenuItem onClick={handleEdit} color="main_blue">
+                    <IconButton
+                      aria-label="Edit"
+                      icon={<EditIcon />}
+                      colorScheme='white.400'
+                      color="main_blue"
+                      size="sm"/>
+                    Edit
+                  </MenuItem>
+                )}
                 <MenuItem onClick={() => handleDeleteConfirm(room_id)} color="main_blue">
                   <IconButton
                     aria-label="Delete"
