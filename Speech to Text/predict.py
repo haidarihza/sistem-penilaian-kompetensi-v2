@@ -9,7 +9,7 @@ class Item(BaseModel):
 
 def predict_speech_english(link):
     try:
-        client = Client("https://9000e083084574706f.gradio.live") #link gradio
+        client = Client("https://42f0253f321e6b7e29.gradio.live") #link gradio
         result = client.predict(
             link,
             api_name="/predict"
@@ -22,7 +22,7 @@ def predict_speech_english(link):
 
 def predict_speech_indonesian(link):
     try:
-        client = Client("https://137db0c1e5d4490bcf.gradio.live") #link gradio
+        client = Client("https://b52037172bbc6109d5.gradio.live") #link gradio
         result = client.predict(
             link,
             api_name="/predict"
